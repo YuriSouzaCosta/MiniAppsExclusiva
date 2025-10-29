@@ -1,0 +1,288 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+}
+
+.layout {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+}
+
+.sidebar {
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 260px;
+    background: #500001;
+    padding: 25px 20px;
+    transition: all 0.4s ease;
+}
+
+.content {
+    flex: 1;
+    padding: 20px;
+    overflow-x: auto;
+    background-color: #f5f5f5;
+}
+
+.sidebar .sidebar-header {
+    display: flex;
+    align-items: center;
+}
+
+.sidebar .sidebar-header img {
+    width: 42px;
+    border-radius: 50%;
+}
+
+.sidebar .sidebar-header h2 {
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    margin-left: 23px;
+}
+
+.sidebar-links h4 {
+    color: #fff;
+    font-weight: 500;
+    white-space: nowrap;
+    margin: 10px 0;
+    position: relative;
+}
+
+.sidebar-links h4 span {
+    opacity: 0;
+}
+
+.sidebar-links .menu-separator {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 1px;
+    transform: scaleX(1);
+    transform: translateY(-50%);
+    background: rgb(255, 255, 255);
+    transform-origin: right;
+    transition-delay: 0.2s;
+}
+
+.sidebar-links {
+    list-style: none;
+    margin-top: 20px;
+    height: 80%;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.sidebar-links::-webkit-scrollbar {
+    display: none;
+}
+
+.sidebar-links li a {
+    display: flex;
+    align-items: center;
+    gap: 0 20px;
+    color: #fff;
+    font-weight: 500;
+    white-space: nowrap;
+    padding: 15px 10px;
+    text-decoration: none;
+    transition: 0.2s ease;
+}
+
+.sidebar-links li a:hover {
+    color: #161a2d;
+    background: #fff;
+    border-radius: 4px;
+}
+
+.sidebar:hover .user-account {
+    background: #fff;
+    border-radius: 4px;
+}
+
+/* Estilo para o modal de loading */
+#loadingModal .modal-content {
+    background-color: transparent;
+    border: none;
+}
+
+/* Ajuste para o formulário de upload */
+#uploadForm {
+    background: white;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+
+.table {
+    font-size: 0.9rem;
+}
+
+.table th {
+    white-space: nowrap;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+}
+
+/* Estilos para a tabela no modal */
+#notaTable {
+    font-size: 0.9rem;
+}
+
+#notaTable th {
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    background-color: #343a40 !important;
+}
+
+#notaTable tbody {
+    display: block;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+#notaTable thead, 
+#notaTable tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    text-align: center;
+}
+
+/* Loader centralizado */
+#loaderNota {
+    width: 3rem;
+    height: 3rem;
+    margin: 2rem auto;
+    display: block;
+}
+
+/* Ajuste para preços */
+.text-end {
+    text-align: right !important;
+}
+
+/* Estilos para mobile */
+.mobile-menu-btn {
+    display: none;
+}
+
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1040;
+    display: none;
+}
+
+/* Media queries para mobile */
+@media (max-width: 992px) {
+    /* Sidebar */
+    .sidebar {
+        width: 280px;
+        position: fixed;
+        left: -280px;
+        top: 0;
+        height: 100vh;
+        z-index: 1050;
+        transition: left 0.3s ease;
+    }
+    
+    .sidebar.show {
+        left: 0;
+    }
+    
+    .mobile-menu-btn {
+        display: block !important;
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 1100;
+    }
+    
+    /* Main content */
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    
+    /* Tabela no modal (layout vertical) */
+    #notaTable thead {
+        display: none;
+    }
+    
+    #notaTable tbody tr {
+        display: block;
+        margin-bottom: 15px;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 10px;
+        background: #f8f9fa;
+    }
+    
+    #notaTable tbody td {
+        display: block;
+        text-align: right;
+        padding: 5px 10px;
+        border-bottom: 1px solid #e9ecef;
+        white-space: normal;
+    }
+    
+    #notaTable tbody td:last-child {
+        border-bottom: none;
+    }
+    
+    #notaTable tbody td::before {
+        content: attr(data-label);
+        float: left;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: #6c757d;
+    }
+    
+    /* Ajustes do modal em mobile */
+    #modalVisualizarNota .modal-dialog {
+        margin: 10px;
+        max-width: calc(100% - 20px);
+    }
+    
+    #modalVisualizarNota .modal-body {
+        padding: 0;
+    }
+}
+
+@media (min-width: 993px) {
+    .sidebar {
+        height: 100vh;
+        position: fixed;
+        width: 280px !important;
+    }
+    
+    .main-content {
+        margin-left: 280px;
+        width: calc(100% - 280px);
+    }
+}

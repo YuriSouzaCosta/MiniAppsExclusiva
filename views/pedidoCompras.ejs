@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedido de Compras</title>
+    
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    
+
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div
+  class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark"
+  style="width: 280px"
+>
+  <a
+    href="/"
+    class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none"
+  >
+    <svg class="bi me-2" width="40" height="32">
+      <use xlink:href="#bootstrap"></use>
+    </svg>
+    <span class="fs-4">Pedidos de Compras</span>
+  </a>
+  <hr />
+  <ul class="nav nav-pills flex-column mb-auto ">
+    <li class="nav-item">
+      <a
+        href="#"
+        class="nav-link active"
+        aria-current="page"
+      >
+        <svg class="bi me-2" width="16" height="16">
+          <use xlink:href="#home"></use>
+        </svg>
+        Criar Pedidos
+      </a>
+    </li>
+    <li>
+      <a href="/listaPedidos" class="nav-link text-white">
+        <svg class="bi me-2" width="16" height="16">
+          <use xlink:href="#speedometer2"></use>
+        </svg>
+        Lista de Pedidos
+      </a>
+    </li>
+    <li>
+      <a href="/fazerPedidos" class="nav-link text-white ">
+        <svg class="bi me-2" width="16" height="16">
+          <use xlink:href="#speedometer2"></use>
+        </svg>
+        Fazer Pedidos
+      </a>
+    </li>
+    <li>
+      <a href="/finalizarPedidos" class="nav-link text-white">
+        <svg class="bi me-2" width="16" height="16">
+          <use xlink:href="#table"></use>
+        </svg>
+        Finalizar Pedidos
+      </a>
+    </li>
+    <li>
+      <a href="/pedidosFinalizados" class="nav-link text-white">
+        <svg class="bi me-2" width="16" height="16">
+          <use xlink:href="#table"></use>
+        </svg>
+        Pedidos Finalizados
+      </a>
+    </li>
+  </ul>
+  <hr />
+</div>
+
+    <div class="container d-grid align-items-center justify-content-center vh-100">
+        <form>
+            <div class="form-group">
+                <label for="dtInit">Data Inicial</label>
+                <input type="date" class="form-control" id="dtInit" placeholder="Data inicial">
+            </div>
+            <div class="form-group">
+                <label for="dtEnd">Data Final</label>
+                <input type="date" class="form-control" id="dtEnd" placeholder="Data Final">
+            </div>
+            
+            <div class="form-group position-relative">
+              <label for="marca">Marca</label>
+              <input type="text" class="form-control" id="marca" placeholder="Digite para buscar" autocomplete="off" onkeyup="filtrarMarcas()">
+              <div id="marcaLista" class="dropdown-menu w-100" style="max-height: 200px; overflow-y: auto;"></div>
+          </div>
+
+        <div class="form-group mb-2">
+          <label for="gpEmp">Grupo Empresa</label>
+          <select id="gpEmp" class="form-control">
+              <option value="">Selecione o Grupo da Emrpesa</option>
+              <option value="1">Exclusiva</option>
+              <option value="2">Prime</option>
+              <option value="3">Site</option>
+              
+          </select>
+      </div>
+
+            <button onclick="salvaPedido()" class="btn btn-primary" >Criar Pedido</button>
+        </form>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- jQuery e Select2 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="js/scriptPedidos.js"></script>
+
+</body>
+</html>

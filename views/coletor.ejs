@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+  <title>Contagem de Produtos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    .container {
+      max-width: 400px;
+      margin: auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .result {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
+    .btn-fnc {
+      width: 90%;
+      margin: 20px auto;
+      padding: 10px;
+
+
+      border: none;
+      border-radius: 5px;
+    }
+
+    .tb-edit {
+      width: 40%;
+      align-content: center;
+    }
+
+    .table-size {
+      width: 60%;
+      align-content: center;
+    }
+  </style>
+</head>
+
+<body>
+
+
+  <div class="container">
+    <h2>Contagem de Produtos</h2>
+    <label for="usuario">Usuário: </label>
+    <input class="center" type="text" id="usuario" value=<%- name %>>
+    <label for="codigo">Código de Barras:</label>
+
+    <input type="text" id="codigo" placeholder="Digite o código de barras" />
+
+    <button onclick="buscarProduto()">Buscar</button>
+
+    <div class="result" id="resultado">
+      <p><strong>Nome:</strong> <span id="nome">-</span></p>
+      <p><strong>Preço:</strong> <span id="preco">-</span></p>
+      <p><strong>Ref :</strong> <span id="referencia">-</span></p>
+    </div>
+
+    <label for="quantidade">Quantidade:</label>
+    <input type="number" id="quantidade" placeholder="Digite a quantidade" />
+
+    <button onclick="salvarContagem()">Salvar</button>
+  </div>
+
+
+  <h2>Produtos em Contagem</h2>
+  <table class="table-size" id="tabela-contagens" border="1">
+    <thead>
+      <tr>
+        <th>Código de Barra</th>
+        <th>Produto</th>
+        <th class="tb-edit">Quantidade</th>
+
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Os produtos serão carregados dinamicamente -->
+    </tbody>
+  </table>
+  </div>
+  <script src="/js/script.js"></script>
+</body>
+
+</html>

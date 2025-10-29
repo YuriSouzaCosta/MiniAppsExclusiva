@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Importador</title>
+	</head>
+	<body>
+		<label for="arquivo">Upload de Arquivo Excel:</label>
+		<input type="file" id="arquivo" accept=".xlsx" />
+		<button onclick="importarArquivo()">Importar</button>
+		<script>
+			async function importarArquivo() {
+				const inputArquivo = document.getElementById("arquivo");
+				const arquivo = inputArquivo.files[0];
+
+				if (!arquivo) {
+					alert("Por favor, selecione um arquivo!");
+					return;
+				}
+
+				const formData = new FormData();
+				formData.append("arquivo", arquivo);
+
+				try {
+					const response = await fetch("http://localhost:3000/importar", {
+						method: "POST",
+						body: formData,
+					});
+
+					const resultado = await response.json();
+
+					if (response.ok) {
+						alert(
+							`Importação concluída: ${resultado.inseridos} produtos inseridos`
+						);
+					} else {
+						console.error(resultado.error);
+						alert(`Erro: ${resultado.error}`);
+					}
+				} catch (err) {
+					console.error(err);
+					alert("Erro ao importar o arquivo.", err);
+				}
+			}
+		</script>
+	</body>
+</html>

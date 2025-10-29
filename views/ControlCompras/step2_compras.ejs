@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedido de Compras</title>
+    
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/styleDashboard.css">
+    <style>
+        /* Estilos gerais */
+        .mobile-menu-btn {
+            display: none;
+        }
+        
+        /* Estilos para desktop */
+        @media (min-width: 993px) {
+            .sidebar {
+                height: 100vh;
+                position: fixed;
+                width: 280px !important;
+            }
+            
+            .main-content {
+                margin-left: 280px;
+                width: calc(100% - 280px);
+            }
+        }
+        
+        /* Estilos para mobile */
+        @media (max-width: 992px) {
+            /* Sidebar */
+            .sidebar {
+                width: 280px;
+                position: fixed;
+                left: -280px;
+                top: 0;
+                height: 100vh;
+                z-index: 1050;
+                transition: left 0.3s ease;
+            }
+            
+            .sidebar.show {
+                left: 0;
+            }
+            
+            .mobile-menu-btn {
+                display: block !important;
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                z-index: 1100;
+            }
+            
+            /* Main content */
+            .main-content {
+                margin-left: 0 !important;
+                width: 100% !important;
+            }
+            
+            /* Tabela principal */
+            .table-responsive-custom {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            #tableData th, #tableData td {
+                white-space: nowrap;
+                padding: 8px 4px;
+                font-size: 14px;
+            }
+            
+            #tableData .btn {
+                padding: 4px 6px;
+                font-size: 12px;
+            }
+            
+            /* Tabela no modal (layout vertical) */
+            #notaTable thead {
+                display: none;
+            }
+            
+            #notaTable tbody tr {
+                display: block;
+                margin-bottom: 15px;
+                border: 1px solid #dee2e6;
+                border-radius: 5px;
+                padding: 10px;
+                background: #f8f9fa;
+            }
+            
+            #notaTable tbody td {
+                display: block;
+                text-align: right;
+                padding: 5px 10px;
+                border-bottom: 1px solid #e9ecef;
+                white-space: normal;
+            }
+            
+            #notaTable tbody td:last-child {
+                border-bottom: none;
+            }
+            
+            #notaTable tbody td::before {
+                content: attr(data-label);
+                float: left;
+                font-weight: bold;
+                text-transform: uppercase;
+                color: #6c757d;
+            }
+            
+            /* Ajustes do modal em mobile */
+            #modalVisualizarNota .modal-dialog {
+                margin: 10px;
+                max-width: calc(100% - 20px);
+            }
+            
+            #modalVisualizarNota .modal-body {
+                padding: 0;
+            }
+        }
+        
+        /* Overlay para menu mobile */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1040;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Overlay para menu mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <!-- Botão de menu mobile -->
+    <button class="btn btn-dark mobile-menu-btn" id="mobileMenuBtn">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark sidebar" id="sidebar">
+        <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+            <svg class="bi me-2" width="40" height="32">
+                <use xlink:href="#bootstrap"></use>
+            </svg>
+            <span class="fs-4">Compras</span>
+        </a>
+        <hr />
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+                <a href="/dashboard/Compras" class="nav-link text-white" aria-current="page">
+                    <i class="bi bi-house-door me-2"></i>
+                    Importar Pedidos
+                </a>
+            </li>
+            <li>
+                <a href="/dashboard/Pedidos" class="nav-link text-white">
+                    <i class="bi bi-speedometer2 me-2"></i>
+                    Acomp de Pedidos
+                </a>
+            </li>
+            <li>
+                <a href="/dashboard/RelatorioPedidos" class="nav-link text-white active">
+                    <i class="bi bi-file-earmark-text me-2"></i>
+                    Emissão de Pedidos
+                </a>
+            </li>
+            <li>
+                <a href="/dashboard/Conferencia" class="nav-link text-white">
+                    <i class="bi bi-check-circle me-2"></i>
+                    Aguardando Conf
+                </a>
+            </li>
+            <li>
+                <a href="/dashboard/Lancamento" class="nav-link text-white">
+                    <i class="bi bi-table me-2"></i>
+                    Aguardando Lanc
+                </a>
+            </li>
+            <li>
+                <a href="/dashboard/Precificado" class="nav-link text-white ">
+                    <i class="bi bi-table me-2"></i>
+                    Notas Precificadas
+                </a>
+            </li>
+            <li>
+                <a href="/dashboard/Sessao" class="nav-link text-white">
+                    <i class="bi bi-shop me-2"></i>
+                    Produtos em Loja
+                </a>
+            </li>
+        </ul>
+        <hr />
+    </div>
+
+    <!-- Conteúdo principal -->
+    <div class="main-content p-3">
+        <div class="table-responsive table-responsive-custom">
+            <table class="table table-striped table-hover" id="tableData">
+                <thead class="table-dark">
+                    <tr>
+                      <th scope="col">Data Emissão</th>        
+                      <th scope="col">Fornecedor</th>
+                      <th scope="col">N° Nota</th>
+                      <th scope="col">Valor</th>
+                      <th scope="col">Empresa</th>
+                      <th scope="col">Data Chegada</th>   
+                      <th scope="col">Ações</th>          
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Os dados serão inseridos aqui pelo JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Ação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="confirmModalBody">
+                    <!-- O conteúdo será preenchido dinamicamente -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="confirmActionBtn">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Visualização de Nota -->
+    <div class="modal fade" id="modalVisualizarNota" tabindex="-1" aria-labelledby="modalVisualizarNotaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title" id="modalVisualizarNotaLabel">Detalhes da Nota Fiscal</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="table-responsive" style="max-height: 70vh;">
+                        <table class="table table-striped table-hover mb-0" id="notaTable">
+                            <thead class="table-dark position-sticky top-0">
+                                <tr>
+                                  <th scope="col">Data Emissão</th>        
+                                  <th scope="col">Fornecedor</th>
+                                  <th scope="col">N° Nota</th>
+                                  <th scope="col">Valor</th>
+                                  <th scope="col">Empresa</th>
+                                  <th scope="col">Data Chegada</th>   
+                                  <th scope="col">Ações</th> 
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Os dados serão inseridos aqui pelo JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center py-3" id="loaderNota">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <p class="mt-2">Carregando itens da nota...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg me-1"></i> Fechar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+            // Controle do menu mobile
+            document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            
+            // Alternar menu
+            mobileMenuBtn.addEventListener('click', function() {
+                sidebar.classList.toggle('show');
+                sidebarOverlay.style.display = sidebar.classList.contains('show') ? 'block' : 'none';
+            });
+            
+            // Fechar menu ao clicar no overlay
+            sidebarOverlay.addEventListener('click', function() {
+                sidebar.classList.remove('show');
+                sidebarOverlay.style.display = 'none';
+            });
+            
+            // Fechar menu ao clicar em um item (em mobile)
+            document.querySelectorAll('#sidebar .nav-link').forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 993) {
+                        sidebar.classList.remove('show');
+                        sidebarOverlay.style.display = 'none';
+                    }
+                });
+            });
+            
+            // Ajustar layout quando redimensionar
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 993) {
+                    sidebar.classList.remove('show');
+                    sidebarOverlay.style.display = 'none';
+                }
+            });
+        });
+    </script>
+    
+    <script src="/js/scriptControlBuy.js"></script>
+    <script>document.addEventListener('DOMContentLoaded', carregarNotasFiscais2);</script>
+</body>
+</html>

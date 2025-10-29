@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pedido de Compras</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+      .header_table {
+        font-size: 8px;
+        align-items: center;
+        justify-content: center;
+      }
+
+      table tbody td {
+        padding: 0.5rem;
+        font-size: 8px;
+        /* Ajuste o tamanho da fonte */
+        line-height: 5px;
+        /* Reduz a altura da linha */
+        vertical-align: middle;
+        /* Centraliza os dados no meio da célula */
+        text-align: center;
+        /* Centraliza horizontalmente (opcional) */
+      }
+
+      .table td {
+        padding: 1px;
+      }
+
+      .btn-custom {
+        padding: 0.25rem 0.5rem;
+        /* Reduz o padding */
+        font-size: 0.875rem;
+        /* Reduz o tamanho da fonte */
+        line-height: 1.5;
+        /* Ajusta a altura da linha */
+      }
+
+      .btn-container {
+        margin: 0;
+        /* Remove margens */
+        padding: 0;
+        /* Remove paddings */
+      }
+
+      table {
+        td:nth-child(3) {
+          width: 10%;
+        }
+
+        td:nth-child(5) {
+          width: 5%;
+        }
+
+        td:nth-child(5) {
+          width: 40%;
+        }
+
+        td:nth-child(6) {
+          width: 5%;
+          font-size: 10px;
+        }
+
+        td:nth-child(7) {
+          width: 5%;
+          font-size: 10px;
+        }
+
+        td:nth-child(8) {
+          width: 5%;
+          font-size: 10px;
+          text-align: center;
+        }
+
+        td:nth-child(9) {
+          background-color: #ffff00;
+          font-weight: bold;
+          font-size: 10px;
+          text-align: center;
+        }
+
+        td:nth-child(10) {
+          background-color: #008080;
+          font-weight: bold;
+          font-size: 10px;
+          text-align: center;
+        }
+
+        td:nth-child(11) {
+          background-color: #00adad;
+          font-weight: bold;
+          font-size: 10px;
+          text-align: center;
+        }
+
+        td:nth-child(12) {
+          background-color: #00ccff;
+          font-weight: bold;
+          font-size: 10px;
+          text-align: center;
+        }
+
+        td:nth-child(13) {
+          width: 7%;
+        }
+
+        td:nth-child(14) {
+          width: 10%;
+        }
+      }
+
+      .f_size {
+        font-size: 8pt;
+        width: 100%;
+        margin: 0;
+      }
+
+      .input-pequeno {
+        font-size: 10px;
+        /* Ajuste conforme necessário */
+        text-align: center;
+        /* Para alinhar os números */
+        height: 100%;
+        /* Garante que o input não cresça além da célula */
+        padding: 1px;
+        /* Reduz espaço interno */
+      }
+
+      .filter-row {
+        background-color: #f8f9fa;
+      }
+
+      .filter-row th {
+        padding: 2px !important;
+      }
+
+      .filter-input {
+        font-size: 12px !important;
+        height: 24px !important;
+        padding: 0.15rem 0.3rem !important;
+      }
+
+      /* Menu de filtro suspenso */
+      .filter-menu {
+        position: absolute;
+        background: white;
+        border: 3px solid #ddd;
+        padding: 5px;
+        z-index: 1000;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        max-height: 300px;
+        overflow-y: auto;
+      }
+
+      .filter-menu-item {
+        padding: 3px 5px;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      .filter-menu-item:hover {
+        background-color: #f0f0f0;
+      }
+
+      .filter-menu input[type="text"] {
+        width: 100%;
+        margin-bottom: 5px;
+        padding: 2px;
+      }
+
+      .filter-menu .filter-actions {
+        margin-top: 5px;
+        padding-top: 5px;
+      }
+
+      table thead tr:first-child {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa;
+        z-index: 10;
+      }
+
+      table thead tr.filter-row {
+        position: sticky;
+        top: 30px; /* Altura da linha do cabeçalho */
+        background-color: #f8f9fa;
+        z-index: 10;
+      }
+      /* Estilos para ordenação com ícones */
+      .sort-icons {
+        display: inline-flex;
+        flex-direction: linear;
+        margin-left: 5px;
+        vertical-align: middle;
+      }
+
+      .sort-icons i {
+        font-size: 10px;
+
+        cursor: pointer;
+        color: #aaa;
+        transition: all 0.2s;
+      }
+
+      .sort-icons i:hover {
+        color: #555;
+      }
+
+      .sort-icons .active {
+        color: #0d6efd;
+        text-shadow: 0 0 2px rgba(13, 110, 253, 0.5);
+      }
+
+      /* Adicione ao seu CSS existente */
+      .sort-icons i.active {
+        color: #0d6efd;
+        text-shadow: 0 0 2px rgba(13, 110, 253, 0.5);
+        font-weight: bold;
+      }
+
+      .sort-icons i:not(.active) {
+        opacity: 0.5;
+        transition: opacity 0.2s;
+      }
+
+      .sort-icons:hover i:not(.active) {
+        opacity: 0.8;
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+  </head>
+
+  <body>
+    <div
+      class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark"
+      style="width: 280px"
+    >
+      <a
+        href="/"
+        class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none"
+      >
+        <svg class="bi me-2" width="40" height="32">
+          <use xlink:href="#bootstrap"></use>
+        </svg>
+        <span class="fs-4">Pedidos de Compras</span>
+      </a>
+      <hr />
+      <ul class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item">
+          <a
+            href="/pedidosCompras"
+            class="nav-link text-white"
+            aria-current="page"
+          >
+            <svg class="bi me-2" width="16" height="16">
+              <use xlink:href="#home"></use>
+            </svg>
+            Criar Pedidos
+          </a>
+        </li>
+        <li>
+          <a href="/listaPedidos" class="nav-link text-white">
+            <svg class="bi me-2" width="16" height="16">
+              <use xlink:href="#speedometer2"></use>
+            </svg>
+            Lista de Pedidos
+          </a>
+        </li>
+        <li>
+          <a href="#" class="nav-link text-white active">
+            <svg class="bi me-2" width="16" height="16">
+              <use xlink:href="#speedometer2"></use>
+            </svg>
+            Fazer Pedidos
+          </a>
+        </li>
+        <li>
+          <a href="/finalizarPedidos" class="nav-link text-white">
+            <svg class="bi me-2" width="16" height="16">
+              <use xlink:href="#table"></use>
+            </svg>
+            Finalizar Pedidos
+          </a>
+        </li>
+        <li>
+          <a href="/pedidosFinalizados" class="nav-link text-white">
+            <svg class="bi me-2" width="16" height="16">
+              <use xlink:href="#table"></use>
+            </svg>
+            Pedidos Finalizados
+          </a>
+        </li>
+      </ul>
+      <hr />
+    </div>
+
+    <div class="table-responsive">
+      <table class="table">
+        <thead class="header_table">
+          <tr>
+            <th scope="col">
+              LINHA
+              <div class="sort-icons">
+                <i class="bi bi-sort-alpha-up sort-asc" data-col="0"></i>
+                <i class="bi bi-sort-alpha-down sort-desc" data-col="0"></i>
+              </div>
+            </th>
+            <th scope="col">
+              COD JIVA
+              <div class="sort-icons">
+                <i class="bi bi-sort-alpha-up sort-asc" data-col="1"></i>
+                <i class="bi bi-sort-alpha-down sort-desc" data-col="1"></i>
+              </div>
+            </th>
+            <th scope="col">
+              COD BARRA
+              <div class="sort-icons">
+                <i class="bi bi-sort-alpha-up sort-asc" data-col="2"></i>
+                <i class="bi bi-sort-alpha-down sort-desc" data-col="2"></i>
+              </div>
+            </th>
+            <th scope="col">
+              REF
+              <div class="sort-icons">
+                <i class="bi bi-sort-alpha-up sort-asc" data-col="3"></i>
+                <i class="bi bi-sort-alpha-down sort-desc" data-col="3"></i>
+              </div>
+            </th>
+            <th scope="col">
+              PRODUTO
+              <div class="sort-icons">
+                <i class="bi bi-sort-alpha-up sort-asc" data-col="4"></i>
+
+                <i class="bi bi-sort-alpha-down sort-desc" data-col="4"></i>
+              </div>
+            </th>
+            <th scope="col">
+              VLR VENDA
+              <div class="sort-icons">
+                <i class="bi bi-sort-alpha-up sort-asc" data-col="5"></i>
+                <i class="bi bi-sort-alpha-down sort-desc" data-col="5"></i>
+              </div>
+            </th>
+            <th scope="col">
+              ULT CUS
+              <div class="sort-icons">
+                <i class="bi bi-sort-alpha-up sort-asc" data-col="6"></i>
+                <i class="bi bi-sort-alpha-down sort-desc" data-col="6"></i>
+              </div>
+            </th>
+            <th scope="col">
+              ULT COMPRA
+              <div class="sort-icons">
+                <i class="bi bi-sort-alpha-up sort-asc" data-col="7"></i>
+                <i class="bi bi-sort-alpha-down sort-desc" data-col="7"></i>
+              </div>
+            </th>
+            <th scope="col">
+              COMPRA TT
+              <div class="sort-icons">
+                <i class="bi bi-sort-alpha-up sort-asc" data-col="8"></i>
+                <i class="bi bi-sort-alpha-down sort-desc" data-col="8"></i>
+              </div>
+            </th>
+            <th scope="col">
+              VENDA TT
+              <div class="sort-icons">
+                <i class="bi bi-sort-alpha-up sort-asc" data-col="9"></i>
+                <i class="bi bi-sort-alpha-down sort-desc" data-col="9"></i>
+              </div>
+            </th>
+            <th scope="col">
+              MED VENDA
+              <div class="sort-icons">
+                <i class="bi bi-sort-alpha-up sort-asc" data-col="10"></i>
+                <i class="bi bi-sort-alpha-down sort-desc" data-col="10"></i>
+              </div>
+            </th>
+            <th scope="col">
+              EST
+              <div class="sort-icons">
+                <i class="bi bi-sort-alpha-up sort-asc" data-col="11"></i>
+                <i class="bi bi-sort-alpha-down sort-desc" data-col="11"></i>
+              </div>
+            </th>
+            <th scope="col">
+              QTD PEDIDO
+              <div class="sort-icons">
+                <i class="bi bi-sort-alpha-up sort-asc" data-col="12"></i>
+                <i class="bi bi-sort-alpha-down sort-desc" data-col="12"></i>
+              </div>
+            </th>
+            <th scope="col">
+              VLR PEDIDO
+              <div class="sort-icons">
+                <i class="bi bi-sort-alpha-up sort-asc" data-col="13"></i>
+                <i class="bi bi-sort-alpha-down sort-desc" data-col="13"></i>
+              </div>
+            </th>
+          </tr>
+          <tr class="filter-row">
+            <th>
+              <input
+                type="text"
+                class="form-control form-control-sm filter-input"
+                data-col="0"
+              />
+            </th>
+            <th>
+              <input
+                type="text"
+                class="form-control form-control-sm filter-input"
+                data-col="1"
+              />
+            </th>
+            <th>
+              <input
+                type="text"
+                class="form-control form-control-sm filter-input"
+                data-col="2"
+              />
+            </th>
+            <th>
+              <input
+                type="text"
+                class="form-control form-control-sm filter-input"
+                data-col="3"
+              />
+            </th>
+            <th>
+              <input
+                type="text"
+                class="form-control form-control-sm filter-input"
+                data-col="4"
+              />
+            </th>
+            <th>
+              <input
+                type="text"
+                class="form-control form-control-sm filter-input"
+                data-col="5"
+              />
+            </th>
+            <th>
+              <input
+                type="text"
+                class="form-control form-control-sm filter-input"
+                data-col="6"
+              />
+            </th>
+            <th>
+              <input
+                type="text"
+                class="form-control form-control-sm filter-input"
+                data-col="7"
+              />
+            </th>
+            <th>
+              <input
+                type="text"
+                class="form-control form-control-sm filter-input"
+                data-col="8"
+              />
+            </th>
+            <th>
+              <input
+                type="text"
+                class="form-control form-control-sm filter-input"
+                data-col="9"
+              />
+            </th>
+            <th>
+              <input
+                type="text"
+                class="form-control form-control-sm filter-input"
+                data-col="10"
+              />
+            </th>
+            <th>
+              <input
+                type="text"
+                class="form-control form-control-sm filter-input"
+                data-col="11"
+              />
+            </th>
+            <th>
+              <input
+                type="text"
+                class="form-control form-control-sm filter-input"
+                data-col="12"
+              />
+            </th>
+            <th>
+              <input
+                type="text"
+                class="form-control form-control-sm filter-input"
+                data-col="13"
+              />
+            </th>
+          </tr>
+        </thead>
+        <tbody class="table_data">
+          <tr></tr>
+        </tbody>
+      </table>
+      <div class="container mt-3">
+        <div class="d-flex justify-content-start gap-1">
+          <div class="btn-container">
+            <button
+              type="button"
+              class="btn btn-primary btn-custom"
+              id="btn-finalizar"
+            >
+              Finalizar
+            </button>
+            <div class="dropdown d-inline-block">
+              <button
+                class="btn btn-success btn-custom dropdown-toggle"
+                type="button"
+                id="exportarDropdown"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                Exportar
+              </button>
+              <ul class="dropdown-menu" aria-labelledby="exportarDropdown">
+                <li><a class="dropdown-item" id="btn-exportar-pdf">PDF</a></li>
+                <li>
+                  <a class="dropdown-item" id="btn-exportar-excel">Excel</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="ms-auto p-2">
+            <div class="dropdown me-1">
+              <button
+                type="button"
+                class="btn btn-secondary dropdown-toggle"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                data-bs-offset="10,20"
+                id="empresa"
+              >
+                Empresa
+              </button>
+              <ul class="dropdown-menu" aria-labelledby="empresa">
+                <li>
+                  <a class="dropdown-item emp" value="1">1 - EXCLUSIVA</a>
+                </li>
+                <li><a class="dropdown-item emp" value="2">2 - SG</a></li>
+                <li><a class="dropdown-item emp" value="3">3 - UTIL</a></li>
+                <li><a class="dropdown-item emp" value="4">4 - 85</a></li>
+                <li><a class="dropdown-item emp" value="5">5 - SITE</a></li>
+                <li><a class="dropdown-item emp" value="6">6 - DECORA</a></li>
+                <li><a class="dropdown-item emp" value="7">7 - ASG</a></li>
+              </ul>
+              <div class="form-group">
+                <label for="dtFat">Data Faturamento</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  id="dtFat"
+                  placeholder="Data inicial"
+                />
+              </div>
+              <div class="form-group">
+                <label for="dtEntrega">Data Entrega</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  id="dtEntrega"
+                  placeholder="Data Final"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="ms-auto p-2">
+            <Span id="valorTotal">Valor Total : </Span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="modal fade"
+      id="alertModal"
+      tabindex="-1"
+      aria-labelledby="alertModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="alertModalLabel">Status do Pedido</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body" id="modalBody">
+            <!-- Mensagem será inserida aqui -->
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+    crossorigin="anonymous"
+  ></script>
+
+  <script>
+    let somaTotal = 0;
+    const apiBase = `${window.location.protocol}//${window.location.hostname}:3000`;
+    let pedidosAtualizados = []; // Variável global para armazenar os dados
+    let codemp;
+    const timeElapsed = Date.now();
+    const dataPedido = new Date(timeElapsed).toLocaleString();
+    let marca_pedido;
+
+    // Função para carregar os dados do pedido
+    async function carregarDadosPedido(id_pedido) {
+      try {
+        const apiUrl = `${apiBase}/loadPedidos?id_pedido=${id_pedido}`;
+        console.log("URL da API:", apiUrl); // Log para depuração
+
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erro na requisição: ${response.statusText}`);
+        }
+
+        const pedidoCompra = await response.json();
+        console.log("Dados recebidos:", pedidoCompra); // Log para depuração
+
+        if (!Array.isArray(pedidoCompra)) {
+          throw new Error("Dados recebidos não são um array.");
+        }
+
+        const tabelaBody = document.querySelector("table tbody");
+        tabelaBody.innerHTML = "";
+        pedidosAtualizados = []; // Resetar os pedidos armazenados
+
+        pedidoCompra.forEach((pedido) => {
+          pedidosAtualizados.push({
+            id: id_pedido,
+            codProd: pedido.CODPROD,
+            quantidade: 0,
+            valorTotal: 0,
+          });
+
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${pedido.LINHA || ""}</td>
+            <td>${pedido.CODPROD || ""}</td>
+            <td>${pedido.REFERENCIA || ""}</td>
+            <td>${pedido.REFFORN || ""}</td>
+            <td>${pedido.DESCRPROD || ""}</td>
+            <td>R$${(pedido.VLR_VENDA || 0).toFixed(2)}</td>
+            <td>R$${(pedido.ENTRADACOMICMS || 0).toFixed(2)}</td>
+            <td>${pedido.QTDULTIMA_COMPA || ""}</td>
+            <td>${pedido.COMP_QTD || 0}</td>
+            <td>${pedido.VNDS_QTD || 0}</td>
+            <td>${(pedido.MED_VENDA || 0).toFixed(2)}</td>
+            <td>${pedido.ESTOQUE || 0}</td>
+            <td>
+              <input type="number" class="f_size input-pequeno" data-id="${
+                pedido.CODPROD
+              }" data-preco="${(pedido.ENTRADACOMICMS || 0).toFixed(
+            2
+          )}" value="${pedido.QTD_PEDIR || ""}">
+            </td>
+            <td class="total">R$ ${(pedido.VLR_TOTAL || 0).toFixed(2)}</td>
+          `;
+          tabelaBody.appendChild(row);
+        });
+      } catch (error) {
+        console.error("Erro ao carregar Pedidos:", error.message);
+      }
+    }
+
+    // Captura o id_pedido da URL e carrega os dados
+    const urlParams = new URLSearchParams(window.location.search);
+    const id_pedido = urlParams.get("id_pedido"); // Captura o id_pedido da URL
+
+    if (id_pedido) {
+      carregarDadosPedido(id_pedido);
+    } else {
+      console.error("ID do pedido não encontrado na URL.");
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      // Configuração do dropdown Empresa
+      const empresaDropdownButton = document.getElementById("empresa");
+      const empresaDropdownItems = document.querySelectorAll(
+        ".dropdown-menu[aria-labelledby='empresa'] .dropdown-item"
+      );
+
+      // Evento para atualizar ao clicar no dropdown Empresa
+      empresaDropdownItems.forEach((item) => {
+        item.addEventListener("click", function (event) {
+          event.stopPropagation(); // Impede propagação do evento
+          codemp = this.getAttribute("value");
+          empresaDropdownButton.textContent = this.textContent;
+          console.log("Codigo Empresa:", codemp);
+        });
+      });
+
+      // Exemplo: Selecionar automaticamente a opção "3 - UTIL" ao carregar a página
+    });
+    function validarEFormatarPedidos(pedidos) {
+      return pedidos
+        .filter((pedido) => {
+          // Filtra pedidos com quantidade válida > 0
+          const qtd = Number(pedido.quantidade);
+          return !isNaN(qtd) && qtd > 0;
+        })
+        .map((pedido) => {
+          // Formatação consistente dos dados
+          return {
+            id: Number(pedido.id),
+            codProd: Number(pedido.codProd), // Garante que é string
+            quantidade: Number(pedido.quantidade),
+            valorTotal: Number(pedido.valorTotal || 0),
+          };
+        });
+    }
+
+    function prepararPedidosParaEnvio(pedidos) {
+      return pedidos
+        .filter((pedido) => {
+          // Filtra pedidos com quantidade válida > 0
+          const qtd = Number(pedido.quantidade);
+          return !isNaN(qtd) && qtd > 0;
+        })
+        .map((pedido) => {
+          // Conversão explícita de tipos
+          return {
+            id: Number(pedido.id),
+            codProd: Number(pedido.codProd), // Garante que é número
+            quantidade: Number(pedido.quantidade),
+            valorTotal: Number(pedido.valorTotal || 0),
+          };
+        });
+    }
+
+    // Atualizar dados ao alterar as quantidades
+    document.addEventListener("input", (event) => {
+      if (event.target.matches("input[data-id]")) {
+        const input = event.target;
+        const row = input.closest("tr");
+        const totalPedido = document.getElementById("valorTotal");
+        const precoUnitario = parseFloat(input.dataset.preco) || 0;
+        const quantidade = parseFloat(input.value) || 0;
+        const total = precoUnitario * quantidade;
+
+        row.querySelector(".total").textContent = `R$ ${total.toFixed(2)}`;
+
+        const idProduto = input.dataset.id;
+        const pedido = pedidosAtualizados.find((p) => p.codProd == idProduto);
+        if (pedido) {
+          pedido.quantidade = quantidade;
+          pedido.valorTotal = total.toFixed(2);
+        }
+
+        // Calcula o total geral de todos os pedidos
+        somaTotal = pedidosAtualizados.reduce(
+          (acc, p) => Number(acc) + Number(p.valorTotal),
+          0
+        );
+
+        // Atualiza o valor total no span
+        totalPedido.innerHTML = `Valor Total: R$ ${somaTotal.toFixed(2)}`;
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+      // Evento para exportar PDF
+      document
+        .getElementById("btn-exportar-pdf")
+        .addEventListener("click", async function () {
+          const btn = this;
+          try {
+            btn.disabled = true;
+            btn.innerHTML =
+              '<span class="spinner-border spinner-border-sm"></span> Enviando...';
+
+            // Validar e formatar os dados
+            const dadosParaEnvio = prepararPedidosParaEnvio(pedidosAtualizados);
+
+            if (dadosParaEnvio.length === 0) {
+              throw new Error("Nenhum pedido válido para enviar");
+            }
+
+            console.log("Dados formatados:", dadosParaEnvio);
+
+            // Enviar para o servidor
+            const response = await fetch(`${apiBase}/salvarPedidos`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(dadosParaEnvio),
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.message || "Erro no servidor");
+            }
+
+            const result = await response.json();
+            console.log("Sucesso:", result);
+
+            exportarPDF();
+            mostrarModal("Pedidos salvos com sucesso!", "success");
+          } catch (error) {
+            console.error("Erro ao enviar pedidos:", error);
+            mostrarModal(`Erro: ${error.message}`, "error");
+          } finally {
+            btn.disabled = false;
+            btn.textContent = "PDF";
+          }
+        });
+
+      // Evento para exportar Excel
+      document
+        .getElementById("btn-exportar-excel")
+        .addEventListener("click", async function () {
+          const btn = this;
+          try {
+            btn.disabled = true;
+            btn.innerHTML =
+              '<span class="spinner-border spinner-border-sm"></span> Enviando...';
+
+            // Validar e formatar os dados
+            const dadosParaEnvio = prepararPedidosParaEnvio(pedidosAtualizados);
+
+            if (dadosParaEnvio.length === 0) {
+              throw new Error("Nenhum pedido válido para enviar");
+            }
+
+            console.log("Dados formatados:", dadosParaEnvio);
+
+            // Enviar para o servidor
+            const response = await fetch(`${apiBase}/salvarPedidos`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(dadosParaEnvio),
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.message || "Erro no servidor");
+            }
+
+            const result = await response.json();
+            console.log("Sucesso:", result);
+
+            exportarExcel();
+            mostrarModal("Pedidos salvos com sucesso!", "success");
+          } catch (error) {
+            console.error("Erro ao enviar pedidos:", error);
+            mostrarModal(`Erro: ${error.message}`, "error");
+          } finally {
+            btn.disabled = false;
+            btn.textContent = "Excel";
+          }
+        });
+    });
+
+    // Evento de clique do botão "Finalizar"
+    function mostrarModal(mensagem, tipo) {
+      const modalBody = document.getElementById("modalBody");
+      const alertModalLabel = document.getElementById("alertModalLabel");
+
+      // Define o título e a mensagem do modal
+      if (tipo === "success") {
+        alertModalLabel.textContent = "Sucesso!";
+        modalBody.innerHTML = `
+                <div class="alert alert-success" role="alert">
+                    ${mensagem}
+                </div>
+            `;
+      } else if (tipo === "error") {
+        alertModalLabel.textContent = "Erro!";
+        modalBody.innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    ${mensagem}
+                </div>
+            `;
+      }
+
+      // Exibe o modal
+      const modal = new bootstrap.Modal(document.getElementById("alertModal"));
+      modal.show();
+    }
+
+    // Evento de clique do botão "Finalizar"
+    document
+      .getElementById("btn-finalizar")
+      .addEventListener("click", async function () {
+        if (!id_pedido || !codemp) {
+          mostrarModal(
+            "Erro: id_pedido ou codemp não estão definidos.",
+            "error"
+          );
+          return;
+        }
+
+        let dados = {
+          id: parseInt(id_pedido, 10),
+          CodEmp: parseInt(codemp, 10),
+          dataFaturamento: document.getElementById("dtFat").value,
+          dataEntrega: document.getElementById("dtEntrega").value,
+          valorTotal: somaTotal,
+        };
+        console.log("Dados antes de finalizar:", dados);
+        console.log("Dados antes de finalizar:", pedidosAtualizados);
+
+        try {
+          const response = await fetch(`${apiBase}/fecharPedido`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dados),
+          });
+
+          if (!response.ok) {
+            throw new Error("Erro ao finalizar pedido");
+          }
+
+          const result = await response.json();
+          console.log("Pedido finalizado com sucesso:", result);
+          atualizaPlanilhaPedidos();
+
+          // Exibe modal de sucesso
+          mostrarModal("Pedido finalizado com sucesso!", "success");
+        } catch (error) {
+          console.error("Erro ao finalizar pedido:", error.message);
+
+          // Exibe modal de erro
+          mostrarModal(`Erro ao finalizar pedido: ${error.message}`, "error");
+        }
+      });
+
+    // Função para gerar o PDF
+    async function exportarPDF() {
+      console.log("Entrei");
+      try {
+        console.log("Iniciando geração do PDF...");
+
+        if (!id_pedido) {
+          throw new Error("ID do pedido não encontrado na URL");
+        }
+
+        // 1. Buscar os dados do pedido na API
+        const response = await fetch(
+          `${apiBase}/exportarPdf?numero_pedido=${id_pedido}`
+        );
+        if (!response.ok) {
+          throw new Error(`Erro ao buscar dados do pedido: ${response.status}`);
+        }
+
+        const dadosPedido = await response.json();
+        console.log("Dados recebidos da API:", dadosPedido);
+
+        if (!dadosPedido || dadosPedido.length === 0) {
+          throw new Error("Nenhum item encontrado para este pedido");
+        }
+
+        // 2. Determinar empresa e CNPJ com base no primeiro item (todos devem ter o mesmo CODEMP)
+        marca_pedido = dadosPedido[0].MARCA;
+
+        // Definir empresa e CNPJ dinâmicos
+        let empresa = "";
+        let EmpresaAbreviada = "";
+        let cnpj = "";
+        switch (Number(codemp)) {
+          case 1:
+            empresa = "Exclusiva Utilidades e Embalagens LTDA";
+            cnpj = "04.023.539/0001-17";
+            EmpresaAbreviada = "Exclusiva";
+            console.log(empresa, cnpj);
+            break;
+          case 2:
+            empresa = "SG Utilidades";
+            cnpj = "02.444.585/0001-64";
+            EmpresaAbreviada = "SG";
+            console.log(empresa, cnpj);
+            break;
+          case 3:
+            empresa = "Exclusiva Util Equipamentos LTDA";
+            cnpj = "09.666.638/0001-30";
+            EmpresaAbreviada = "UTIL";
+            console.log(empresa, cnpj);
+            break;
+          case 4:
+            empresa = "Exclusiva Prime 85 LTDA";
+            cnpj = "21.518.354/0001-00";
+            EmpresaAbreviada = "PRIME";
+            console.log(empresa, cnpj);
+            break;
+          case 5:
+            empresa = "Seg Center Comercial LTDA";
+            cnpj = "24.486.321/0002-97";
+            EmpresaAbreviada = "SITE";
+            console.log(empresa, cnpj);
+            break;
+          case 6:
+            empresa = "Seg Center Comercial LTDA";
+            cnpj = "24.486.321/0001-06";
+            EmpresaAbreviada = "DECORA";
+            console.log(empresa, cnpj);
+            break;
+          case 7:
+            empresa = "Asg Distribuição LTDA";
+            cnpj = "49.318.824/0001-01";
+            EmpresaAbreviada = "ASG";
+            console.log(empresa, cnpj);
+            break;
+        }
+        console.log(empresa, cnpj);
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Adiciona a logo
+        const img = new Image();
+        img.src = "/images/logo.png"; // Substitua pelo caminho da sua logo
+
+        img.onload = function () {
+          doc.addImage(img, "PNG", 120, 10, 70, 20);
+          // Adiciona título e informações do cabeçalho
+          doc.setFontSize(20, "bold");
+          doc.text("Pedido de Compra", 14, 20);
+
+          doc.setFontSize(12);
+          doc.text(`Número do Pedido: ${id_pedido}`, 14, 30);
+          doc.text(`Razão Social: ${empresa}`, 14, 36);
+          doc.text(`CNPJ: ${cnpj}`, 14, 42);
+          doc.text(`Data: ${new Date().toLocaleDateString()}`, 14, 48);
+
+          // Captura os dados da tabela
+          const tabela = document.querySelector("table tbody");
+          const dados = [];
+          let totalizador = 0;
+
+          tabela.querySelectorAll("tr").forEach((linha) => {
+            const refforn = linha.cells[3]?.innerText || ""; // REF FORN
+            const descrprod = linha.cells[4]?.innerText || ""; // DESCR PROD
+            const qtd = linha.cells[12]?.querySelector("input")?.value || "0"; // QTD PEDIDO
+            const valorUnitario = parseFloat(
+              linha.cells[5]?.innerText.replace("R$", "").replace(",", ".") ||
+                "0"
+            ); // VALOR UNITÁRIO
+
+            if (qtd > 0 && valorUnitario > 0) {
+              let totalLinha = qtd * valorUnitario; // Multiplica quantidade pelo valor unitário
+              totalizador += totalLinha; // Soma ao totalizador geral
+              dados.push([refforn, descrprod, qtd]);
+            }
+          });
+
+          console.log("Dados para o PDF:", dados); // Log para depuração
+
+          // Adiciona a tabela no PDF
+          doc.autoTable({
+            startY: 55,
+            head: [["REFERENCIA", "PRODUTO", "QTD PEDIDO"]],
+            body: dados,
+            styles: {
+              fontSize: 9,
+              cellPadding: 2,
+              overflow: "linebreak",
+            },
+            columnStyles: {
+              0: { cellWidth: 30 },
+              1: { cellWidth: 130 },
+              2: { cellWidth: 30 },
+            },
+            margin: { left: 10, right: 10 },
+            theme: "grid",
+            compress: true, // ATIVA COMPRESSÃO
+          });
+
+          // Salva o PDF
+          doc.save(`PEDIDOS_${marca_pedido}_${EmpresaAbreviada}_${id_pedido}`, {
+            returnPromise: true,
+            compression: "FAST",
+          });
+        };
+
+        img.onerror = function () {
+          console.error("Erro ao carregar a logo.");
+        };
+      } catch (error) {
+        console.error("Erro ao gerar PDF:", error);
+      }
+    }
+    async function atualizaPlanilhaPedidos() {
+      const dados = []; // Array para armazenar os dados, se necessário
+
+      try {
+        // URL da API para obter os dados do pedido
+        const apiUrl = `${apiBase}/dadosPlanilhas/${id_pedido}`; // Substitua pelo endpoint correto
+
+        // Faz a requisição para obter os pedidos
+        const response = await fetch(apiUrl);
+
+        // Verifica se a resposta foi bem-sucedida
+        if (!response.ok) {
+          throw new Error("Erro ao carregar pedidos");
+        }
+
+        // Converte a resposta em JSON
+        const pedidosCompras = await response.json();
+
+        // Verifica se os dados foram recebidos corretamente
+        if (!pedidosCompras) {
+          throw new Error("Dados dos pedidos não encontrados");
+        }
+        console.log(pedidosCompras);
+        var data = [];
+        let empresa = "";
+        pedidosCompras.forEach((pedidos) => {
+          // Mapeia o código da empresa para o nome da empresa
+          switch (pedidos.CODEMP) {
+            case 1:
+              empresa = "Exclusiva";
+              break;
+            case 2:
+              empresa = "SG";
+              break;
+            case 3:
+              empresa = "Util";
+              break;
+            case 4:
+              empresa = "Prime 85";
+              break;
+            case 5:
+              empresa = "Site";
+              break;
+            case 6:
+              empresa = "Seg Center";
+              break;
+            case 7:
+              empresa = "Asg";
+              break;
+            default:
+              empresa = "Empresa não encontrada"; // Caso o código não corresponda a nenhuma empresa
+              break;
+          }
+          data = {
+            "Carimbo de data/hora": dataPedido, // Certifique-se de que `dataPedido` está definido
+            Fornecedor: pedidos.MARCA,
+            Empresa: empresa, // Certifique-se de que `CodEmp` está definido
+            "Grupo Empresa": pedidos.GRUPO,
+            "Data faturamento": pedidos.DATAFATURAMENTO,
+            "Data entrega": pedidos.DATAENTREGA,
+            Regional: "Não",
+          };
+        });
+        // Faz a requisição para atualizar a planilha via SheetMonkey
+        const sheetMonkeyResponse = await fetch(
+          "https://api.sheetmonkey.io/form/sxqv9ux7Fx3c3cwBjzhEov",
+          {
+            method: "POST",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          }
+        ).then((result) => {
+          console.log(result);
+        });
+
+        // Log dos dados recebidos para depuração
+        console.log("Dados recebidos:", data, response);
+      } catch (error) {
+        // Captura e log de erros
+        console.error("Erro durante a execução da função:", error);
+      }
+    }
+    function exportarExcel() {
+      // Definir empresa baseado no código
+      let empresa = "";
+      switch (Number(codemp)) {
+        case 1:
+          empresa = "Exclusiva Utilidades e Embalagens LTDA";
+          break;
+        case 2:
+          empresa = "SG Utilidades";
+          break;
+        case 3:
+          empresa = "Exclusiva Util Equipamentos LTDA";
+          break;
+        case 4:
+          empresa = "Exclusiva Prime 85 LTDA";
+          break;
+        case 5:
+          empresa = "Seg Center Comercial LTDA";
+          break;
+        case 6:
+          empresa = "Seg Center Comercial LTDA";
+          break;
+        case 7:
+          empresa = "Asg Distribuição LTDA";
+          break;
+      }
+
+      console.log("Empresa:", empresa);
+
+      // Captura os dados da tabela
+      const tabela = document.querySelector("table tbody");
+      const dados = [];
+
+      // Adicionar cabeçalho com informações do pedido
+      dados.push(["Pedido de Compra"]);
+      dados.push(["Número do Pedido:", id_pedido]);
+      dados.push(["Razão Social:", empresa]);
+      dados.push(["Data:", new Date().toLocaleDateString()]);
+      dados.push([]); // Linha em branco
+
+      // Adicionar cabeçalho da tabela - sem valores unitários ou totais
+      dados.push(["REFERENCIA", "PRODUTO", "QTD PEDIDO"]);
+
+      // Adicionar dados - sem valores unitários ou totais
+      tabela.querySelectorAll("tr").forEach((linha) => {
+        const refforn = linha.cells[3]?.innerText || "";
+        const descrprod = linha.cells[4]?.innerText || "";
+        const qtd = linha.cells[12]?.querySelector("input")?.value || "0";
+
+        if (qtd > 0) {
+          dados.push([refforn, descrprod, parseInt(qtd)]);
+        }
+      });
+
+      // Criar workbook e worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(dados);
+
+      // Aplicar estilos (limitado no xlsx)
+      const colWidths = [
+        { wch: 15 }, // REFERENCIA
+        { wch: 40 }, // PRODUTO
+        { wch: 12 }, // QTD PEDIDO
+      ];
+
+      ws["!cols"] = colWidths;
+
+      // Adicionar a planilha ao workbook
+      XLSX.utils.book_append_sheet(wb, ws, "Pedido");
+
+      // Salvar o arquivo
+      XLSX.writeFile(wb, `Pedido_${id_pedido}.xlsx`);
+    }
+    // Variável para armazenar os filtros ativos
+    const activeFilters = {};
+
+    // Função para filtrar a tabela
+    function applyFilters() {
+      const rows = document.querySelectorAll("table tbody tr");
+      let hasVisibleRows = false;
+
+      rows.forEach((row) => {
+        let shouldShow = true;
+        const cells = row.cells;
+
+        for (const [colIndex, filterValue] of Object.entries(activeFilters)) {
+          if (filterValue) {
+            let cellValue;
+
+            if (colIndex == 12) {
+              // Coluna QTD PEDIDO (input)
+              cellValue = cells[colIndex]
+                .querySelector("input")
+                .value.trim()
+                .toLowerCase();
+            } else {
+              cellValue = cells[colIndex].textContent.trim().toLowerCase();
+            }
+
+            if (!cellValue.includes(filterValue.toLowerCase())) {
+              shouldShow = false;
+              break;
+            }
+          }
+        }
+
+        row.style.display = shouldShow ? "" : "none";
+        if (shouldShow) hasVisibleRows = true;
+      });
+
+      return hasVisibleRows;
+    }
+
+    // Event listener para os inputs de filtro
+    document.querySelectorAll(".filter-input").forEach((input) => {
+      input.addEventListener("input", function () {
+        const colIndex = this.getAttribute("data-col");
+
+        if (this.value.trim() === "") {
+          delete activeFilters[colIndex];
+        } else {
+          activeFilters[colIndex] = this.value.trim();
+        }
+
+        applyFilters();
+      });
+    });
+
+    // Função para mostrar o menu de filtro avançado
+    function showFilterMenu(columnIndex, button) {
+      // Remove qualquer menu existente
+      const existingMenu = document.querySelector(".filter-menu");
+      if (existingMenu) existingMenu.remove();
+
+      // Cria o novo menu
+      const menu = document.createElement("div");
+      menu.className = "filter-menu";
+
+      // Posiciona o menu abaixo do botão
+      const rect = button.getBoundingClientRect();
+      menu.style.left = `${rect.left}px`;
+      menu.style.top = `${rect.bottom}px`;
+
+      // Adiciona campo de busca
+      menu.innerHTML = `
+    <input type="text" placeholder="Filtrar..." class="form-control form-control-sm" id="filter-search">
+    <div id="filter-options"></div>
+    <div class="filter-actions">
+      <button class="btn btn-sm btn-primary" id="apply-filter">Aplicar</button>
+      <button class="btn btn-sm btn-secondary" id="clear-filter">Limpar</button>
+    </div>
+  `;
+
+      document.body.appendChild(menu);
+
+      // Coleta valores únicos da coluna
+      const columnValues = new Set();
+      document
+        .querySelectorAll(
+          `table tbody tr td:nth-child(${parseInt(columnIndex) + 1})`
+        )
+        .forEach((td) => {
+          columnValues.add(td.textContent.trim());
+        });
+
+      // Ordena os valores
+      const sortedValues = Array.from(columnValues).sort();
+
+      // Adiciona opções ao menu
+      const optionsContainer = menu.querySelector("#filter-options");
+      sortedValues.forEach((value) => {
+        if (value) {
+          const option = document.createElement("div");
+          option.className = "filter-menu-item";
+          option.textContent = value;
+          option.addEventListener("click", () => {
+            const searchInput = menu.querySelector("#filter-search");
+            searchInput.value = value;
+          });
+          optionsContainer.appendChild(option);
+        }
+      });
+
+      // Filtra as opções conforme digita
+      menu
+        .querySelector("#filter-search")
+        .addEventListener("input", function () {
+          const searchTerm = this.value.toLowerCase();
+          Array.from(optionsContainer.children).forEach((option) => {
+            option.style.display = option.textContent
+              .toLowerCase()
+              .includes(searchTerm)
+              ? ""
+              : "none";
+          });
+        });
+
+      // Aplica o filtro
+      menu.querySelector("#apply-filter").addEventListener("click", () => {
+        const filterValue = menu.querySelector("#filter-search").value.trim();
+        const filterInput = document.querySelector(
+          `.filter-input[data-col="${columnIndex}"]`
+        );
+        filterInput.value = filterValue;
+        activeFilters[columnIndex] = filterValue;
+        applyFilters();
+        menu.remove();
+      });
+
+      // Limpa o filtro
+      menu.querySelector("#clear-filter").addEventListener("click", () => {
+        const filterInput = document.querySelector(
+          `.filter-input[data-col="${columnIndex}"]`
+        );
+        filterInput.value = "";
+        delete activeFilters[columnIndex];
+        applyFilters();
+        menu.remove();
+      });
+
+      // Fecha o menu ao clicar fora
+      document.addEventListener("click", function closeMenu(e) {
+        if (!menu.contains(e.target) && e.target !== button) {
+          menu.remove();
+          document.removeEventListener("click", closeMenu);
+        }
+      });
+    }
+
+    // Event listeners para os botões de filtro
+    document.querySelectorAll(".btn-filter").forEach((button) => {
+      button.addEventListener("click", function (e) {
+        e.stopPropagation();
+        const colIndex = this.getAttribute("data-col");
+        showFilterMenu(colIndex, this);
+      });
+    });
+
+    // Fechar menu ao rolar
+    window.addEventListener("scroll", function () {
+      const menu = document.querySelector(".filter-menu");
+      if (menu) menu.remove();
+    });
+    // Variáveis para controle de ordenação
+    let currentSortColumn = null;
+    let isAscending = true;
+
+    // Função para ordenar a tabela
+    function sortTable(columnIndex, ascending) {
+      const table = document.querySelector("table");
+      const tbody = table.querySelector("tbody");
+      const rows = Array.from(tbody.querySelectorAll("tr"));
+
+      // Remove todas as classes ativas primeiro
+      document.querySelectorAll(".sort-icons i").forEach((icon) => {
+        icon.classList.remove("active");
+      });
+
+      // Ativa apenas o ícone correspondente
+      const directionClass = ascending ? "sort-asc" : "sort-desc";
+      const activeIcon = document.querySelector(
+        `.${directionClass}[data-col="${columnIndex}"]`
+      );
+      if (activeIcon) {
+        activeIcon.classList.add("active");
+      }
+
+      // Ordena as linhas
+      rows.sort((rowA, rowB) => {
+        const cellA = rowA.cells[columnIndex];
+        const cellB = rowB.cells[columnIndex];
+
+        let valueA, valueB;
+
+        // Tratamento especial para colunas numéricas
+        if ([5, 6, 8, 9, 10, 11, 12, 13].includes(columnIndex)) {
+          // Para colunas de valores (VLR VENDA, ULT CUS, etc.)
+          valueA =
+            parseFloat(
+              cellA.textContent.replace("R$", "").replace(",", "").trim()
+            ) || 0;
+          valueB =
+            parseFloat(
+              cellB.textContent.replace("R$", "").replace(",", "").trim()
+            ) || 0;
+        } else if (columnIndex === 12) {
+          // Para coluna QTD PEDIDO (input)
+          valueA = parseFloat(cellA.querySelector("input").value) || 0;
+          valueB = parseFloat(cellB.querySelector("input").value) || 0;
+        } else {
+          // Para colunas de texto
+          valueA = cellA.textContent.trim().toLowerCase();
+          valueB = cellB.textContent.trim().toLowerCase();
+        }
+
+        if (valueA < valueB) return ascending ? -1 : 1;
+        if (valueA > valueB) return ascending ? 1 : -1;
+        return 0;
+      });
+
+      // Reinsere as linhas ordenadas
+      rows.forEach((row) => tbody.appendChild(row));
+
+      // Atualiza estado atual
+      currentSortColumn = columnIndex;
+      isAscending = ascending;
+    }
+
+    // Event listeners para os ícones de ordenação
+    document.querySelectorAll(".sort-asc").forEach((icon) => {
+      icon.addEventListener("click", function () {
+        const columnIndex = parseInt(this.getAttribute("data-col"));
+        // Se já estiver ordenado ascendente, desativa a ordenação
+        if (currentSortColumn === columnIndex && isAscending) {
+          sortTable(columnIndex, true); // Isso removerá todas as classes ativas
+          currentSortColumn = null; // Reseta o estado
+        } else {
+          sortTable(columnIndex, true);
+        }
+      });
+    });
+
+    document.querySelectorAll(".sort-desc").forEach((icon) => {
+      icon.addEventListener("click", function () {
+        const columnIndex = parseInt(this.getAttribute("data-col"));
+        // Se já estiver ordenado descendente, desativa a ordenação
+        if (currentSortColumn === columnIndex && !isAscending) {
+          sortTable(columnIndex, false); // Isso removerá todas as classes ativas
+          currentSortColumn = null; // Reseta o estado
+        } else {
+          sortTable(columnIndex, false);
+        }
+      });
+    });
+
+    // Função para combinar filtros e ordenação
+    function applyFiltersAndSort() {
+      applyFilters(); // Aplica os filtros primeiro
+      if (currentSortColumn !== null) {
+        sortTable(currentSortColumn, isAscending); // Mantém a ordenação
+      }
+    }
+
+    // Atualize o event listener dos filtros para usar a nova função
+    document.querySelectorAll(".filter-input").forEach((input) => {
+      input.addEventListener("input", function () {
+        const colIndex = this.getAttribute("data-col");
+
+        if (this.value.trim() === "") {
+          delete activeFilters[colIndex];
+        } else {
+          activeFilters[colIndex] = this.value.trim();
+        }
+
+        applyFiltersAndSort(); // Agora aplica filtros e mantém ordenação
+      });
+    });
+  </script>
+</html>
