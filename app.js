@@ -7,63 +7,58 @@ const authMiddleware = require('./middleware/authMiddleware');
 const { authenticate, generateToken, ensureAuth, requireRole, COOKIE_NAME } = require('./middleware/authMiddleware');
 require('dotenv').config({ override: true });
 
-
-
+const produtoRoutes = require('./routes/produtoRoutes');
+const contagemRoutes = require('./routes/contagemRoutes');
+const exportacaoRoutes = require('./routes/exportacaoRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
+
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
-app.set('view engine', 'ejs');
+app.use(bodyParser.json());
+
 
 // inicializa pool Oracle
 db.init().catch(err => {
   console.error('Erro Oracle:', err); process.exit(1);
 });
 
-// rota pública de login
-app.get('/login', (req, res) => {
-  res.render('login', { error: null, next: req.query.next || '/' });
-});
-
-app.post('/login', authController.postLogin);
-
-app.post('/logout', (req, res) => {
-	authController.postLogout(req, res);
-  });
-
 // proteger todas as rotas abaixo
+app.use('/', authRoutes);
+
+// middleware para proteger rotas depois do login
 app.use((req, res, next) => {
-	const publicPaths = ['/login', '/css', '/js', '/public'];
-	if (publicPaths.some(p => req.path.startsWith(p))) return next();
+	const publicPaths = ['/login', '/css', '/js', '/public', '/auth'];
+	if (publicPaths.some(p => req.path.startsWith(p))) {
+	  return next();
+	}
 	return authMiddleware.ensureAuth(req, res, next);
   });
 
-// rota index protegida
+// rota principal (menu/index) após login
 app.get('/', (req, res) => {
-	// Aqui você pode calcular ‘minhaVariavel’ conforme lógica que você tinha
 	const baseUrl = `${req.protocol}://${req.get('host')}`;
-
-	// se você quiser tratar casos específicos como PHP fazia:
 	let minhaVariavel = baseUrl;
 	if (baseUrl.startsWith('http://exclusiva.intranet:8080')) {
-		minhaVariavel = 'http://exclusiva.intranet';
+	  minhaVariavel = 'http://exclusiva.intranet';
+	} else if (baseUrl.startsWith('http://exclusivarua4.duckdns.org:8080')) {
+	  minhaVariavel = 'http://exclusivarua4.duckdns.org';
 	}
-	else if (baseUrl.startsWith('http://exclusivarua4.duckdns.org:8080')) {
-		minhaVariavel = 'http://exclusivarua4.duckdns.org';
-	}
-	res.render('menu', {
-	  user: req.user,         // via token já populado
-	  minhaVariavel
-	});
+	res.render('menu', { user: req.user, minhaVariavel });
   });
+  
 
-// exemplo de rota com role admin only
-app.get('/admin', authMiddleware.requireRole('ADMIN'), (req, res) => {
-	res.render('admin', { user: req.user });
-  });
-
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
+app.use('/produto', produtoRoutes);
+app.use('/contagem', contagemRoutes);
+app.use('/exportacao', exportacaoRoutes);
+  
+app.listen(PORT, () => {
 	console.log(`Servidor rodando na porta ${PORT}`);
-  });
+});

@@ -50,7 +50,7 @@
 
       <% /* Outro botão visível para todos */ %>
       <a class="list-group-item list-group-item-action text-center col-3 start-50"
-         href="http://exclusiva.intranet:3000/pendenciaFornecedor">
+         href="http://exclusiva.intranet/pendenciaFornecedor">
         Produtos Avariados
       </a>
 
@@ -75,11 +75,11 @@
       <% // Exemplo de botão “somente para role ADMIN” novamente %>
       <% if (user.role === 'ADMIN') { %>
         <a class="list-group-item list-group-item-action text-center col-3 start-50"
-           href="<%= minhaVariavel %>:3000/">
+           href="<%= minhaVariavel %>/coletor">
           Coletor
         </a>
         <a class="list-group-item list-group-item-action text-center col-3 start-50"
-           href="<%= minhaVariavel %>:3000/pedidosCompras?">
+           href="<%= minhaVariavel %>/pedidosCompras?">
           Pedido de Compra
         </a>
       <% } %>

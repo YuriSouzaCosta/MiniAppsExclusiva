@@ -1,22 +1,30 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login</title>
-  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-  <main>
-    <h1>Entrar</h1>
+  <div class="container">
+    <h2>Login</h2>
     <% if (error) { %>
-      <div class="error"><%= error %></div>
+      <div class="alert alert-danger"><%= error %></div>
     <% } %>
     <form method="POST" action="/login">
-      <input type="hidden" name="next" value="<%= next %>" />
-      <label>Usuário<br><input name="username" required /></label><br>
-      <label>Senha<br><input name="password" type="password" required/></label><br>
-      <button type="submit">Entrar</button>
+      <div class="mb-3">
+        <label for="username" class="form-label">Usuário</label>
+        <input type="text" class="form-control" id="username" name="username" required>
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Senha</label>
+        <input type="password" class="form-control" id="password" name="password" required>
+      </div>
+      <input type="hidden" name="next" value="<%= next %>">
+      <button type="submit" class="btn btn-primary">Entrar</button>
     </form>
-  </main>
+  </div>
 </body>
+
 </html>
