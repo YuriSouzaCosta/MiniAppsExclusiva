@@ -1,6 +1,7 @@
 // app.js (trechos)
 const express = require('express');
 const cookieParser = require('cookie-parser');
+const path = require('path');
 const db = require('./config/db/oracle');
 const authController = require('./controllers/authController');
 const authMiddleware = require('./middleware/authMiddleware');
@@ -11,6 +12,7 @@ const produtoRoutes = require('./routes/produtoRoutes');
 const contagemRoutes = require('./routes/contagemRoutes');
 const exportacaoRoutes = require('./routes/exportacaoRoutes');
 const authRoutes = require('./routes/authRoutes');
+const coletorRoutes = require('./routes/coletorRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,7 +24,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
-app.use(bodyParser.json());
+
 
 
 // inicializa pool Oracle
@@ -58,6 +60,8 @@ app.get('/', (req, res) => {
 app.use('/produto', produtoRoutes);
 app.use('/contagem', contagemRoutes);
 app.use('/exportacao', exportacaoRoutes);
+app.use('/coletor', coletorRoutes);
+
   
 app.listen(PORT, () => {
 	console.log(`Servidor rodando na porta ${PORT}`);
