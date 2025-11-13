@@ -8,5 +8,7 @@ router.post('/', authMiddleware.ensureAuth, contagemController.createContagem);
 router.get('/', authMiddleware.ensureAuth, contagemController.listContagens);
 router.get('/:usuario', authMiddleware.ensureAuth, contagemController.getContagensByUsuario);
 router.delete('/:usuario', authMiddleware.ensureAuth, contagemController.deleteContagensByUsuario);
+router.put('/:id', authMiddleware.ensureAuth, contagemController.updateQuantidade);
+
 
 module.exports = router;

@@ -89,3 +89,35 @@ exports.deleteContagensByUsuario = async (req, res) => {
     res.status(500).json({ error: "Erro ao zerar as contagens" });
   }
 };
+
+exports.updateQuantidade = async (req, res) => {
+  const { id } = req.params;
+  const { quantidade } = req.body;
+
+  if (!id || quantidade === undefined) {
+    return res.status(400).json({ error: "ID e quantidade são obrigatórios." });
+  }
+
+  try {
+    const result = await db.simpleExecute(
+      `UPDATE AD_CONTAGENS
+          SET quantidade = :quantidade
+        WHERE id = :id`,
+      {
+        quantidade: Number(quantidade),
+        id: Number(id)
+      },
+      { autoCommit: true }
+    );
+
+    // Verifica se alguma linha foi realmente atualizada
+    if (result.rowsAffected === 0) {
+      return res.status(404).json({ error: "Contagem não encontrada para o ID informado." });
+    }
+
+    res.json({ message: "Quantidade atualizada com sucesso." });
+  } catch (err) {
+    console.error('updateQuantidade erro:', err);
+    res.status(500).json({ error: "Erro ao atualizar quantidade da contagem." });
+  }
+};

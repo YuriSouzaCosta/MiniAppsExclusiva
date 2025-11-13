@@ -1,6 +1,6 @@
 // db/oracle.js
 const oracledb = require('oracledb');
-require('dotenv').config({ override: true });
+require('dotenv').config();
 
 oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
 
@@ -15,19 +15,37 @@ async function init() {
   });
 }
 
-function close() {
-  return oracledb.getPool().close(0);
+async function getConnection() {
+  return await oracledb.getConnection();
 }
 
-async function simpleExecute(sql, binds = {}, opts = {}) {
-  const pool = oracledb.getPool();
-  const conn = await pool.getConnection();
+async function close() {
+  return await oracledb.getPool().close(0);
+}
+
+const simpleExecute = async (query, binds = {}, options = {}) => {
+  let conn;
   try {
-    const result = await conn.execute(sql, binds, { autoCommit: true, ...opts });
+    conn = await getConnection();
+    const result = await conn.execute(query, binds, options);
     return result;
+  } catch (err) {
+    console.error('Erro na execução da consulta:', err);
+    throw err;
   } finally {
-    await conn.close();
+    if (conn) {
+      try {
+        await conn.close();
+      } catch (err) {
+        console.error('Erro ao fechar a conexão:', err);
+      }
+    }
   }
-}
+};
 
-module.exports = { init, close, simpleExecute };
+module.exports = {
+  init,
+  getConnection,
+  close,
+  simpleExecute
+};

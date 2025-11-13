@@ -1,236 +1,233 @@
-//const apiBase = "http://exclusiva.intranet:3000";
-//const apiBase = "http://10.1.20.88:3000";
-const apiBase = `${window.location.protocol}//${window.location.hostname}:3000`;
+// public/js/script.js
 
-const codigoBarraInput = document.getElementById("codigo");
-async function carregarContagens() {
-	const usuario = document.getElementById("usuario").value;
-	console.log(usuario.toLowerCase());
+const apiBase = `${window.location.protocol}//${window.location.hostname}:${window.location.port || 3000}`;
 
-	const response = await fetch(`${apiBase}/contagens`, {
-		method: "GET",
-		headers: {
-			"Content-Type": "application/json",
-			authorization: usuario.toLowerCase(),
-		},
-	});
-	const produtos = await response.json();
-	console.log(produtos);
+async function buscarProduto() {
+  const codigo = document.getElementById("codigo").value.trim();
+  if (!codigo) {
+    alert("Por favor digite o código de barras");
+    return;
+  }
 
-	if (produtos.length === 0) {
-		// Exibe uma mensagem caso não haja produtos
-		const tabelaBody = document.querySelector("#tabela-contagens tbody");
-		tabelaBody.innerHTML =
-			"<tr><td colspan='4'>Nenhuma contagem encontrada para este usuário.</td></tr>";
-		return; // Finaliza a execução se não houver produtos
-	}
+  try {
+    const response = await fetch(`${apiBase}/produto/${encodeURIComponent(codigo)}`, {
+      method: "GET",
+      headers: {
+        "Accept": "application/json"
+      }
+    });
 
-	// Função para carregar as contagens na tabela
-	const tabelaBody = document.querySelector("#tabela-contagens tbody");
-	tabelaBody.innerHTML = ""; // Limpar a tabela antes de adicionar os dados
+    if (!response.ok) {
+      if (response.status === 404) {
+        alert("Produto não encontrado");
+      } else {
+        alert("Erro ao buscar produto");
+      }
+      document.getElementById("nome").textContent = "-";
+      document.getElementById("preco").textContent = "-";
+      document.getElementById("referencia").textContent = "-";
+      return;
+    }
 
-	// Preencher a tabela com os dados dos produtos
-	if (produtos.length >= 1) {
-		produtos.forEach((produto) => {
-			const row = document.createElement("tr");
+    const data = await response.json();
+    document.getElementById("nome").textContent = data.NOME || data.nome || "-";
+    document.getElementById("preco").textContent = `R$ ${(data.PRECO || data.preco || 0).toFixed(2)}`;
+    document.getElementById("referencia").textContent = data.REFERENCIA || data.referencia || "-";
 
-			row.innerHTML = `
-				<td>${produto.CODIGO_BARRA}</td>
-				<td>${produto.NOME}</td>
-				<td class="tb-edit">
-					<input type="number" value="${produto.QUANTIDADE}" onchange="atualizarQuantidade(${produto.ID}, this.value)">
-				</td>
-			`;
+    document.getElementById("quantidade").focus();
 
-			tabelaBody.appendChild(row);
-		});
-	}
-
-	// Foco no campo de código de barra (se necessário)
-	codigoBarraInput.focus();
+  } catch (err) {
+    console.error("Erro ao buscar produto:", err);
+    alert("Erro de rede ao buscar produto");
+  }
 }
-document.addEventListener("DOMContentLoaded", () => {
-	if (document.getElementById("tabela-contagens")) {
-		carregarContagens();
-	}
-});
 
 async function salvarContagem() {
-	const usuario = document.getElementById("usuario").value;
-	const codigo = document.getElementById("codigo").value;
-	const quantidade = document.getElementById("quantidade").value;
+  const usuario = document.getElementById("usuario")?.value?.trim() || "";
+  const codigo = document.getElementById("codigo").value.trim();
+  const quantidade = document.getElementById("quantidade").value.trim();
 
-	// Verificar se os campos estão preenchidos
-	if (!usuario || !codigo || !quantidade) {
-		alert("Preencha todos os campos!");
-		return;
+  console.log(`Salvar contagem - Usuário: ${usuario}, Código: ${codigo}, Quantidade: ${quantidade}`);
+
+  
+  if (!usuario || !codigo || !quantidade) {
+    alert("Preencha todos os campos!");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${apiBase}/contagem`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        usuario,
+        codigo_barra: codigo,
+        quantidade: Number(quantidade)
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Erro na resposta: ${errorText}`);
+    }
+
+    const result = await response.json();
+    alert(`Contagem salva com sucesso! ID: ${result.id}`);
+    document.getElementById("codigo").value = "";
+    document.getElementById("quantidade").value = "";
+    document.getElementById("nome").textContent = "-";
+    document.getElementById("preco").textContent = "-";
+    document.getElementById("referencia").textContent = "-";
+    carregarContagens(usuario);
+
+  } catch (err) {
+    console.error("Erro ao salvar contagem:", err);
+    alert(`Erro: ${err.message}`);
+  }
+}
+
+async function carregarContagens(usuarioParam) {
+	const usuario = (usuarioParam || document.getElementById("usuario")?.value?.trim()).toLowerCase();
+	if (!usuario) {
+	  console.warn("carregarContagens: usuário não especificado");
+	  return;
 	}
-
+  
+	console.log("carregarContagens para usuário:", usuario);
+  
 	try {
-		// Envia a requisição POST para salvar a contagem
-		const response = await fetch(`${apiBase}/contagem`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({
-				usuario,
-				codigo_barra: codigo,
-				quantidade,
-			}),
-		});
-
-		// Verifica se a resposta foi bem-sucedida
-		if (response.ok) {
-			const result = await response.json();
-			// Limpa os campos após salvar
-			document.getElementById("codigo").value = "";
-			document.getElementById("quantidade").value = "";
-
-			// Atualiza a tabela de contagens
-			carregarContagens();
-		} else {
-			// Se a resposta não for OK, tenta ler a resposta como texto
-			const errorText = await response.text();
-			throw new Error(`Erro na resposta: ${errorText}`);
+	  const response = await fetch(`${apiBase}/contagem`, {
+		method: "GET",
+		headers: {
+		  "Accept": "application/json",
+		  "Authorization": usuario // 👈 aqui está a mudança
 		}
+	  });
+  
+	  console.log("Resposta contagem status:", response.status);
+  
+	  const tbody = document.querySelector("#tabela-contagens tbody");
+	  if (!response.ok) {
+		tbody.innerHTML = `<tr><td colspan="3">Nenhuma contagem encontrada para o usuário '${usuario}'.</td></tr>`;
+		return;
+	  }
+  
+	  const produtos = await response.json();
+	  console.log("Produtos retornados:", produtos);
+  
+	  tbody.innerHTML = "";
+  
+	  produtos.forEach((produto) => {
+		const codigo = produto.CODIGO_BARRA || produto.codigo_barra;
+		const nome = produto.NOME || produto.nome;
+		const quantidade = produto.QUANTIDADE || produto.quantidade;
+		const id = produto.ID || produto.id;
+  
+		const tr = document.createElement("tr");
+		tr.innerHTML = `
+		  <td>${codigo}</td>
+		  <td>${nome}</td>
+		  <td>
+			<input type="number" class="form-control form-control-sm" value="${quantidade}"
+				   onchange="atualizarQuantidade(${id}, this.value)" />
+		  </td>
+		`;
+		tbody.appendChild(tr);
+	  });
+  
 	} catch (err) {
-		// Exibe a mensagem de erro
-		alert(`Erro: ${err.message}`);
+	  console.error("Erro ao carregar contagens:", err);
 	}
+  }
+  
+
+async function atualizarQuantidade(id, quantidade) {
+  if (!id || quantidade === "") {
+    alert("ID ou quantidade inválidos.");
+    return;
+  }
+
+  try {
+    const url = `${apiBase}/contagem/${id}`;
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ quantidade: Number(quantidade) })
+    });
+    if (!response.ok) throw new Error(`Erro na API: ${response.statusText}`);
+    const data = await response.json();
+    console.log("Resposta da API:", data);
+  } catch (err) {
+    console.error("Erro ao atualizar a contagem:", err);
+    alert("Erro ao atualizar a contagem.");
+  }
 }
 
 async function exportarContagens() {
-	const usuario = prompt("Usuário para exportar as contagens:");
-	if (!usuario) {
-		alert("Usuário não especificado.");
-		return;
-	}
+  const usuario = document.getElementById("usuario")?.value?.trim();
+  if (!usuario) {
+    alert("Usuário não especificado.");
+    return;
+  }
 
-	let nomeArquivo =
-		prompt("Digite o nome do arquivo (sem extensão):") || "contagens";
-	nomeArquivo = nomeArquivo.replace(/[<>:"/\\|?*]/g, ""); // Remove caracteres inválidos para nomes de arquivo
+  const nomeArquivoPrompt = prompt("Digite o nome do arquivo (sem extensão):") || "contagens";
+  const nomeArquivo = nomeArquivoPrompt.replace(/[<>:"/\\|?*]/g, "");
 
-	try {
-		// Exportar contagens
-		const response = await fetch(
-			`${apiBase}/exportar/${usuario}?nomeArquivo=${nomeArquivo}`
-		);
-		if (!response.ok) throw new Error("Erro ao exportar os dados.");
+  try {
+    const response = await fetch(`${apiBase}/exportacao/exportar/${encodeURIComponent(usuario.toLowerCase())}?nomeArquivo=${encodeURIComponent(nomeArquivo)}`, {
+      method: "GET"
+    });
+    if (!response.ok) throw new Error("Erro ao exportar os dados.");
 
-		const blob = await response.blob();
-		const url = window.URL.createObjectURL(blob);
-		const link = document.createElement("a");
-		link.href = url;
-		link.download = `${nomeArquivo}.xlsx`;
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${nomeArquivo}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 
-		alert(
-			`Exportação concluída e contagens de '${usuario}' marcadas como exportadas.`
-		);
-	} catch (err) {
-		console.error(err);
-		alert("Erro durante exportação.");
-	}
-	carregarContagens();
+    alert(`Exportação concluída. Usuário: ${usuario}`);
+    carregarContagens(usuario);
+
+  } catch (err) {
+    console.error(err);
+    alert("Erro durante exportação.");
+  }
 }
 
-// Função para apagar as contagens
-async function ApagarProdutos() {
-	var usuario = prompt("Usuario a apagar Produtos : ");
-	if (confirm("Deseja realmente apagar os Produtos?")) {
-		console.log(usuario);
-
-		await fetch(`${apiBase}/resetar-produtos`, {
-			method: "DELETE",
-		});
-		alert("Produtos zeradas!");
-	}
-}
-
-// Função para zerar as contagens
 async function zerarContagens() {
-	if (usuario && confirm("Deseja realmente zerar as contagens?")) {
-		console.log(usuario);
-		usuario = usuario.toLocaleLowerCase(); // Convertendo para letras minúsculas
-		await fetch(`${apiBase}/contagens/${usuario}`, {
-			method: "DELETE",
-		});
-		alert("Contagens zeradas!");
-		carregarContagens();
-	}
+  const usuario = document.getElementById("usuario")?.value?.trim().toLowerCase();
+  if (!usuario) {
+    alert("Usuário não especificado.");
+    return;
+  }
+  if (confirm(`Deseja realmente zerar as contagens de ${usuario}?`)) {
+    try {
+      const response = await fetch(`${apiBase}/contagem/${encodeURIComponent(usuario)}`, {
+        method: "DELETE"
+      });
+      if (!response.ok) throw new Error("Erro ao zerar contagens.");
+      alert("Contagens zeradas!");
+      carregarContagens(usuario);
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao zerar contagens.");
+    }
+  }
 }
 
-// Função para atualizar a quantidade de um produto
-async function atualizarQuantidade(id, quantidade) {
-	if (!id || !quantidade) {
-		alert("ID ou quantidade não fornecidos.");
-		return;
+window.addEventListener("DOMContentLoaded", () => {
+	const usuario = document.getElementById("usuario")?.value?.trim();
+	console.log("Usuário carregado no DOMContentLoaded:", usuario);
+	if (usuario) {
+	  carregarContagens(usuario);
 	}
+  });
 
-	try {
-		// Verifique a URL gerada
-		const url = `${apiBase}/contagens/${id}`;
-		console.log("URL para fetch:", url);
-
-		// Chamada para atualizar a contagem
-		const response = await fetch(url, {
-			method: "PUT",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ quantidade }),
-		});
-
-		if (!response.ok) throw new Error(`Erro na API: ${response.statusText}`);
-
-		const data = await response.json();
-		console.log("Resposta da API:", data);
-	} catch (err) {
-		console.error("Erro ao atualizar a contagem:", err);
-		alert("Erro ao atualizar a contagem.");
-	}
-}
-
-// Função para excluir uma contagem específica (se necessário)
-
-async function buscarProduto() {
-	const codigo = document.getElementById("codigo").value;
-	const resultadoDiv = document.getElementById("resultado");
-	try {
-		const response = await fetch(`${apiBase}/produto/${codigo}`);
-		if (!response.ok) throw new Error("Produto não encontrado");
-		const produto = await response.json();
-		console.log(produto);
-
-		document.getElementById("nome").innerText = produto.NOME;
-		document.getElementById("preco").innerText = `R$ ${produto.PRECO}`;
-		document.getElementById("referencia").innerText = produto.REFERENCIA;
-	} catch (err) {
-		resultadoDiv.innerHTML = `<p style="color: red;">${err.message}</p>`;
-	}
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-	const codigoBarraInput = document.getElementById("codigo");
-
-	const quantidadeInput = document.getElementById("quantidade");
-
-	codigoBarraInput.addEventListener("keydown", async (event) => {
-		if (event.key === "Enter") {
-			event.preventDefault(); // Evita o envio do formulário
-
-			const codigoBarra = codigoBarraInput.value;
-			if (!codigoBarra) {
-				alert("Digite um código de barras");
-				return;
-			}
-
-			const produto = await buscarProduto();
-			quantidadeInput.focus(); // Move o foco para o campo de quantidade
-		}
-	});
-});
 
 const dropdownItems = document.querySelectorAll(".dropdown-item");
 const dropdownToggle = document.getElementById("dropdownMenuLink");

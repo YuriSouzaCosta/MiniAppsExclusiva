@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title><%= title || "Sistema Exclusiva" %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar padrão -->
+    <%- include('../partials/sidebar') %>
+
+    <!-- Sidebar adicional (opcional) -->
+    <% if (typeof extraSidebar !== "undefined" && extraSidebar) { %>
+      <%- include(`../partials/${extraSidebar}`) %>
+    <% } %>
+
+    <!-- Conteúdo principal -->
+    <main>
+      <%- body %>
+    </main>
+  </div>
+</body>
+</html>

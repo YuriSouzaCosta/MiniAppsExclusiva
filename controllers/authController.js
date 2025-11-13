@@ -1,5 +1,3 @@
-// controllers/authController.js
-
 const db = require('../config/db/oracle');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
@@ -10,21 +8,27 @@ const JWT_EXPIRES = process.env.JWT_EXPIRES || '7d';
 
 async function authenticate(username, password) {
   let conn;
+  console.log('Dados recebidos no login:', username, ' SENHA : ', password != null ? password : '(sem senha)');
   try {
-    conn = await db.simpleExecute();
+    // Obter conexão com o banco de dados
+    conn = await db.getConnection(); // Alterado para obter a conexão corretamente
 
     console.log('authenticate: buscando usuário:', username);
     const usuario_uc = username.toUpperCase();
-    const result = await conn.execute(
-        `SELECT NOMEUSU, AD_SENHA, AD_ROLE
-           FROM TSIUSU
-          WHERE UPPER(NOMEUSU) = ':usuario_uc'`,
-        {usuario_uc}
-      );
-      
-      if (!result.rows || result.rows.length === 0) {
-        return null;
-      }
+    const query = `
+      SELECT NOMEUSU AS NOMEUSU, AD_SENHA AS AD_SENHA, AD_ROLE AS AD_ROLE
+      FROM TSIUSU
+      WHERE NOMEUSU = :usuario_uc AND AD_SENHA = :password
+    `;
+    const binds = { usuario_uc, password };
+
+    console.log('Autenticando com:', binds);
+    const result = await conn.execute(query, binds);
+
+    if (!result.rows || result.rows.length === 0) {
+      console.log('authenticate: usuário não encontrado ou senha inválida');
+      return null;
+    }
 
     const userRow = result.rows[0];
     console.log('authenticate: encontrado usuário:', userRow);
@@ -35,13 +39,9 @@ async function authenticate(username, password) {
 
     // Se for senha em texto puro:
     if (password !== senhaBanco) {
-        console.log('Senha inválida. Digitado:', password, 'Banco:', senhaBanco);
-        return null;
-      }
-
-    // Se for hash com bcrypt, descomente:
-    // const valid = await bcrypt.compare(password, senhaBanco);
-    // if (!valid) { console.log('authenticate: bcrypt senha incorreta'); return null; }
+      console.log('Senha inválida. Digitado:', password, 'Banco:', senhaBanco);
+      return null;
+    }
 
     // Busca nome bonito da role
     const roleRes = await conn.execute(
@@ -65,13 +65,17 @@ async function authenticate(username, password) {
       roleName
     };
 
-  } catch(err) {
+  } catch (err) {
     console.error('authenticate: erro no banco:', err);
     throw err;
 
   } finally {
     if (conn) {
-      try { await conn.close(); } catch(e) { console.error(e); }
+      try {
+        await conn.close();
+      } catch (e) {
+        console.error('Erro ao fechar a conexão:', e);
+      }
     }
   }
 }
@@ -95,19 +99,18 @@ async function postLogin(req, res) {
 
     const token = generateToken({ username: user.username, role: user.role });
 
+    // Configuração manual do cookie
     res.cookie(COOKIE_NAME, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: (() => {
-        return 7 * 24 * 60 * 60 * 1000;
-      })()
+      httpOnly: true, // O cookie não pode ser acessado via JavaScript no cliente
+      secure: false, // Apenas em HTTPS em produção
+      sameSite: 'lax', // Proteção contra CSRF
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 dias em milissegundos
     });
 
-    console.log('postLogin: token gerado e cookie enviado para:', username);
+    console.log('postLogin: token gerado e cookie enviado para:', username, 'Token:', token);
 
     return res.redirect('http://exclusiva.intranet:8080/home/');
-  } catch(err) {
+  } catch (err) {
     console.error('postLogin: erro no login:', err);
     return res.render('login', { error: 'Erro interno no servidor', next: req.body.next || '/' });
   }
@@ -118,7 +121,26 @@ function postLogout(req, res) {
   return res.redirect('/login');
 }
 
+function ensureAuth(req, res, next) {
+  const token = req.cookies[process.env.COOKIE_NAME || 'auth_token'];
+
+  if (!token) {
+    console.log('ensureAuth(): cookie não encontrado, redirecionando para login');
+    return res.redirect('/login');
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; // Adiciona os dados do usuário à requisição
+    next();
+  } catch (err) {
+    console.log('ensureAuth(): token inválido, redirecionando para login');
+    return res.redirect('/login');
+  }
+}
+
 module.exports = {
   postLogin,
-  postLogout
+  postLogout,
+  ensureAuth
 };
