@@ -3,28 +3,63 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login</title>
-  <link rel="stylesheet" href="/css/style.css">
+  <title>Login - Sistema</title>
+  <link rel="stylesheet" href="/css/login.css">
 </head>
 <body>
   <div class="container">
-    <h2>Login</h2>
+    <div class="login-header">
+      <img src="/images/logo_branca.png" alt="Logo">
+      <h2>Bem-vindo</h2>
+    </div>
+
     <% if (error) { %>
       <div class="alert alert-danger"><%= error %></div>
     <% } %>
-    <form method="POST" action="/login">
-      <div class="mb-3">
-        <label for="username" class="form-label">Usuário</label>
-        <input type="text" class="form-control" id="username" name="username" required>
+
+    <form method="POST" action="/login" id="loginForm">
+      <div class="input-group">
+        <label for="username">Usuário</label>
+        <input type="text" id="username" name="username" autocomplete="username" required placeholder="Digite seu usuário">
       </div>
-      <div class="mb-3">
-        <label for="password" class="form-label">Senha</label>
-        <input type="password" class="form-control" id="password" name="password" required>
+      
+      <div class="input-group">
+        <label for="password">Senha</label>
+        <input type="password" id="password" name="password" autocomplete="current-password" required placeholder="Digite sua senha">
       </div>
+
+      <label class="remember-me">
+        <input type="checkbox" id="rememberMe">
+        Lembrar de mim
+      </label>
+
       <input type="hidden" name="next" value="<%= next %>">
-      <button type="submit" class="btn btn-primary">Entrar</button>
+      <button type="submit">Entrar</button>
     </form>
   </div>
-</body>
 
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const usernameInput = document.getElementById('username');
+      const rememberMeCheckbox = document.getElementById('rememberMe');
+      const loginForm = document.getElementById('loginForm');
+
+      // Carregar usuário salvo
+      const savedUsername = localStorage.getItem('savedUsername');
+      if (savedUsername) {
+        usernameInput.value = savedUsername;
+        rememberMeCheckbox.checked = true;
+      }
+
+      // Salvar usuário ao enviar formulário
+      loginForm.addEventListener('submit', () => {
+        if (rememberMeCheckbox.checked) {
+          localStorage.setItem('savedUsername', usernameInput.value);
+        } else {
+          localStorage.removeItem('savedUsername');
+        }
+      });
+    });
+  </script>
+</body>
 </html>
