@@ -1,0 +1,59 @@
+<!-- Top Navigation for Internal Links -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-exclusiva mb-4 rounded-bottom shadow-sm">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/controle-cartao">
+      <i class="fas fa-credit-card me-2"></i>Controle Cartão
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="/controle-cartao/novo">
+            <i class="fas fa-square-plus me-1"></i>Cadastro
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/controle-cartao/pendentes">
+            <i class="fas fa-id-card me-1"></i>Retiradas
+          </a>
+        </li>
+        <!-- Add other links as needed -->
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Floating Buttons Layout -->
+<div class="floating-buttons-container">
+  <a href="/" class="btn-floating" title="Voltar ao Menu">
+    <i class="fas fa-home"></i>
+  </a>
+  <button id="logoutBtn" class="btn-floating btn-logout" title="Sair">
+    <i class="fas fa-sign-out-alt"></i>
+  </button>
+</div>
+
+<form id="logoutForm" action="/logout" method="POST" style="display: none;"></form>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  document.getElementById('logoutBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+    Swal.fire({
+      title: 'Tem certeza?',
+      text: "Você será desconectado do sistema.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sim, sair!',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        document.getElementById('logoutForm').submit();
+      }
+    });
+  });
+</script>

@@ -109,7 +109,7 @@ async function postLogin(req, res) {
 
     console.log('postLogin: token gerado e cookie enviado para:', username, 'Token:', token);
 
-    return res.redirect('http://exclusiva.intranet:8080/home/');
+    return res.redirect('/');
   } catch (err) {
     console.error('postLogin: erro no login:', err);
     return res.render('login', { error: 'Erro interno no servidor', next: req.body.next || '/' });

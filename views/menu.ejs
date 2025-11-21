@@ -3,87 +3,251 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
-    integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"
-    integrity="sha384-fbbOQedDUMZZ5KreZpsbe1LCZPVmfTnH7ois6mU1QK+m14rQ1l2bGBq41eYeM/fS" crossorigin="anonymous"></script>
+  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" />
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
   <style>
-    body { background-color: #5e0909; }
-    a:hover { background-color: tomato; color: aliceblue; }
+    :root {
+      --primary-bg: #5e0909;
+      --card-hover-transform: translateY(-5px);
+      --card-transition: all 0.3s ease;
+    }
+    
+    body { 
+      background-color: var(--primary-bg);
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .dashboard-header {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 2rem 0;
+      margin-bottom: 3rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .app-card {
+      border: none;
+      border-radius: 15px;
+      background: white;
+      transition: var(--card-transition);
+      height: 100%;
+      text-decoration: none;
+      color: #333;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      cursor: pointer;
+    }
+
+    .app-card:hover {
+      transform: var(--card-hover-transform);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      background: #fff;
+      color: #5e0909;
+    }
+
+    .app-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: #5e0909;
+      transition: var(--card-transition);
+    }
+
+    .app-card:hover .app-icon {
+      transform: scale(1.1);
+      color: #d63031;
+    }
+
+    .app-title {
+      font-weight: 600;
+      font-size: 1.1rem;
+      text-align: center;
+      margin: 0;
+    }
+
+    .logout-btn {
+      transition: all 0.3s ease;
+    }
+    
+    .logout-btn:hover {
+      transform: scale(1.05);
+    }
   </style>
   <title>Central de Links</title>
 </head>
 
 <body>
-  <h1 class="justify-content-center text-center mt-4 p-4 text-white">
-    Bem-vindo <%= user.username.charAt(0).toUpperCase() + user.username.slice(1).toLowerCase() %>!<br>
-    Menu de acessos
-  </h1>
+  <!-- Header Section -->
+  <header class="dashboard-header">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-md-8 text-center text-md-start">
+          <h1 class="text-white mb-0 fw-bold">
+            <i class="fas fa-th-large me-2"></i>Central de Acessos
+          </h1>
+          <p class="text-white-50 mb-0 mt-2 fs-5">
+            Bem-vindo, <span class="text-white fw-bold"><%= user.username.charAt(0).toUpperCase() + user.username.slice(1).toLowerCase() %></span>
+          </p>
+        </div>
+        <div class="col-md-4 text-center text-md-end mt-3 mt-md-0">
+          <button id="logoutBtn" class="btn btn-outline-light btn-lg logout-btn px-4">
+            <i class="fas fa-sign-out-alt me-2"></i>Sair
+          </button>
+          <form id="logoutForm" action="/logout" method="POST" style="display: none;"></form>
+        </div>
+      </div>
+      
+      <!-- Search Bar -->
+      <div class="row justify-content-center mt-4">
+        <div class="col-md-6">
+          <div class="input-group input-group-lg">
+            <span class="input-group-text bg-white border-0 text-muted">
+              <i class="fas fa-search"></i>
+            </span>
+            <input type="text" id="searchInput" class="form-control border-0" placeholder="Buscar aplicativo..." aria-label="Buscar aplicativo">
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
 
-  <div class="container mt-4">
-    <div class="list-group col-6">
-      <% /* Exemplo de botão visível para todos usuários logados */ %>
-      <a class="list-group-item list-group-item-action text-center col-3 start-50"
-         href="../PEDIDO DE COMPRA/index.html">
-        Agendador De Compras
-      </a>
-
-      <a class="list-group-item list-group-item-action text-center col-3 start-50"
-         href="../ControleCartao/index.php">
-        Controle dos Cartões
-      </a>
-
-      <% // Exemplo de botão “somente para role ADMIN” %>
-      <% if (user.role === 'ADMIN') { %>
-        <a class="list-group-item list-group-item-action text-center col-3 start-50"
-           href="../Tranferencias/index.PHP">
-          Transferências
+  <!-- Main Content -->
+  <div class="container pb-5">
+    <div class="row g-4 justify-content-center" id="appsContainer">
+      
+      <!-- Controle dos Cartões -->
+      <div class="col-6 col-md-4 col-lg-3 app-item">
+        <a href="/controle-cartao" class="app-card">
+          <i class="fas fa-credit-card app-icon"></i>
+          <h3 class="app-title">Controle de Cartões</h3>
         </a>
+      </div>
+
+      <!-- Transferências (ADMIN) -->
+      <% if (user.role === 'ADMIN') { %>
+        <div class="col-6 col-md-4 col-lg-3 app-item">
+          <a href="../Tranferencias/index.PHP" class="app-card">
+            <i class="fas fa-exchange-alt app-icon"></i>
+            <h3 class="app-title">Transferências</h3>
+          </a>
+        </div>
       <% } %>
 
-      <a class="list-group-item list-group-item-action text-center col-3 start-50"
-         href="../Calculadora Custo/index.html">
-        Calculadora Custo
-      </a>
+      <!-- Calculadora Custo -->
+      <div class="col-6 col-md-4 col-lg-3 app-item">
+        <a href="/calculadora-custo" class="app-card">
+          <i class="fas fa-calculator app-icon"></i>
+          <h3 class="app-title">Calculadora Custo</h3>
+        </a>
+      </div>
 
-      <% /* Outro botão visível para todos */ %>
-      <a class="list-group-item list-group-item-action text-center col-3 start-50"
-         href="http://exclusiva.intranet/pendenciaFornecedor">
-        Produtos Avariados
-      </a>
+      <!-- Produtos Avariados -->
+      <div class="col-6 col-md-4 col-lg-3 app-item">
+        <a href="http://exclusiva.intranet/pendenciaFornecedor" class="app-card">
+          <i class="fas fa-box-open app-icon"></i>
+          <h3 class="app-title">Produtos Avariados</h3>
+        </a>
+      </div>
 
-      <% // Botão somente para roles GERENTE ou ADMIN %>
+      <!-- Consulta de Produtos (GERENTE/ADMIN) -->
       <% if (user.role === 'GERENTE' || user.role === 'ADMIN') { %>
-        <a class="list-group-item list-group-item-action text-center col-3 start-50"
-           href="../Consulta Produtos/index.html">
-          Consulta Preço
-        </a>
+        <div class="col-6 col-md-4 col-lg-3 app-item">
+          <a href="/consulta-produtos" class="app-card">
+            <i class="fas fa-tags app-icon"></i>
+            <h3 class="app-title">Consulta de Produtos</h3>
+          </a>
+        </div>
       <% } %>
 
-      <a class="list-group-item list-group-item-action text-center col-3 start-50"
-         href="../Consulta Produtos Vendedor/index.html">
-        Consulta Preço Vendedor
-      </a>
+      <!-- Consulta de Produtos Vendedor -->
+      <div class="col-6 col-md-4 col-lg-3 app-item">
+        <a href="/consulta-produtos/vendedor" class="app-card">
+          <i class="fas fa-search-dollar app-icon"></i>
+          <h3 class="app-title">Consulta Vendedor</h3>
+        </a>
+      </div>
 
-      <a class="list-group-item list-group-item-action text-center col-3 start-50"
-         href="../CadastroPedido/pages/index.html">
-        Pedido de venda
-      </a>
+      <!-- Pedido de venda -->
+      <div class="col-6 col-md-4 col-lg-3 app-item">
+        <a href="../CadastroPedido/pages/index.html" class="app-card">
+          <i class="fas fa-shopping-cart app-icon"></i>
+          <h3 class="app-title">Pedido de Venda</h3>
+        </a>
+      </div>
 
-      <% // Exemplo de botão “somente para role ADMIN” novamente %>
+      <!-- Coletor (ADMIN) -->
       <% if (user.role === 'ADMIN') { %>
-        <a class="list-group-item list-group-item-action text-center col-3 start-50"
-           href="/coletor">
-          Coletor
-        </a>
-        <a class="list-group-item list-group-item-action text-center col-3 start-50"
-           href="<%= minhaVariavel %>/pedidosCompras?">
-          Pedido de Compra
-        </a>
+        <div class="col-6 col-md-4 col-lg-3 app-item">
+          <a href="/coletor" class="app-card">
+            <i class="fas fa-barcode app-icon"></i>
+            <h3 class="app-title">Coletor</h3>
+          </a>
+        </div>
+        
+        <!-- Pedido de Compra (ADMIN) -->
+        <div class="col-6 col-md-4 col-lg-3 app-item">
+          <a href="<%= minhaVariavel %>/pedidosCompras?" class="app-card">
+            <i class="fas fa-truck-loading app-icon"></i>
+            <h3 class="app-title">Pedido de Compra</h3>
+          </a>
+        </div>
       <% } %>
+
     </div>
   </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js" integrity="sha384-fbbOQedDUMZZ5KreZpsbe1LCZPVmfTnH7ois6mU1QK+m14rQ1l2bGBq41eYeM/fS" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <script>
+    // Logout confirmation
+    document.getElementById('logoutBtn').addEventListener('click', function(e) {
+      e.preventDefault();
+      
+      Swal.fire({
+        title: 'Tem certeza?',
+        text: "Você será desconectado do sistema.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, sair!',
+        cancelButtonText: 'Cancelar',
+        background: '#fff',
+        color: '#000'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          document.getElementById('logoutForm').submit();
+        }
+      });
+    });
+
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+      const query = this.value.toLowerCase();
+      const apps = document.querySelectorAll('.app-item');
+      
+      apps.forEach(app => {
+        const title = app.querySelector('.app-title').textContent.toLowerCase();
+        if (title.includes(query)) {
+          app.style.display = '';
+        } else {
+          app.style.display = 'none';
+        }
+      });
+    });
+  </script>
 </body>
 </html>

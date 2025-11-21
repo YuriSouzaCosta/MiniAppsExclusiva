@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" />
+    <script src="https://kit.fontawesome.com/acad52e772.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="/css/consultaProdutos.css" />
+    <title>Consulta de Produtos <%= isVendedor ? '(Vendedor)' : '' %></title>
+</head>
+<body>
+    <div>
+        <%- include('layout') %>
+
+        <div class="container mt-4">
+            <div class="card p-4 shadow-sm mb-4">
+                <h2 class="mb-3 text-center" style="color: #500001;">
+                    <i class="fas fa-search me-2"></i>Consulta de Produtos <%= isVendedor ? '(Vendedor)' : '' %>
+                </h2>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="inputCodigoEan" placeholder="Busque por Nome, Referência ou Código de Barras..." />
+                    
+                    <select id="selectMarcas" class="form-select btn-exclusiva-marca" style="max-width: 200px;">
+                        <option selected disabled hidden>Selecione a Marca</option>
+                        <option value="Selecione a Marca">Todas as Marcas</option>
+                    </select>
+                    
+                    <button class="btn btn-exclusiva" type="button" id="btnSearch">
+                        <i class="fas fa-search me-1"></i> Pesquisar
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="responsive-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Produto</th>
+                            <th scope="col">Marca</th>
+                            <th scope="col">Referência</th>
+                            <th scope="col">Cód. Barras</th>
+                            <% if (!isVendedor) { %>
+                                <th scope="col">Ult. Entrada</th>
+                                <th scope="col">Vlr Custo</th>
+                            <% } %>
+                            <th scope="col">Vlr Venda</th>
+                        </tr>
+                    </thead>
+                    <tbody id="produtosAvaria">
+                        <!-- Results will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card mt-3 mb-3 p-3 text-center fw-bold shadow-sm" id="totalEstoque_F" style="display: none; background-color: #e9ecef;">
+                Estoque Total: 0
+            </div>
+
+            <div class="table-responsive" id="estoqueContainer" style="display: none;">
+                <h4 class="mb-2" style="color: #500001;">Detalhes do Estoque</h4>
+                <table class="responsive-table">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="text-center">Local e Quantidade</th>
+                        </tr>
+                    </thead>
+                    <tbody id="estoqueProdutos">
+                        <!-- Stock details will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
+    <script>
+        const isVendedor = <%= isVendedor %>;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadMarcas();
+
+            document.getElementById('btnSearch').addEventListener('click', searchProducts);
+            document.getElementById('inputCodigoEan').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') searchProducts();
+            });
+        });
+
+        async function loadMarcas() {
+            try {
+                console.log('Carregando marcas...');
+                const response = await axios.get('/consulta-produtos/api/marcas');
+                console.log('Marcas recebidas:', response.data);
+                const select = document.getElementById('selectMarcas');
+                response.data.forEach(marca => {
+                    const option = document.createElement('option');
+                    option.value = marca.DESCRICAO;
+                    option.textContent = marca.DESCRICAO;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar marcas:', error);
+                console.error('Detalhes do erro:', error.response);
+            }
+        }
+
+        async function searchProducts() {
+            const term = document.getElementById('inputCodigoEan').value;
+            const marca = document.getElementById('selectMarcas').value;
+            
+            console.log('Buscando produtos...', { term, marca });
+            
+            if (!term && (!marca || marca === 'Selecione a Marca')) {
+                alert('Por favor, digite um termo de busca ou selecione uma marca.');
+                return;
+            }
+
+            try {
+                const response = await axios.get('/consulta-produtos/api/produtos', {
+                    params: { term, marca }
+                });
+                console.log('Produtos recebidos:', response.data);
+                displayProducts(response.data);
+                document.getElementById('estoqueContainer').style.display = 'none';
+                document.getElementById('totalEstoque_F').style.display = 'none';
+            } catch (error) {
+                console.error('Erro ao buscar produtos:', error);
+                console.error('Detalhes do erro:', error.response);
+                alert('Erro ao buscar produtos. Tente novamente.');
+            }
+        }
+
+        function displayProducts(products) {
+            console.log('Exibindo produtos:', products);
+            
+            const tbody = document.getElementById('produtosAvaria');
+            tbody.innerHTML = '';
+
+            if (products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum produto encontrado.</td></tr>';
+                return;
+            }
+
+            products.forEach(product => {
+                const tr = document.createElement('tr');
+                
+                let html = `
+                    <th scope="row">${product.DESCRPROD}</th>
+                    <td>${product.MARCA}</td>
+                    <td>${product.REFFORN || '-'}</td>
+                    <td>${product.REFERENCIA}</td>
+                `;
+
+                if (!isVendedor) {
+                    html += `
+                        <td>${product.ULT_COMPRA || '-'}</td>
+                        <td>R$ ${parseFloat(product.CUSTO).toFixed(2)}</td>
+                    `;
+                }
+
+                html += `<td>R$ ${parseFloat(product.PRECO).toFixed(2)}</td>`;
+                
+                tr.innerHTML = html;
+                tr.style.cursor = 'pointer';
+                tr.title = 'Clique para ver o estoque';
+                tr.addEventListener('click', () => loadStock(product.CODPROD));
+                
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function loadStock(codProd) {
+            try {
+                const response = await axios.get('/consulta-produtos/api/estoque', {
+                    params: { codProd }
+                });
+                displayStock(response.data);
+            } catch (error) {
+                console.error('Erro ao buscar estoque:', error);
+            }
+        }
+
+        function displayStock(stockData) {
+            const tbody = document.getElementById('estoqueProdutos');
+            tbody.innerHTML = '';
+            let totalEstoque = 0;
+
+            stockData.forEach(item => {
+                if (parseFloat(item.ESTOQUE) > 0) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>
+                            <emp>Empresa: ${item.CODEMP}</emp>&emsp;
+                            <estoque>Estoque: ${item.ESTOQUE}</estoque>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                    totalEstoque += parseFloat(item.ESTOQUE);
+                }
+            });
+
+            const totalDiv = document.getElementById('totalEstoque_F');
+            totalDiv.textContent = `Estoque Total: ${totalEstoque}`;
+            totalDiv.style.display = 'block';
+            
+            document.getElementById('estoqueContainer').style.display = 'block';
+            
+            // Scroll to stock section
+            totalDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

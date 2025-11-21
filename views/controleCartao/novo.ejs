@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://code.jquery.com/jquery-3.7.0.js" integrity="sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM=" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous" />
+    <script src="https://igorescobar.github.io/jQuery-Mask-Plugin/js/jquery.mask.min.js"></script>
+    <script src="https://kit.fontawesome.com/acad52e772.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="/css/controleCartao.css" />
+    <title>Controle Cartão - Novo</title>
+</head>
+<body>
+    <div>
+        <%- include('layout') %>
+
+        <div class="main-content col-6 bg-exclusiva p-5 h-3 mt-3 rounded-2">
+            <h1 class="h1 rounded-2 p-2 text-center text-white">
+                Cadastro Solicitação
+            </h1>
+            <form action="/controle-cartao/novo" method="POST">
+                <fieldset>
+                    <div class="mb-3">
+                        <label for="solicitante" class="form-label text-white font-text-filtro">Solicitante :</label>
+                        <input type="text" class="form-control" id="solicitante" name="nome"
+                            placeholder="Nome de quem pegou o cartão..." required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="cartao" class="form-label text-white font-text-exclusiva">Cartão :</label>
+                        <select class="form-select" aria-label="Default select example" id="cartao" name="cartao">
+                            <option value="0" disabled selected>Selecione o cartão</option>
+                            <option value="1">Bradesco - EXC</option>
+                            <option value="2">Santander - PRIME</option>
+                            <option value="3">Bradesco - SG</option>
+                            <option value="4">Bradesco - ASG</option>
+                            <option value="5">Tribanco - T4</option>
+                            <option value="6">Cartão Uber</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="valor" class="form-label text-white font-text-exclusiva">Descrição :</label>
+                        <input type="text" name="desc" class="form-control" id="desc" placeholder="24 cx de Taça... " required />
+                    </div>
+                    <div class="text-center">
+                        <input class="btn-exclusiva mt-4 p-2 px-4" type="submit" value="Cadastrar" />
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

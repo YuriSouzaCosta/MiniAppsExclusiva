@@ -1,0 +1,32 @@
+<!-- Floating Buttons Layout -->
+<div class="floating-buttons-container">
+  <a href="/" class="btn-floating" title="Voltar ao Menu">
+    <i class="fas fa-home"></i>
+  </a>
+  <button id="logoutBtn" class="btn-floating btn-logout" title="Sair">
+    <i class="fas fa-sign-out-alt"></i>
+  </button>
+</div>
+
+<form id="logoutForm" action="/logout" method="POST" style="display: none;"></form>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  document.getElementById('logoutBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+    Swal.fire({
+      title: 'Tem certeza?',
+      text: "Você será desconectado do sistema.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sim, sair!',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        document.getElementById('logoutForm').submit();
+      }
+    });
+  });
+</script>

@@ -17,6 +17,10 @@ const produtoRoutes = require('./routes/produtoRoutes');
 const contagemRoutes = require('./routes/contagemRoutes');
 const authRoutes = require('./routes/authRoutes');
 const exportacaoRoutes = require('./routes/exportacaoRoutes');
+const controleCartaoRoutes = require('./routes/controleCartaoRoutes');
+const calculadoraCustoRoutes = require('./routes/calculadoraCustoRoutes');
+const consultaProdutosRoutes = require('./routes/consultaProdutosRoutes');
+const pedidoComprasRoutes = require('./routes/pedidoComprasRoutes');
 
 
 
@@ -82,6 +86,10 @@ app.use('/', coletorRoutes);
 app.use('/produto', produtoRoutes);
 app.use('/contagem', contagemRoutes);
 app.use('/exportacao', exportacaoRoutes);
+app.use('/controle-cartao', controleCartaoRoutes);
+app.use('/calculadora-custo', calculadoraCustoRoutes);
+app.use('/consulta-produtos', consultaProdutosRoutes);
+app.use('/', pedidoComprasRoutes);
 app.use('/', homeRoutes);
 app.use('/', coletorRoutes);
 

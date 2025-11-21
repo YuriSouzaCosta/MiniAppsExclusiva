@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.7.0.js" integrity="sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM=" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous" />
+    <script src="https://kit.fontawesome.com/acad52e772.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="/css/controleCartao.css">
+    <title>Controle Cartão - Pendentes</title>
+</head>
+<body>
+    <div>
+        <%- include('layout') %>
+
+        <div class="table-cast" id="table-cast">
+            <div>
+                <div class="row line-hd" id="tb-hd">
+                    <div class="col">ID</div>
+                    <div class="col">SOLICITANTE</div>
+                    <div class="col">CARTÃO</div>
+                    <div class="col">DATA DA RETIRADA</div>
+                    <div class="col">DESCRIÇÃO</div>
+                    <div class="col">SELECIONAR</div>
+                </div>
+                
+                <% if (solicitacoes && solicitacoes.length > 0) { %>
+                    <% solicitacoes.forEach(function(solicitacao) { %>
+                        <div class="row line-tb">
+                            <div class="col" id="id"><%= solicitacao.ID_CODE %></div>
+                            <div class="col" id="Solicitante"><%= solicitacao.NOME %></div>
+                            <div class="col" id="Cartão"><%= solicitacao.CARTAO_DESCR %></div>
+                            <div class="col" id="DataRetirada"><%= solicitacao.DATA_RETIRADA %></div>
+                            <div class="col" id="situacao"><%= solicitacao.DESCRITIVO %></div>
+                            <div class='col'>
+                                <a href='#'>
+                                    <button class='btn btn-exclusiva-table'>
+                                        <i class='bi bi-caret-right-square-fill'></i>
+                                    </button>
+                                </a>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <div class="row line-tb">
+                        <div class="col-12">Nenhuma solicitação pendente encontrada.</div>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
