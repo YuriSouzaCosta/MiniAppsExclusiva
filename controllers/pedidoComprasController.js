@@ -230,9 +230,9 @@ async function consultarPedidosCompleto(req, res) {
         conn = await db.getConnection();
         const result = await conn.execute(
             `SELECT NUMERO_PEDIDO, NUNOTA, PARCEIRO, MARCA, DATA_PEDIDO, DATA_FATURAMENTO, 
-                    DATA_ENTREGA, EMPRESA, STATUS, FORMA_PAGAMENTO, VALOR_TOTAL 
+                    DATA_ENTREGA, EMPRESA, ANDAMENTO, FORMA_PAGAMENTO, VALOR_TOTAL 
              FROM CABECALHO_PEDIDO_YSC 
-             WHERE STATUS = 'Finalizado'
+             WHERE ANDAMENTO = 'Finalizado'
              ORDER BY DATA_PEDIDO DESC`,
             [],
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
@@ -329,6 +329,41 @@ async function finalizarPedidoFinal(req, res) {
     }
 }
 
+// Load order details with items for analysis
+async function loadPedidos(req, res) {
+    console.log('=== LOAD PEDIDOS - API chamada ===');
+    const { id_pedido } = req.query;
+    let conn;
+
+    if (!id_pedido) {
+        return res.status(400).json({ error: 'ID do pedido é obrigatório' });
+    }
+
+    try {
+        conn = await db.getConnection();
+        const result = await conn.execute(
+            `SELECT * FROM ITENS_PEDIDO_YSC 
+             WHERE NUMERO_PEDIDO = :idPedido
+             ORDER BY LINHA`,
+            { idPedido: id_pedido },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+        console.log('Itens do pedido encontrados:', result.rows.length);
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Erro ao carregar pedido:', err);
+        res.status(500).json({ error: 'Erro ao carregar pedido' });
+    } finally {
+        if (conn) {
+            try {
+                await conn.close();
+            } catch (e) {
+                console.error('Erro ao fechar conexão:', e);
+            }
+        }
+    }
+}
+
 // Export to PDF (returns data for PDF generation)
 async function exportarPdf(req, res) {
     console.log('=== EXPORTAR PDF - API chamada ===');
@@ -338,7 +373,7 @@ async function exportarPdf(req, res) {
     try {
         conn = await db.getConnection();
         const result = await conn.execute(
-            `SELECT * FROM CABECALHO_PEDIDO_YSC_ITENS 
+            `SELECT * FROM PEDIDO_PROCESSADO_YSC 
              WHERE NUMERO_PEDIDO = :numPedido
              ORDER BY ITEM`,
             { numPedido: numero_pedido },
@@ -376,6 +411,7 @@ module.exports = {
     consultarPedidos,
     consultarPedidosFeitos,
     consultarPedidosCompleto,
+    loadPedidos,
     fecharPedido,
     finalizarPedidoFinal,
     exportarPdf

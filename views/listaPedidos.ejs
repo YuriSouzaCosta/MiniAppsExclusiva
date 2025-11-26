@@ -3,92 +3,480 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pedido de Compras</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-    <link rel="stylesheet" href="css/style.css" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <title>Lista de Pedidos - Pedido de Compras</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="css/style.css" />
     <style>
-      table tbody td{
-        padding: 0.5rem;
-        
-        
-        vertical-align: middle; /* Centraliza os dados no meio da célula */
-        text-align: center; /* Centraliza horizontalmente (opcional) */
-      }
-      .table td{
-        padding: 1px;
-      }
+        * {
+            font-family: 'Inter', sans-serif;
+        }
 
+        body {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
+            min-height: 100vh;
+            width: 280px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #dc2626;
+            margin: 0;
+        }
+
+        .nav-pills .nav-link {
+            color: #4a5568;
+            border-radius: 12px;
+            margin: 0.25rem 0;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-pills .nav-link:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+            transform: translateX(4px);
+        }
+
+        .nav-pills .nav-link.active {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .nav-pills .nav-link i {
+            margin-right: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            padding: 2rem;
+            width: calc(100% - 280px);
+        }
+
+        .page-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin: 0;
+        }
+
+        .page-subtitle {
+            color: #718096;
+            margin: 0.5rem 0 0 0;
+        }
+
+        .pedido-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .pedido-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .pedido-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f7fafc;
+        }
+
+        .pedido-numero {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .pedido-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-pendente {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+        }
+
+        .badge-feito {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .badge-finalizado {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .pedido-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .pedido-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 2px solid #f7fafc;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            border: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .btn-danger-custom {
+            background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
+            color: white;
+        }
+
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(239, 68, 68, 0.2);
+            border-top-color: #ef4444;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 1.5rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #cbd5e0;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            color: #2d3748;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            color: #718096;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .pedido-info {
+                grid-template-columns: 1fr;
+            }
+
+            .pedido-actions {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style="width: 280px;">
-        <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-          <svg class="bi me-2" width="40" height="32"><use xlink:href="#bootstrap"></use></svg>
-          <span class="fs-4">Pedidos de Compras</span>
-        </a>
-        <hr>
-        <ul class="nav nav-pills flex-column mb-auto">
-          <li class="nav-item ">
-            <a href="/pedidosCompras" class="nav-link text-white" aria-current="page">
-              <svg class="bi me-2" width="16" height="16"><use xlink:href="#home"></use></svg>
-              Criar Pedidos
-            </a>
-          </li>
-          <li>
-            <a href="/listaPedidos" class="nav-link active">
-              <svg class="bi me-2" width="16" height="16"><use xlink:href="#speedometer2"></use></svg>
-              Lista de Pedidos
-            </a>
-          </li>
-          <li>
-            <a href="/fazerPedidos" class="nav-link text-white">
-              <svg class="bi me-2" width="16" height="16"><use xlink:href="#speedometer3"></use></svg>
-              Fazer Pedidos
-            </a>
-          </li>
-          <li>
-            <a href="/finalizarPedidos" class="nav-link text-white">
-              <svg class="bi me-2" width="16" height="16"><use xlink:href="#table"></use></svg>
-              Finalizar Pedidos
-            </a>
-          </li>
-          <li>
-            <a href="/pedidosFinalizados" class="nav-link text-white">
-              <svg class="bi me-2" width="16" height="16"><use xlink:href="#table"></use></svg>
-              Pedidos Finalizados
-            </a>
-          </li>
-          
-        </ul>
-
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1 class="sidebar-title">
+                <i class="bi bi-cart-check"></i> Pedidos de Compras
+            </h1>
+        </div>
+        <div class="p-3">
+            <ul class="nav nav-pills flex-column">
+                <li class="nav-item">
+                    <a href="/pedidosCompras" class="nav-link">
+                        <i class="bi bi-plus-circle"></i>
+                        Criar Pedidos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/listaPedidos" class="nav-link active">
+                        <i class="bi bi-list-ul"></i>
+                        Lista de Pedidos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/fazerPedidos" class="nav-link">
+                        <i class="bi bi-clipboard-check"></i>
+                        Fazer Pedidos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/finalizarPedidos" class="nav-link">
+                        <i class="bi bi-check-circle"></i>
+                        Finalizar Pedidos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/pedidosFinalizados" class="nav-link">
+                        <i class="bi bi-archive"></i>
+                        Pedidos Finalizados
+                    </a>
+                </li>
+            </ul>
+        </div>
     </div>
-    <table class="table">
-        <thead>
-          <tr>
-            <th scope="col">#</th>
-            <th scope="col">Marca</th>
-            <th scope="col">Data</th>
-            <th scope="col">Data Relatorio</th>
-            <th scope="col">Grupo</th>
-            <th scope="col">Status</th>
-            <th scope="col">#</th> 
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-          </tr>
-        </tbody>
-      </table>
 
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Lista de Pedidos</h1>
+            <p class="page-subtitle">Visualize e gerencie todos os pedidos pendentes</p>
+        </div>
 
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-container" style="display: none;">
+            <div class="spinner"></div>
+            <p class="loading-text">Carregando pedidos...</p>
+        </div>
 
-      
-      
+        <!-- Pedidos Container -->
+        <div id="pedidosContainer"></div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <i class="bi bi-inbox"></i>
+            <h3>Nenhum pedido encontrado</h3>
+            <p>Não há pedidos pendentes no momento. Crie um novo pedido para começar.</p>
+            <a href="/pedidosCompras" class="btn btn-primary-custom mt-3">
+                <i class="bi bi-plus-circle"></i>
+                Criar Novo Pedido
+            </a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/scriptPedidos.js"></script>
+    <script>
+        // Override the carregarPedidos function to use the new card layout
+        async function carregarPedidos() {
+            const loadingState = document.getElementById('loadingState');
+            const pedidosContainer = document.getElementById('pedidosContainer');
+            const emptyState = document.getElementById('emptyState');
+
+            // Show loading
+            loadingState.style.display = 'flex';
+            pedidosContainer.innerHTML = '';
+            emptyState.style.display = 'none';
+
+            try {
+                const apiUrl = `${apiBase}/consultarPedidos`;
+                const response = await fetch(apiUrl);
+
+                if (!response.ok) {
+                    throw new Error("Erro ao carregar pedidos");
+                }
+
+                const pedidosCompras = await response.json();
+                console.log('Pedidos carregados:', pedidosCompras);
+
+                // Hide loading
+                loadingState.style.display = 'none';
+
+                if (pedidosCompras.length === 0) {
+                    emptyState.style.display = 'block';
+                    return;
+                }
+
+                // Create cards for each pedido
+                pedidosCompras.forEach((pedido, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'pedido-card';
+                    card.style.animationDelay = `${index * 0.1}s`;
+
+                    const statusClass = pedido.ANDAMENTO === 'Pendente' ? 'badge-pendente' : 
+                                       pedido.ANDAMENTO === 'Feito' ? 'badge-feito' : 'badge-finalizado';
+
+                    card.innerHTML = `
+                        <div class="pedido-header">
+                            <div class="pedido-numero">
+                                <i class="bi bi-receipt"></i> Pedido #${pedido.NUMERO_PEDIDO}
+                            </div>
+                            <span class="pedido-badge ${statusClass}">
+                                ${pedido.ANDAMENTO}
+                            </span>
+                        </div>
+                        <div class="pedido-info">
+                            <div class="info-item">
+                                <span class="info-label">Marca</span>
+                                <span class="info-value">${pedido.MARCA}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Data do Pedido</span>
+                                <span class="info-value">${new Date(pedido.DATA_PEDIDO).toLocaleDateString('pt-BR')}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Período do Relatório</span>
+                                <span class="info-value">
+                                    ${new Date(pedido.DATA_INICIAL).toLocaleDateString('pt-BR')} - 
+                                    ${new Date(pedido.DATA_FINAL).toLocaleDateString('pt-BR')}
+                                </span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Grupo</span>
+                                <span class="info-value">${pedido.GRUPO}</span>
+                            </div>
+                        </div>
+                        <div class="pedido-actions">
+                            <button type="button" class="btn btn-action btn-primary-custom" onclick="carregarDadosPedido(${pedido.NUMERO_PEDIDO})">
+                                <i class="bi bi-arrow-right-circle"></i>
+                                Abrir Pedido
+                            </button>
+                            <button type="button" class="btn btn-action btn-danger-custom" onclick="apagarPedido(${pedido.NUMERO_PEDIDO})">
+                                <i class="bi bi-trash"></i>
+                                Excluir
+                            </button>
+                        </div>
+                    `;
+
+                    pedidosContainer.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error("Erro ao carregar Pedidos:", error.message);
+                loadingState.style.display = 'none';
+                emptyState.style.display = 'block';
+                emptyState.innerHTML = `
+                    <i class="bi bi-exclamation-triangle text-danger"></i>
+                    <h3>Erro ao carregar pedidos</h3>
+                    <p>${error.message}</p>
+                    <button class="btn btn-primary-custom mt-3" onclick="carregarPedidos()">
+                        <i class="bi bi-arrow-clockwise"></i>
+                        Tentar Novamente
+                    </button>
+                `;
+            }
+        }
+
+        // Load pedidos when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            carregarPedidos();
+        });
+    </script>
 </body>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-<script src="js/scriptPedidos.js"></script>
 </html>

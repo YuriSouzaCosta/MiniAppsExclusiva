@@ -3,142 +3,390 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pedido de Compras</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <title>Finalizar Pedidos - Pedido de Compras</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
     <link rel="stylesheet" href="css/style.css" />
-    <script src="js/scriptPedidos.js"></script>
     <style>
-       .header_table {
-        font-size: 8px;
-        align-items: center;
-        justify-content: center;
-      }
-
-      table tbody td {
-        
-        font-size: 12px; /* Ajuste o tamanho da fonte */
-        vertical-align: middle; /* Centraliza os dados no meio da célula */
-        text-align: center; /* Centraliza horizontalmente (opcional) */
-      }
-      .table td {
-        padding: 1px;
-      }
-      .btn-custom {
-        padding: 0.25rem 0.5rem; /* Reduz o padding */
-        font-size: 0.875rem; /* Reduz o tamanho da fonte */
-        line-height: 1.5; /* Ajusta a altura da linha */
-      }
-      .btn-container {
-        margin: 0; /* Remove margens */
-        padding: 0; /* Remove paddings */
-      }
-
-      table form{
-        th:nth-child(1),
-        td:nth-child(1) {
-          width: 5%;
+        * {
+            font-family: 'Inter', sans-serif;
         }
 
-        th:nth-child(2),
-        td:nth-child(2) {
-          width: 40%;
-        }
-        th:nth-child(9),
-        td:nth-child(9) {
-          width: 40%;
+        body {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            min-height: 100vh;
+            display: flex;
         }
 
-      }
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
+            min-height: 100vh;
+            width: 280px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+        }
 
-      .f_size {
-        font-size: 8pt;
-        width: 100%;
-        margin: 0;
-      }
-      .input-pequeno {
-        font-size: 10px; /* Ajuste conforme necessário */
-        text-align: center; /* Para alinhar os números */
-        height: 100%; /* Garante que o input não cresça além da célula */
-        
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
 
-      }
-      /* Adicione ao seu arquivo CSS */
-.modal-title.success {
-    color: green;
-}
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #dc2626;
+            margin: 0;
+        }
 
-.modal-title.error {
-    color: red;
-}
+        .nav-pills .nav-link {
+            color: #4a5568;
+            border-radius: 12px;
+            margin: 0.25rem 0;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-pills .nav-link:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+            transform: translateX(4px);
+        }
+
+        .nav-pills .nav-link.active {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .nav-pills .nav-link i {
+            margin-right: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            padding: 2rem;
+            width: calc(100% - 280px);
+        }
+
+        .page-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin: 0;
+        }
+
+        .page-subtitle {
+            color: #718096;
+            margin: 0.5rem 0 0 0;
+        }
+
+        .pedido-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .pedido-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card-header-custom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f7fafc;
+        }
+
+        .pedido-numero {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .badge-feito {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .form-section {
+            background: #fef2f2;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #fecaca;
+        }
+
+        .form-section-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #dc2626;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1rem;
+        }
+
+        .input-group-custom {
+            position: relative;
+        }
+
+        .input-custom {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #fecaca;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .input-custom:focus {
+            outline: none;
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+
+        .dropdown-menu-custom {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #fecaca;
+            border-radius: 12px;
+            margin-top: 0.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            z-index: 1000;
+        }
+
+        .dropdown-item-custom {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .dropdown-item-custom:hover {
+            background: #fef2f2;
+        }
+
+        .actions-section {
+            display: flex;
+            gap: 0.75rem;
+            padding-top: 1rem;
+            border-top: 2px solid #f7fafc;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            border: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-success-custom {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .btn-danger-custom {
+            background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
+            color: white;
+        }
+
+        .btn-dark-custom {
+            background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+            color: white;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #cbd5e0;
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body>
-    <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style="width: 280px;">
-        <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-          <svg class="bi me-2" width="40" height="32"><use xlink:href="#bootstrap"></use></svg>
-          <span class="fs-4">Pedidos de Compras</span>
-        </a>
-        <hr>
-        <ul class="nav nav-pills flex-column mb-auto">
-          <li class="nav-item ">
-            <a href="/pedidosCompras" class="nav-link text-white" aria-current="page">
-              <svg class="bi me-2" width="16" height="16"><use xlink:href="#home"></use></svg>
-              Criar Pedidos
-            </a>
-          </li>
-          <li>
-            <a href="/listaPedidos" class="nav-link text-white">
-              <svg class="bi me-2" width="16" height="16"><use xlink:href="#speedometer2"></use></svg>
-              Lista de Pedidos
-            </a>
-          </li>
-          <li>
-            <a href="/fazerPedidos" class="nav-link text-white">
-              <svg class="bi me-2" width="16" height="16"><use xlink:href="#speedometer3"></use></svg>
-              Fazer Pedidos
-            </a>
-          </li>
-          <li>
-            <a href="/finalizarPedidos" class="nav-link text-white active">
-              <svg class="bi me-2" width="16" height="16"><use xlink:href="#table"></use></svg>
-              Finalizar Pedidos
-            </a>
-          </li>
-          <li>
-            <a href="/pedidosFinalizados" class="nav-link text-white">
-              <svg class="bi me-2" width="16" height="16"><use xlink:href="#table"></use></svg>
-              Pedidos Finalizados
-            </a>
-          </li>
-          
-        </ul>
-
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1 class="sidebar-title">
+                <i class="bi bi-cart-check"></i> Pedidos de Compras
+            </h1>
+        </div>
+        <div class="p-3">
+            <ul class="nav nav-pills flex-column">
+                <li class="nav-item">
+                    <a href="/pedidosCompras" class="nav-link">
+                        <i class="bi bi-plus-circle"></i>
+                        Criar Pedidos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/listaPedidos" class="nav-link">
+                        <i class="bi bi-list-ul"></i>
+                        Lista de Pedidos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/fazerPedidos" class="nav-link">
+                        <i class="bi bi-clipboard-check"></i>
+                        Fazer Pedidos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/finalizarPedidos" class="nav-link active">
+                        <i class="bi bi-check-circle"></i>
+                        Finalizar Pedidos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/pedidosFinalizados" class="nav-link">
+                        <i class="bi bi-archive"></i>
+                        Pedidos Finalizados
+                    </a>
+                </li>
+            </ul>
+        </div>
     </div>
-    <table class="table">
-        <thead>
-          <tr>
-            <th scope="col">#</th>
-            <th scope="col">Fornecedor</th>
-            <th scope="col">Marca</th>
-            <th scope="col">Data</th>
-            <th scope="col">Data Faturamento</th>
-            <th scope="col">Data Entrega</th>
-            <th scope="col">Grupo</th>
-            <th scope="col">Status</th>
-            <th scope="col">Forma de Pagamentos</th>
-            <th scope="col">Valor</th>
-            <th scope="col">#</th>
-            
-  
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-          </tr>
-        </tbody>
-      </table>
-      <div class="modal fade" id="mensagemModal" tabindex="-1" aria-hidden="true">
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Finalizar Pedidos</h1>
+            <p class="page-subtitle">Complete os pedidos com fornecedor e forma de pagamento</p>
+        </div>
+
+        <!-- Pedidos Container -->
+        <div id="pedidosContainer"></div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <i class="bi bi-inbox"></i>
+            <h3>Nenhum pedido pronto para finalizar</h3>
+            <p>Complete os pedidos pendentes para finalizá-los aqui.</p>
+        </div>
+    </div>
+
+    <!-- Modal de Mensagem -->
+    <div class="modal fade" id="mensagemModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -155,22 +403,18 @@
             </div>
         </div>
     </div>
-    
-    <!-- Loader (adicione em algum lugar da página) -->
-    <div id="loader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999;">
-        <div class="d-flex justify-content-center align-items-center h-100">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Carregando...</span>
-            </div>
+
+    <!-- Loader -->
+    <div id="loader" class="loading-overlay" style="display: none;">
+        <div class="d-flex flex-column align-items-center">
+            <div class="spinner"></div>
+            <p class="text-white mt-3 fw-bold">Processando...</p>
         </div>
     </div>
-    </div>
 
-
-      
-      
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
+    <script src="js/scriptPedidos.js"></script>
 </body>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
 </html>

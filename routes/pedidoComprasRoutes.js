@@ -18,6 +18,7 @@ router.post('/criarPedido', ensureAuth, pedidoComprasController.criarPedido);
 router.get('/consultarPedidos', ensureAuth, pedidoComprasController.consultarPedidos);
 router.get('/consultarPedidosFeitos', ensureAuth, pedidoComprasController.consultarPedidosFeitos);
 router.get('/consultarPedidosCompleto', ensureAuth, pedidoComprasController.consultarPedidosCompleto);
+router.post('/loadPedidos', ensureAuth, pedidoComprasController.loadPedidos);
 router.delete('/fecharPedido', ensureAuth, pedidoComprasController.fecharPedido);
 router.post('/finalizarPedidoFinal', ensureAuth, pedidoComprasController.finalizarPedidoFinal);
 router.get('/exportarPdf', ensureAuth, pedidoComprasController.exportarPdf);
