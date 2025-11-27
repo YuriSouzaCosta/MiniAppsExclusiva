@@ -54,3 +54,47 @@ app.use((req, res, next) => {
   }
   return authMiddleware.ensureAuth(req, res, next);
 });
+
+// rota principal (menu/index) após login
+app.get('/', (req, res) => {
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  let minhaVariavel;
+
+  console.log('Base URL:', baseUrl);
+
+  // Detectar ambiente com base no host e NODE_ENV
+  if (process.env.NODE_ENV === 'development' || baseUrl.includes('localhost')) {
+    // Ambiente de desenvolvimento (localhost)
+    minhaVariavel = baseUrl;
+  } else if (baseUrl.includes('exclusiva.intranet')) {
+    // Ambiente de produção (intranet)
+    minhaVariavel = baseUrl;
+  } else if (baseUrl.includes('exclusivarua4.duckdns.org')) {
+    // Ambiente externo (DuckDNS)
+    minhaVariavel = baseUrl;
+  } else {
+    // Caso nenhum dos casos acima seja atendido, usar o baseUrl padrão
+    minhaVariavel = baseUrl;
+  }
+
+  console.log('minhaVariavel definida como:', minhaVariavel);
+
+  res.render('menu', { user: req.user, minhaVariavel });
+});
+
+app.use('/', coletorRoutes);
+app.use('/produto', produtoRoutes);
+app.use('/contagem', contagemRoutes);
+app.use('/exportacao', exportacaoRoutes);
+app.use('/controle-cartao', controleCartaoRoutes);
+app.use('/calculadora-custo', calculadoraCustoRoutes);
+app.use('/consulta-produtos', consultaProdutosRoutes);
+app.use('/', pedidoComprasRoutes);
+app.use('/', homeRoutes);
+app.use('/', coletorRoutes);
+
+
+
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
