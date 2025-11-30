@@ -79,7 +79,7 @@ exports.deleteContagensByUsuario = async (req, res) => {
   const { usuario } = req.params;
   try {
     await db.simpleExecute(
-      `DELETE FROM AD_CONTAGENS
+      `UPDATE AD_CONTAGENS SET SITUACAO = 'E'
          WHERE LOWER(usuario) = :usuario`,
       { usuario: usuario.toLowerCase() }
     );
