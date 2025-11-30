@@ -358,6 +358,44 @@
                 }
             });
         });
+
+        // Override salvaPedido to show confirmation dialog after success
+        const originalSalvaPedido = window.salvaPedido;
+        window.salvaPedido = async function() {
+            try {
+                const result = await originalSalvaPedido();
+                
+                // Show success dialog with options
+                Swal.fire({
+                    title: 'Pedido criado com sucesso!',
+                    text: "O que deseja fazer agora?",
+                    icon: 'success',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#dc3545',
+                    confirmButtonText: 'Ir para Listas De Pedidos',
+                    cancelButtonText: 'Continuar Aqui'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Redirect to fazer pedidos
+                        window.location.href = '/listaPedidos';
+                    } else {
+                        // Clear form to create another pedido
+                        document.getElementById('marca').value = '';
+                        document.getElementById('dtInit').value = '';
+                        document.getElementById('dtEnd').value = '';
+                        document.getElementById('gpEmp').value = '';
+                    }
+                });
+            } catch (error) {
+                Swal.fire({
+                    title: 'Erro!',
+                    text: error.message || 'Erro ao criar pedido',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+        };
     </script>
 </body>
 </html>

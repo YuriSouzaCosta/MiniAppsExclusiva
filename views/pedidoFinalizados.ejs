@@ -433,15 +433,15 @@
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Data do Pedido</span>
-                                <span class="info-value">${new Date(pedido.DATA_PEDIDO).toLocaleDateString('pt-BR')}</span>
+                                <span class="info-value">${pedido.DATA_PEDIDO ? new Date(pedido.DATA_PEDIDO).toLocaleDateString('pt-BR') : ''}</span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Data Faturamento</span>
-                                <span class="info-value">${new Date(pedido.DATA_FATURAMENTO).toLocaleDateString('pt-BR')}</span>
+                                <span class="info-value">${pedido.DATAFATURAMENTO ? new Date(pedido.DATAFATURAMENTO).toLocaleDateString('pt-BR') : ''}</span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Data Entrega</span>
-                                <span class="info-value">${new Date(pedido.DATA_ENTREGA).toLocaleDateString('pt-BR')}</span>
+                                <span class="info-value">${pedido.DATAENTREGA ? new Date(pedido.DATAENTREGA).toLocaleDateString('pt-BR') : ''}</span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Empresa</span>
@@ -449,12 +449,12 @@
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Forma de Pagamento</span>
-                                <span class="info-value">${pedido.FORMA_PAGAMENTO}</span>
+                                <span class="info-value">${pedido.FORMA_PAGTO || ''}</span>
                             </div>
                         </div>
                         <div class="valor-total">
                             <div class="valor-total-label">Valor Total</div>
-                            <div class="valor-total-value">R$ ${parseFloat(pedido.VALOR_TOTAL || 0).toFixed(2)}</div>
+                            <div class="valor-total-value">R$ ${parseFloat(pedido.VLRTOTAL || 0).toFixed(2)}</div>
                         </div>
                         <div class="actions-section">
                             <button type="button" class="btn btn-action btn-primary-custom" onclick="carregarDadosPedido(${pedido.NUMERO_PEDIDO})">

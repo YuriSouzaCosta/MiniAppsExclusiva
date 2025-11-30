@@ -123,21 +123,32 @@ async function criarPedido(req, res) {
 
     const { marca, dtInit, dtEnd, gpEmp } = req.body;
     let conn;
-
+    let gp;
+    if (gpEmp == 1) {
+        gp = 'EXCLUSIVA';
+        emp = '1,3';
+    } if (gpEmp == 2) {
+        gp = 'PRIME';
+        emp = '2,4,7';
+    } if (gpEmp == 3) {
+        gp = 'SITE';
+        emp = '5'
+    }
     try {
         conn = await db.getConnection();
 
         // Insert into orders table (adjust table name and columns as needed)
         const result = await conn.execute(
             `INSERT INTO CABECALHO_PEDIDO_YSC 
-             (MARCA, DATA_INICIAL, DATA_FINAL, GRUPO, DATA_PEDIDO, ANDAMENTO) 
-             VALUES (:marca, TO_DATE(:dtInit, 'YYYY-MM-DD'), TO_DATE(:dtEnd, 'YYYY-MM-DD'), :gpEmp, SYSDATE, 'Pendente') 
+             (MARCA, DATA_INICIAL, DATA_FINAL, GRUPO, DATA_PEDIDO, ANDAMENTO, EMPRESA) 
+             VALUES (:marca, TO_DATE(:dtInit, 'YYYY-MM-DD'), TO_DATE(:dtEnd, 'YYYY-MM-DD'), :gp, SYSDATE, 'ABERTO', :emp) 
              RETURNING NUMERO_PEDIDO INTO :id`,
             {
                 marca,
                 dtInit,
                 dtEnd,
-                gpEmp,
+                gp,
+                emp,
                 id: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT }
             },
             { autoCommit: true, outFormat: oracledb.OUT_FORMAT_OBJECT }
@@ -170,7 +181,7 @@ async function consultarPedidos(req, res) {
         const result = await conn.execute(
             `SELECT NUMERO_PEDIDO, MARCA, DATA_PEDIDO, DATA_INICIAL, DATA_FINAL, GRUPO, ANDAMENTO 
              FROM CABECALHO_PEDIDO_YSC 
-             WHERE ANDAMENTO = 'Pendente'
+             WHERE ANDAMENTO = 'ABERTO'
              ORDER BY DATA_PEDIDO DESC`,
             [],
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
@@ -201,7 +212,7 @@ async function consultarPedidosFeitos(req, res) {
             `SELECT NUMERO_PEDIDO, MARCA, DATA_PEDIDO, DATAFATURAMENTO, DATAENTREGA, 
                     GRUPO, ANDAMENTO, VLRTOTAL 
              FROM CABECALHO_PEDIDO_YSC 
-             WHERE ANDAMENTO = 'Feito'
+             WHERE ANDAMENTO = 'FEITO'
              ORDER BY DATA_PEDIDO DESC`,
             [],
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
@@ -229,15 +240,18 @@ async function consultarPedidosCompleto(req, res) {
     try {
         conn = await db.getConnection();
         const result = await conn.execute(
-            `SELECT NUMERO_PEDIDO, NUNOTA, PARCEIRO, MARCA, DATA_PEDIDO, DATA_FATURAMENTO, 
-                    DATA_ENTREGA, EMPRESA, ANDAMENTO, FORMA_PAGAMENTO, VALOR_TOTAL 
+            `SELECT NUMERO_PEDIDO, NUNOTA, PARCEIRO,GRUPO, MARCA, DATA_PEDIDO, DATAFATURAMENTO, 
+                    DATAENTREGA, EMPRESA, ANDAMENTO, FORMA_PAGTO, VLRTOTAL 
              FROM CABECALHO_PEDIDO_YSC 
-             WHERE ANDAMENTO = 'Finalizado'
+             WHERE ANDAMENTO = 'FINALIZADO'
              ORDER BY DATA_PEDIDO DESC`,
             [],
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
         console.log('Pedidos finalizados encontrados:', result.rows.length);
+        if (result.rows.length > 0) {
+            console.log('🔍 Exemplo do primeiro registro do banco:', result.rows[0]);
+        }
         res.json(result.rows);
     } catch (err) {
         console.error('Erro ao consultar pedidos completos:', err);
@@ -282,6 +296,56 @@ async function fecharPedido(req, res) {
     }
 }
 
+// Update order status to FEITO (completed)
+async function atualizarPedidoFeito(req, res) {
+    console.log('=== ATUALIZAR PEDIDO FEITO - API chamada ===');
+    const { id, CodEmp, dataFaturamento, dataEntrega, valorTotal } = req.body;
+    let conn;
+
+    console.log('Dados recebidos:', { id, CodEmp, dataFaturamento, dataEntrega, valorTotal });
+
+    try {
+        conn = await db.getConnection();
+
+        await conn.execute(
+            `UPDATE CABECALHO_PEDIDO_YSC 
+             SET ANDAMENTO = 'FEITO', 
+                 CODEMP = :CodEmp, 
+                 DATAENTREGA = TO_DATE(:dataEntrega, 'YYYY-MM-DD'), 
+                 DATAFATURAMENTO = TO_DATE(:dataFaturamento, 'YYYY-MM-DD'), 
+                 VLRTOTAL = :valorTotal
+             WHERE NUMERO_PEDIDO = :id`,
+            {
+                CodEmp: Number(CodEmp),
+                dataEntrega,
+                dataFaturamento,
+                valorTotal: Number(valorTotal),
+                id: Number(id)
+            },
+            { autoCommit: true }
+        );
+
+        console.log('Pedido atualizado para FEITO:', id);
+        res.json({ result: 'Pedido Finalizado com Sucesso', success: true });
+    } catch (err) {
+        console.error('Erro ao atualizar pedido:', err);
+        res.status(500).json({
+            error: 'Erro ao finalizar pedido',
+            details: err.message,
+            id,
+            CodEmp
+        });
+    } finally {
+        if (conn) {
+            try {
+                await conn.close();
+            } catch (e) {
+                console.error('Erro ao fechar conexão:', e);
+            }
+        }
+    }
+}
+
 // Finalize order
 async function finalizarPedidoFinal(req, res) {
     console.log('=== FINALIZAR PEDIDO FINAL - API chamada ===');
@@ -293,15 +357,14 @@ async function finalizarPedidoFinal(req, res) {
     try {
         conn = await db.getConnection();
 
-        // Update order with payment and supplier info
+        // 1. Atualizar o pedido
         await conn.execute(
             `UPDATE CABECALHO_PEDIDO_YSC 
-             SET FORMA_PAGAMENTO = :formaPag,
+             SET FORMA_PAGTO = :formaPag,
                  PARCEIRO = :fornecedor,
-                 COD_PAGAMENTO = :codPag,
-                 COD_FORNECEDOR = :codForn,
-                 STATUS = 'Finalizado',
-                 ANDAMENTO = 'Finalizado'
+                 COD_FORMA_PAGTO = :codPag,
+                 COD_PARCEIRO = :codForn,
+                 ANDAMENTO = 'FINALIZADO'
              WHERE NUMERO_PEDIDO = :numPedido`,
             {
                 formaPag: idPagamento,
@@ -310,14 +373,52 @@ async function finalizarPedidoFinal(req, res) {
                 codForn: cod_fornecedor,
                 numPedido: numero_pedido
             },
-            { autoCommit: true }
+            { autoCommit: false } // Não commitar ainda
         );
 
+        // 2. Chamar a procedure
+        const result = await conn.execute(
+            `BEGIN
+                JIVA.STP_GERARPEDCOMPRA_IMPORT_YSC(
+                    :P_NUM_PEDIDO,
+                    :P_MENSAGEM
+                );
+            END;`,
+            {
+                P_NUM_PEDIDO: numero_pedido,
+                P_MENSAGEM: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 4000 }
+            }
+        );
+
+        const mensagemProcedure = result.outBinds.P_MENSAGEM;
+        console.log('Mensagem da procedure:', mensagemProcedure);
+
+        // Se chegou até aqui, commit das alterações
+        await conn.commit();
+
         console.log('Pedido finalizado:', numero_pedido);
-        res.json({ success: true, mensagemProcedure: 'Pedido finalizado com sucesso' });
+        res.json({
+            success: true,
+            result: "Pedido Finalizado com Sucesso",
+            mensagemProcedure: mensagemProcedure
+        });
+
     } catch (err) {
+        // Rollback em caso de erro
+        if (conn) {
+            try {
+                await conn.rollback();
+            } catch (rollbackErr) {
+                console.error("Erro no rollback:", rollbackErr);
+            }
+        }
+
         console.error('Erro ao finalizar pedido:', err);
-        res.status(500).json({ error: 'Erro ao finalizar pedido' });
+        res.status(500).json({
+            success: false,
+            error: 'Erro ao finalizar pedido',
+            details: err.message
+        });
     } finally {
         if (conn) {
             try {
@@ -332,7 +433,7 @@ async function finalizarPedidoFinal(req, res) {
 // Load order details with items for analysis
 async function loadPedidos(req, res) {
     console.log('=== LOAD PEDIDOS - API chamada ===');
-    const { id_pedido } = req.query;
+    const { id_pedido } = req.query; // Using req.query for GET request
     let conn;
 
     if (!id_pedido) {
@@ -342,7 +443,7 @@ async function loadPedidos(req, res) {
     try {
         conn = await db.getConnection();
         const result = await conn.execute(
-            `SELECT * FROM ITENS_PEDIDO_YSC 
+            `SELECT * FROM PEDIDO_PROCESSADO_YSC 
              WHERE NUMERO_PEDIDO = :idPedido
              ORDER BY LINHA`,
             { idPedido: id_pedido },
@@ -375,7 +476,7 @@ async function exportarPdf(req, res) {
         const result = await conn.execute(
             `SELECT * FROM PEDIDO_PROCESSADO_YSC 
              WHERE NUMERO_PEDIDO = :numPedido
-             ORDER BY ITEM`,
+             ORDER BY CODPROD`,
             { numPedido: numero_pedido },
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
@@ -390,6 +491,73 @@ async function exportarPdf(req, res) {
                 await conn.close();
             } catch (e) {
                 console.error('Erro ao fechar conexão:', e);
+            }
+        }
+    }
+}
+
+// Save/Update multiple pedidos
+async function salvarPedidos(req, res) {
+    console.log('=== SALVAR PEDIDOS - API chamada ===');
+    let conn;
+    try {
+        // 1. Validação e normalização dos dados
+        const pedidos = Array.isArray(req.body) ? req.body : [req.body];
+
+        // 2. Conectar ao banco
+        conn = await db.getConnection();
+
+        // 3. Preparar binds com tipos explícitos
+        const binds = pedidos.map(pedido => [
+            Number(pedido.quantidade),
+            Number(pedido.valorTotal),
+            Number(pedido.id),
+            Number(pedido.codProd)
+        ]);
+
+        // 4. Executar atualização com executeMany
+        const result = await conn.executeMany(
+            `UPDATE PEDIDO_PROCESSADO_YSC 
+             SET QTD_PEDIR = :1, VLR_TOTAL = :2 
+             WHERE NUMERO_PEDIDO = :3 AND CODPROD = :4`,
+            binds,
+            {
+                autoCommit: true,
+                bindDefs: [
+                    { type: oracledb.NUMBER },
+                    { type: oracledb.NUMBER },
+                    { type: oracledb.NUMBER },
+                    { type: oracledb.NUMBER }
+                ]
+            }
+        );
+
+        console.log(`${pedidos.length} pedidos atualizados, linhas afetadas:`, result.rowsAffected);
+
+        res.json({
+            success: true,
+            message: `${pedidos.length} pedidos atualizados`,
+            rowsAffected: result.rowsAffected
+        });
+
+    } catch (err) {
+        console.error("Erro ao salvar pedidos:", {
+            message: err.message,
+            stack: err.stack,
+            inputData: req.body
+        });
+
+        res.status(500).json({
+            success: false,
+            error: "Erro ao processar pedidos",
+            details: process.env.NODE_ENV === 'development' ? err.message : null
+        });
+    } finally {
+        if (conn) {
+            try {
+                await conn.close();
+            } catch (closeErr) {
+                console.error("Erro ao fechar conexão:", closeErr);
             }
         }
     }
@@ -414,5 +582,7 @@ module.exports = {
     loadPedidos,
     fecharPedido,
     finalizarPedidoFinal,
-    exportarPdf
+    exportarPdf,
+    salvarPedidos,
+    atualizarPedidoFeito
 };
