@@ -110,6 +110,9 @@ async function salvarContagem() {
     document.getElementById("referencia").textContent = "-";
     carregarContagens(usuario);
 
+    // Retorna o foco para o campo de código de barras
+    document.getElementById("codigo").focus();
+
   } catch (err) {
     console.error("Erro ao salvar contagem:", err);
     Swal.fire({
@@ -371,6 +374,28 @@ window.addEventListener("DOMContentLoaded", () => {
   console.log("Usuário carregado no DOMContentLoaded:", usuario);
   if (usuario) {
     carregarContagens(usuario);
+  }
+
+  // Event listener para busca automática ao pressionar Enter no campo de código de barras (Coletor)
+  const codigoInput = document.getElementById("codigo");
+  if (codigoInput) {
+    codigoInput.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        buscarProduto();
+      }
+    });
+  }
+
+  // Event listener para salvar contagem ao pressionar Enter no campo de quantidade (Coletor)
+  const quantidadeInput = document.getElementById("quantidade");
+  if (quantidadeInput) {
+    quantidadeInput.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        salvarContagem();
+      }
+    });
   }
 });
 
