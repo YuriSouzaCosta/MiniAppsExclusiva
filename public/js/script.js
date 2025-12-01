@@ -95,13 +95,13 @@ async function salvarContagem() {
 
     const result = await response.json();
 
-    Swal.fire({
-      icon: 'success',
-      title: 'Sucesso',
-      text: 'Contagem salva com sucesso!',
-      timer: 1500,
-      showConfirmButton: false
-    });
+    // Swal.fire({
+    //   icon: 'success',
+    //   title: 'Sucesso',
+    //   text: 'Contagem salva com sucesso!',
+    //   timer: 10,
+    //   showConfirmButton: false
+    // });
 
     document.getElementById("codigo").value = "";
     document.getElementById("quantidade").value = "";
@@ -148,6 +148,17 @@ async function carregarContagens(usuarioParam) {
 
     const produtos = await response.json();
     console.log("Produtos retornados:", produtos);
+    console.log(`[carregarContagens] Total de ${produtos.length} produtos carregados:`);
+
+    produtos.forEach((produto, index) => {
+      const codigo = produto.CODIGO_BARRA || produto.codigo_barra;
+      const nome = produto.NOME || produto.nome;
+      const preco = produto.PRECO || produto.preco;
+      const quantidade = produto.QUANTIDADE || produto.quantidade;
+      const id = produto.ID || produto.id;
+
+      console.log(`  [${index + 1}] ID: ${id}, Código: ${codigo}, Nome: ${nome}, Preço: R$ ${preco ? preco.toFixed(2) : '0.00'}, Quantidade: ${quantidade}`);
+    });
 
     tbody.innerHTML = "";
 

@@ -126,12 +126,15 @@
     <div class="row g-4 justify-content-center" id="appsContainer">
       
       <!-- Controle dos Cartões -->
+       <% if (user.role === 'ADMIN') { %>
       <div class="col-6 col-md-4 col-lg-3 app-item">
         <a href="/controle-cartao" class="app-card">
           <i class="fas fa-credit-card app-icon"></i>
           <h3 class="app-title">Controle de Cartões</h3>
         </a>
       </div>
+      <% } %>
+
 
       <!-- Transferências (ADMIN) -->
       <% if (user.role === 'ADMIN') { %>
@@ -144,27 +147,31 @@
       <% } %>
 
       <!-- Calculadora Custo -->
+      <% if (user.role === 'ADMIN') { %>
       <div class="col-6 col-md-4 col-lg-3 app-item">
         <a href="/calculadora-custo" class="app-card">
           <i class="fas fa-calculator app-icon"></i>
           <h3 class="app-title">Calculadora Custo</h3>
         </a>
       </div>
+      <% } %>
 
       <!-- Produtos Avariados -->
+      <% if (user.role === 'ADMIN') { %>
       <div class="col-6 col-md-4 col-lg-3 app-item">
         <a href="http://exclusiva.intranet/pendenciaFornecedor" class="app-card">
           <i class="fas fa-box-open app-icon"></i>
           <h3 class="app-title">Produtos Avariados</h3>
         </a>
       </div>
+      <% } %>
 
       <!-- Consulta de Produtos (GERENTE/ADMIN) -->
-      <% if (user.role === 'GERENTE' || user.role === 'ADMIN') { %>
+      <% if (user.role === 'ADMIN') { %>
         <div class="col-6 col-md-4 col-lg-3 app-item">
           <a href="/consulta-produtos" class="app-card">
             <i class="fas fa-tags app-icon"></i>
-            <h3 class="app-title">Consulta de Produtos</h3>
+            <h3 class="app-title">Consulta de Produtos C/ Custo</h3>
           </a>
         </div>
       <% } %>
@@ -173,7 +180,7 @@
       <div class="col-6 col-md-4 col-lg-3 app-item">
         <a href="/consulta-produtos/vendedor" class="app-card">
           <i class="fas fa-search-dollar app-icon"></i>
-          <h3 class="app-title">Consulta Vendedor</h3>
+          <h3 class="app-title">Consulta de Produtos</h3>
         </a>
       </div>
 
@@ -186,7 +193,7 @@
       </div>
 
       <!-- Coletor (ADMIN) -->
-      <% if (user.role === 'ADMIN') { %>
+      
         <div class="col-6 col-md-4 col-lg-3 app-item">
           <a href="/coletor" class="app-card">
             <i class="fas fa-barcode app-icon"></i>
@@ -195,6 +202,7 @@
         </div>
         
         <!-- Pedido de Compra (ADMIN) -->
+         <% if (user.role === 'ADMIN') { %>
         <div class="col-6 col-md-4 col-lg-3 app-item">
           <a href="<%= minhaVariavel %>/pedidosCompras?" class="app-card">
             <i class="fas fa-truck-loading app-icon"></i>
