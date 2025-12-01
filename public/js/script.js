@@ -5,7 +5,11 @@ const apiBase = `${window.location.protocol}//${window.location.hostname}:${wind
 async function buscarProduto() {
   const codigo = document.getElementById("codigo").value.trim();
   if (!codigo) {
-    alert("Por favor digite o código de barras");
+    Swal.fire({
+      icon: 'warning',
+      title: 'Atenção',
+      text: 'Por favor digite o código de barras'
+    });
     return;
   }
 
@@ -19,9 +23,17 @@ async function buscarProduto() {
 
     if (!response.ok) {
       if (response.status === 404) {
-        alert("Produto não encontrado");
+        Swal.fire({
+          icon: 'warning',
+          title: 'Não encontrado',
+          text: 'Produto não encontrado'
+        });
       } else {
-        alert("Erro ao buscar produto");
+        Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Erro ao buscar produto'
+        });
       }
       document.getElementById("nome").textContent = "-";
       document.getElementById("preco").textContent = "-";
@@ -38,7 +50,11 @@ async function buscarProduto() {
 
   } catch (err) {
     console.error("Erro ao buscar produto:", err);
-    alert("Erro de rede ao buscar produto");
+    Swal.fire({
+      icon: 'error',
+      title: 'Erro de Rede',
+      text: 'Erro de rede ao buscar produto'
+    });
   }
 }
 
@@ -49,9 +65,13 @@ async function salvarContagem() {
 
   console.log(`Salvar contagem - Usuário: ${usuario}, Código: ${codigo}, Quantidade: ${quantidade}`);
 
-  
+
   if (!usuario || !codigo || !quantidade) {
-    alert("Preencha todos os campos!");
+    Swal.fire({
+      icon: 'warning',
+      title: 'Campos vazios',
+      text: 'Preencha todos os campos!'
+    });
     return;
   }
 
@@ -74,7 +94,15 @@ async function salvarContagem() {
     }
 
     const result = await response.json();
-    alert(`Contagem salva com sucesso! ID: ${result.id}`);
+
+    // Swal.fire({
+    //   icon: 'success',
+    //   title: 'Sucesso',
+    //   text: 'Contagem salva com sucesso!',
+    //   timer: 10,
+    //   showConfirmButton: false
+    // });
+
     document.getElementById("codigo").value = "";
     document.getElementById("quantidade").value = "";
     document.getElementById("nome").textContent = "-";
@@ -84,49 +112,64 @@ async function salvarContagem() {
 
   } catch (err) {
     console.error("Erro ao salvar contagem:", err);
-    alert(`Erro: ${err.message}`);
+    Swal.fire({
+      icon: 'error',
+      title: 'Erro',
+      text: `Erro: ${err.message}`
+    });
   }
 }
 
 async function carregarContagens(usuarioParam) {
-	const usuario = (usuarioParam || document.getElementById("usuario")?.value?.trim()).toLowerCase();
-	if (!usuario) {
-	  console.warn("carregarContagens: usuário não especificado");
-	  return;
-	}
-  
-	console.log("carregarContagens para usuário:", usuario);
-  
-	try {
-	  const response = await fetch(`${apiBase}/contagem`, {
-		method: "GET",
-		headers: {
-		  "Accept": "application/json",
-		  "Authorization": usuario // 👈 aqui está a mudança
-		}
-	  });
-  
-	  console.log("Resposta contagem status:", response.status);
-  
-	  const tbody = document.querySelector("#tabela-contagens tbody");
-	  if (!response.ok) {
-		tbody.innerHTML = `<tr><td colspan="3">Nenhuma contagem encontrada para o usuário '${usuario}'.</td></tr>`;
-		return;
-	  }
-  
-	  const produtos = await response.json();
-	  console.log("Produtos retornados:", produtos);
-  
-	  tbody.innerHTML = "";
-  
-	  produtos.forEach((produto) => {
-		const codigo = produto.CODIGO_BARRA || produto.codigo_barra;
-		const nome = produto.NOME || produto.nome;
-		const quantidade = produto.QUANTIDADE || produto.quantidade;
-		const id = produto.ID || produto.id;
-  
-		const tr = document.createElement("tr");
-		tr.innerHTML = `
+  const usuario = (usuarioParam || document.getElementById("usuario")?.value?.trim()).toLowerCase();
+  if (!usuario) {
+    console.warn("carregarContagens: usuário não especificado");
+    return;
+  }
+
+  console.log("carregarContagens para usuário:", usuario);
+
+  try {
+    const response = await fetch(`${apiBase}/contagem`, {
+      method: "GET",
+      headers: {
+        "Accept": "application/json",
+        "Authorization": usuario // 👈 aqui está a mudança
+      }
+    });
+
+    console.log("Resposta contagem status:", response.status);
+
+    const tbody = document.querySelector("#tabela-contagens tbody");
+    if (!response.ok) {
+      tbody.innerHTML = `<tr><td colspan="3">Nenhuma contagem encontrada para o usuário '${usuario}'.</td></tr>`;
+      return;
+    }
+
+    const produtos = await response.json();
+    console.log("Produtos retornados:", produtos);
+    console.log(`[carregarContagens] Total de ${produtos.length} produtos carregados:`);
+
+    produtos.forEach((produto, index) => {
+      const codigo = produto.CODIGO_BARRA || produto.codigo_barra;
+      const nome = produto.NOME || produto.nome;
+      const preco = produto.PRECO || produto.preco;
+      const quantidade = produto.QUANTIDADE || produto.quantidade;
+      const id = produto.ID || produto.id;
+
+      console.log(`  [${index + 1}] ID: ${id}, Código: ${codigo}, Nome: ${nome}, Preço: R$ ${preco ? preco.toFixed(2) : '0.00'}, Quantidade: ${quantidade}`);
+    });
+
+    tbody.innerHTML = "";
+
+    produtos.forEach((produto) => {
+      const codigo = produto.CODIGO_BARRA || produto.codigo_barra;
+      const nome = produto.NOME || produto.nome;
+      const quantidade = produto.QUANTIDADE || produto.quantidade;
+      const id = produto.ID || produto.id;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
 		  <td>${codigo}</td>
 		  <td>${nome}</td>
 		  <td>
@@ -134,18 +177,22 @@ async function carregarContagens(usuarioParam) {
 				   onchange="atualizarQuantidade(${id}, this.value)" />
 		  </td>
 		`;
-		tbody.appendChild(tr);
-	  });
-  
-	} catch (err) {
-	  console.error("Erro ao carregar contagens:", err);
-	}
+      tbody.appendChild(tr);
+    });
+
+  } catch (err) {
+    console.error("Erro ao carregar contagens:", err);
   }
-  
+}
+
 
 async function atualizarQuantidade(id, quantidade) {
   if (!id || quantidade === "") {
-    alert("ID ou quantidade inválidos.");
+    Swal.fire({
+      icon: 'warning',
+      title: 'Atenção',
+      text: 'ID ou quantidade inválidos.'
+    });
     return;
   }
 
@@ -159,24 +206,73 @@ async function atualizarQuantidade(id, quantidade) {
     if (!response.ok) throw new Error(`Erro na API: ${response.statusText}`);
     const data = await response.json();
     console.log("Resposta da API:", data);
+
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer)
+        toast.addEventListener('mouseleave', Swal.resumeTimer)
+      }
+    })
+
+    Toast.fire({
+      icon: 'success',
+      title: 'Quantidade atualizada'
+    })
+
   } catch (err) {
     console.error("Erro ao atualizar a contagem:", err);
-    alert("Erro ao atualizar a contagem.");
+    Swal.fire({
+      icon: 'error',
+      title: 'Erro',
+      text: 'Erro ao atualizar a contagem.'
+    });
   }
 }
 
 async function exportarContagens() {
-  const usuario = document.getElementById("usuario")?.value?.trim();
-  if (!usuario) {
-    alert("Usuário não especificado.");
-    return;
-  }
+  const usuarioAtual = document.getElementById("usuario")?.value?.trim();
 
-  const nomeArquivoPrompt = prompt("Digite o nome do arquivo (sem extensão):") || "contagens";
+  // 1. Ask for Target Username
+  const { value: usuarioAlvo } = await Swal.fire({
+    title: 'Exportar Contagens',
+    input: 'text',
+    inputLabel: 'Usuário a exportar',
+    inputValue: usuarioAtual,
+    showCancelButton: true,
+    inputValidator: (value) => {
+      if (!value) {
+        return 'Você precisa digitar um usuário!'
+      }
+    }
+  });
+
+  if (!usuarioAlvo) return;
+
+  // 2. Ask for Filename
+  const { value: nomeArquivoPrompt } = await Swal.fire({
+    title: 'Nome do Arquivo',
+    input: 'text',
+    inputLabel: 'Digite o nome do arquivo (sem extensão)',
+    inputValue: 'contagens',
+    showCancelButton: true,
+    inputValidator: (value) => {
+      if (!value) {
+        return 'Você precisa digitar um nome!'
+      }
+    }
+  });
+
+  if (!nomeArquivoPrompt) return;
+
   const nomeArquivo = nomeArquivoPrompt.replace(/[<>:"/\\|?*]/g, "");
 
   try {
-    const response = await fetch(`${apiBase}/exportacao/exportar/${encodeURIComponent(usuario.toLowerCase())}?nomeArquivo=${encodeURIComponent(nomeArquivo)}`, {
+    const response = await fetch(`${apiBase}/exportacao/exportar/${encodeURIComponent(usuarioAlvo.toLowerCase())}?nomeArquivo=${encodeURIComponent(nomeArquivo)}`, {
       method: "GET"
     });
     if (!response.ok) throw new Error("Erro ao exportar os dados.");
@@ -190,43 +286,93 @@ async function exportarContagens() {
     link.click();
     document.body.removeChild(link);
 
-    alert(`Exportação concluída. Usuário: ${usuario}`);
-    carregarContagens(usuario);
+    Swal.fire({
+      icon: 'success',
+      title: 'Sucesso',
+      text: `Exportação concluída. Usuário: ${usuarioAlvo}`
+    });
+
+    // Only reload list if we exported the current view's user
+    if (usuarioAlvo.toLowerCase() === usuarioAtual.toLowerCase()) {
+      carregarContagens(usuarioAtual);
+    }
 
   } catch (err) {
     console.error(err);
-    alert("Erro durante exportação.");
+    Swal.fire({
+      icon: 'error',
+      title: 'Erro',
+      text: 'Erro durante exportação.'
+    });
   }
 }
 
 async function zerarContagens() {
-  const usuario = document.getElementById("usuario")?.value?.trim().toLowerCase();
-  if (!usuario) {
-    alert("Usuário não especificado.");
-    return;
-  }
-  if (confirm(`Deseja realmente zerar as contagens de ${usuario}?`)) {
+  const usuarioAtual = document.getElementById("usuario")?.value?.trim();
+
+  // 1. Ask for Target Username
+  const { value: usuarioAlvo } = await Swal.fire({
+    title: 'Zerar Contagens',
+    input: 'text',
+    inputLabel: 'Usuário a zerar',
+    inputValue: usuarioAtual,
+    showCancelButton: true,
+    inputValidator: (value) => {
+      if (!value) {
+        return 'Você precisa digitar um usuário!'
+      }
+    }
+  });
+
+  if (!usuarioAlvo) return;
+
+  // 2. Confirm Action
+  const result = await Swal.fire({
+    title: 'Tem certeza?',
+    text: `Deseja realmente zerar as contagens de ${usuarioAlvo}?`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Sim, zerar!',
+    cancelButtonText: 'Cancelar'
+  });
+
+  if (result.isConfirmed) {
     try {
-      const response = await fetch(`${apiBase}/contagem/${encodeURIComponent(usuario)}`, {
-        method: "DELETE"
+      const response = await fetch(`${apiBase}/contagem/${encodeURIComponent(usuarioAlvo.toLowerCase())}`, {
+        method: "POST"
       });
       if (!response.ok) throw new Error("Erro ao zerar contagens.");
-      alert("Contagens zeradas!");
-      carregarContagens(usuario);
+
+      Swal.fire(
+        'Zerado!',
+        'As contagens foram zeradas.',
+        'success'
+      );
+
+      // Only reload list if we zerou the current view's user
+      if (usuarioAlvo.toLowerCase() === usuarioAtual.toLowerCase()) {
+        carregarContagens(usuarioAtual);
+      }
     } catch (err) {
       console.error(err);
-      alert("Erro ao zerar contagens.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Erro',
+        text: 'Erro ao zerar contagens.'
+      });
     }
   }
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-	const usuario = document.getElementById("usuario")?.value?.trim();
-	console.log("Usuário carregado no DOMContentLoaded:", usuario);
-	if (usuario) {
-	  carregarContagens(usuario);
-	}
-  });
+  const usuario = document.getElementById("usuario")?.value?.trim();
+  console.log("Usuário carregado no DOMContentLoaded:", usuario);
+  if (usuario) {
+    carregarContagens(usuario);
+  }
+});
 
 
 const dropdownItems = document.querySelectorAll(".dropdown-item");
@@ -234,47 +380,47 @@ const dropdownToggle = document.getElementById("dropdownMenuLink");
 let selectedValue = "";
 // Adiciona um evento de clique a cada item
 dropdownItems.forEach((item) => {
-	item.addEventListener("click", function (event) {
-		event.preventDefault(); // Evita comportamento padrão do link
-		selectedValue = this.getAttribute("data-value"); // Obtém o valor do atributo data-value
-		dropdownToggle.textContent = selectedValue; // Atualiza o texto do botão
-	});
+  item.addEventListener("click", function (event) {
+    event.preventDefault(); // Evita comportamento padrão do link
+    selectedValue = this.getAttribute("data-value"); // Obtém o valor do atributo data-value
+    dropdownToggle.textContent = selectedValue; // Atualiza o texto do botão
+  });
 });
 async function salvarPendencia() {
-	try {
-		// Define a URL da API
-		const apiUrl = `${apiBase}/salvarAvaria`; // Altere para o endpoint correto
+  try {
+    // Define a URL da API
+    const apiUrl = `${apiBase}/salvarAvaria`; // Altere para o endpoint correto
 
-		// Configura os dados que serão enviados para a API
-		const requestData = {
-			avaria: selectedValue,
-			fornecedor: document.getElementById("fornecedor").value,
-			descricao: document.getElementById("descricao").value,
-		};
-		console.log(requestData);
+    // Configura os dados que serão enviados para a API
+    const requestData = {
+      avaria: selectedValue,
+      fornecedor: document.getElementById("fornecedor").value,
+      descricao: document.getElementById("descricao").value,
+    };
+    console.log(requestData);
 
-		// Faz a requisição POST para a API
-		const response = await fetch(apiUrl, {
-			method: "POST", // Método HTTP
-			headers: {
-				"Content-Type": "application/json", // Define o tipo do conteúdo como JSON
-			},
-			body: JSON.stringify(requestData), // Converte os dados para JSON
-		});
+    // Faz a requisição POST para a API
+    const response = await fetch(apiUrl, {
+      method: "POST", // Método HTTP
+      headers: {
+        "Content-Type": "application/json", // Define o tipo do conteúdo como JSON
+      },
+      body: JSON.stringify(requestData), // Converte os dados para JSON
+    });
 
-		// Verifica se a requisição foi bem-sucedida
-		if (!response.ok) {
-			const error = await response.json();
-			throw new Error(error.error || "Erro ao salvar a contagem");
-		}
+    // Verifica se a requisição foi bem-sucedida
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Erro ao salvar a contagem");
+    }
 
-		// Lê a resposta JSON retornada pela API
-		const responseData = await response.json();
+    // Lê a resposta JSON retornada pela API
+    const responseData = await response.json();
 
-		console.log("Contagem salva com sucesso:", responseData);
-		return responseData; // Retorna o ID gerado ou outra informação
-	} catch (error) {
-		console.error("Erro ao salvar contagem:", error.message);
-		throw error; // Repassa o erro para quem chamou a função
-	}
+    console.log("Contagem salva com sucesso:", responseData);
+    return responseData; // Retorna o ID gerado ou outra informação
+  } catch (error) {
+    console.error("Erro ao salvar contagem:", error.message);
+    throw error; // Repassa o erro para quem chamou a função
+  }
 }

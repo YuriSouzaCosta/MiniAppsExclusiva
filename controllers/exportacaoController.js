@@ -19,7 +19,7 @@ exports.exportarContagens = async (req, res) => {
         WHERE LOWER(c.usuario) = :usuario
           AND c.situacao IS NULL
         ORDER BY c.id DESC`,
-      { usuario: usuario.toLowerCase() }
+      { usuario: String(usuario).toLowerCase() }
     );
 
     if (!result.rows || result.rows.length === 0) {
@@ -32,7 +32,7 @@ exports.exportarContagens = async (req, res) => {
 
     // Cabeçalhos
     sheet.columns = [
-      { header : 'Cód. Produto', key: 'CODPROD', width: 15 },
+      { header: 'Cód. Produto', key: 'CODPROD', width: 15 },
       { header: 'ID', key: 'ID', width: 10 },
       { header: 'Código de Barras', key: 'CODIGO_BARRA', width: 25 },
       { header: 'Nome do Produto', key: 'NOME', width: 40 },
