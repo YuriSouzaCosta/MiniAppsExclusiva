@@ -1,4 +1,6 @@
-const apiBase = `${window.location.protocol}//${window.location.hostname}:3000`;
+const apiBase = window.location.port
+    ? `${window.location.protocol}//${window.location.hostname}:${window.location.port}`
+    : `${window.location.protocol}//${window.location.hostname}`;
 
 
 // Global variables
@@ -857,140 +859,136 @@ async function carregaPedidosFeitosFinalizados() {
 }
 
 async function exportarPDF(id_pedido) {
-    try {
-        console.log("Iniciando geração do PDF...");
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (!id_pedido) throw new Error("ID do pedido não encontrado");
 
+            // Obter dados da API
+            const response = await fetch(`${apiBase}/exportarPdf?numero_pedido=${id_pedido}`);
+            if (!response.ok) throw new Error("Erro ao buscar dados do pedido");
 
+            const dadosPedido = await response.json();
+            if (!dadosPedido || dadosPedido.length === 0) throw new Error("Nenhum item encontrado");
 
-        if (!id_pedido) {
-            throw new Error("ID do pedido não encontrado na URL");
-        }
+            // Configurar Empresa
+            let empresaNome = "Empresa Desconhecida";
+            let cnpj = "";
+            const codEmpresa = parseInt(dadosPedido[0].CODEMP || 0);
 
-        // 1. Buscar os dados do pedido na API
-        const response = await fetch(`${apiBase}/exportarPdf?numero_pedido=${id_pedido}`);
-        if (!response.ok) {
-            throw new Error(`Erro ao buscar dados do pedido: ${response.status}`);
-        }
-
-        const dadosPedido = await response.json();
-        console.log("Dados recebidos da API:", dadosPedido);
-
-        if (!dadosPedido || dadosPedido.length === 0) {
-            throw new Error("Nenhum item encontrado para este pedido");
-        }
-
-        // 2. Determinar empresa e CNPJ com base no primeiro item (todos devem ter o mesmo CODEMP)
-        const codemp = dadosPedido[0].CODEMP;
-        let empresa = "";
-        let cnpj = "";
-
-        switch (Number(codemp)) {
-            case 1:
-                empresa = "Exclusiva Utilidades e Embalagens LTDA";
-                cnpj = "04.023.539/0001-17";
-                break;
-            case 2:
-                empresa = "SG Utilidades";
-                cnpj = "02.444.585/0001-64";
-                break;
-            case 3:
-                empresa = "Exclusiva Util Equipamentos LTDA";
-                cnpj = "09.666.638/0001-30";
-                break;
-            case 4:
-                empresa = "Exclusiva Prime 85 LTDA";
-                cnpj = "21.518.354/0001-00";
-                break;
-            case 5:
-                empresa = "Seg Center Comercial LTDA";
-                cnpj = "24.486.321/0002-97";
-                break;
-            case 6:
-                empresa = "Seg Center Comercial LTDA";
-                cnpj = "24.486.321/0001-06";
-                break;
-            case 7:
-                empresa = "Asg Distribuição LTDA";
-                cnpj = "49.318.824/0001-01";
-                break;
-            default:
-                empresa = "Empresa não identificada";
-                cnpj = "CNPJ não disponível";
-        }
-
-        console.log(`Empresa: ${empresa} - CNPJ: ${cnpj}`);
-
-        // 3. Criar o PDF
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        // Adicionar logo (se disponível)
-        const img = new Image();
-        img.src = "/images/logo.png";
-
-        // Função para adicionar conteúdo após o carregamento da imagem
-        const addContentToPDF = () => {
-            // Cabeçalho do PDF
-            doc.setFontSize(20, 'bold');
-            doc.text("Pedido de Compra", 14, 20);
-
-            doc.setFontSize(12);
-            doc.text(`Número do Pedido: ${id_pedido}`, 14, 30);
-            doc.text(`Razão Social: ${empresa}`, 14, 36);
-            doc.text(`CNPJ: ${cnpj}`, 14, 42);
-            doc.text(`Data: ${new Date().toLocaleDateString()}`, 14, 48);
-
-            // Adicionar imagem (se carregada)
-            try {
-                doc.addImage(img, "PNG", 120, 10, 70, 20);
-            } catch (e) {
-                console.warn("Não foi possível adicionar a logo:", e.message);
+            switch (codEmpresa) {
+                case 1: empresaNome = "Exclusiva Utilidades e Embalagens LTDA"; cnpj = "04.023.539/0001-17"; break;
+                case 2: empresaNome = "SG Utilidades"; cnpj = "02.444.585/0001-64"; break;
+                case 3: empresaNome = "Exclusiva Util Equipamentos LTDA"; cnpj = "09.666.638/0001-30"; break;
+                case 4: empresaNome = "Exclusiva Prime 85 LTDA"; cnpj = "21.518.354/0001-00"; break;
+                case 5: empresaNome = "Seg Center Comercial LTDA"; cnpj = "24.486.321/0002-97"; break;
+                case 6: empresaNome = "Seg Center Comercial LTDA"; cnpj = "24.486.321/0001-06"; break;
+                case 7: empresaNome = "Asg Distribuição LTDA"; cnpj = "49.318.824/0001-01"; break;
             }
 
-            // Preparar dados para a tabela
-            const dadosTabela = dadosPedido.map(item => [
-                item.REFFORN || "",
-                item.DESCRPROD || "",
-                item.QTD_PEDIR || "0"
-            ]);
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
 
-            // Calcular total de itens
+            // Adicionar Logo (se existir)
+            const img = new Image();
+            img.src = "/images/logo.png";
 
+            img.onload = () => {
+                doc.addImage(img, "PNG", 14, 10, 60, 15);
+                gerarConteudoPDF(doc, empresaNome, cnpj, dadosPedido, id_pedido, resolve);
+            };
 
-            // Adicionar tabela ao PDF
-            doc.autoTable({
-                startY: 55,
-                head: [["REFERÊNCIA", "DESCRIÇÃO DO PRODUTO", "QUANTIDADE"]],
-                body: dadosTabela,
-                styles: {
-                    fontSize: 9,
-                    cellPadding: 2,
-                    overflow: 'linebreak'
-                },
-                columnStyles: {
-                    0: { cellWidth: 30 },
-                    1: { cellWidth: 130 },
-                    2: { cellWidth: 30 }
-                },
-                margin: { left: 10, right: 10 },
-                theme: 'grid'
+            img.onerror = () => {
+                // Se não carregar logo, gera sem logo
+                gerarConteudoPDF(doc, empresaNome, cnpj, dadosPedido, id_pedido, resolve);
+            };
+
+        } catch (error) {
+            console.error("Erro ao gerar PDF:", error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro ao gerar PDF',
+                text: error.message
             });
+            reject(error);
+        }
+    });
+}
 
+function gerarConteudoPDF(doc, empresaNome, cnpj, dadosPedido, id_pedido, resolve) {
+    // Cabeçalho
+    doc.setFontSize(18);
+    doc.setTextColor(80, 0, 1); // Bordô
+    doc.text("PEDIDO DE COMPRA", 195, 20, { align: "right" });
 
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Nº Pedido: ${id_pedido}`, 195, 28, { align: "right" });
+    doc.text(`Data: ${new Date().toLocaleDateString()}`, 195, 33, { align: "right" });
 
-            // Salvar o PDF
-            doc.save(`Pedido_${id_pedido}.pdf`);
-        };
+    // Info Empresa
+    doc.setFontSize(11);
+    doc.setTextColor(0);
+    doc.text(empresaNome, 14, 35);
+    doc.setFontSize(9);
+    doc.setTextColor(100);
+    doc.text(`CNPJ: ${cnpj}`, 14, 40);
 
-        // Se a imagem carregar, adiciona ao PDF, senão continua sem a logo
-        img.onload = addContentToPDF;
-        img.onerror = () => {
-            console.warn("Erro ao carregar logo, gerando PDF sem imagem...");
-            addContentToPDF();
-        };
+    // Tabela
+    const colunas = ["REF", "PRODUTO", "QTD"];
+    const linhas = dadosPedido
+        .filter(item => parseFloat(item.QTD_PEDIR) > 0)
+        .map(item => [
+            item.REFFORN || item.REFERENCIA,
+            item.DESCRPROD,
+            item.QTD_PEDIR
+        ]);
 
-    } catch (error) {
-        console.error("Erro ao gerar PDF:", error);
+    doc.autoTable({
+        startY: 50,
+        head: [colunas],
+        body: linhas,
+        theme: 'grid',
+        headStyles: {
+            fillColor: [80, 0, 1], // Bordô
+            textColor: 255,
+            fontSize: 10,
+            fontStyle: 'bold'
+        },
+        bodyStyles: {
+            fontSize: 9,
+            textColor: 50
+        },
+        alternateRowStyles: {
+            fillColor: [245, 245, 245]
+        },
+        columnStyles: {
+            0: { cellWidth: 40 },
+            1: { cellWidth: 'auto' },
+            2: { cellWidth: 20, halign: 'center' }
+        },
+        margin: { top: 50 }
+    });
 
+    // Rodapé
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`Página ${i} de ${pageCount}`, 195, 290, { align: "right" });
+        doc.text(`Gerado em ${new Date().toLocaleString()}`, 14, 290, { align: "left" });
     }
+
+    doc.save(`Pedido_${id_pedido}_${empresaNome.split(' ')[0]}.pdf`);
+
+    // Mostrar mensagem de sucesso
+    Swal.fire({
+        icon: 'success',
+        title: 'PDF Gerado!',
+        text: 'O arquivo foi baixado com sucesso.',
+        timer: 2000,
+        showConfirmButton: false
+    });
+
+    if (resolve) resolve();
 }

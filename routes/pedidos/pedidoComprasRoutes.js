@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const pedidoComprasController = require('../controllers/pedidoComprasController');
-const { ensureAuth } = require('../middleware/authMiddleware');
+const pedidoComprasController = require('../../controllers/pedidos/pedidoComprasController');
+const { ensureAuth } = require('../../middleware/authMiddleware');
 
 // ========== VIEW ROUTES ==========
 router.get('/pedidosCompras', ensureAuth, pedidoComprasController.index);

@@ -960,7 +960,9 @@
 
   <script>
     let somaTotal = 0;
-    const apiBase = `${window.location.protocol}//${window.location.hostname}:3000`;
+    const apiBase = window.location.port 
+      ? `${window.location.protocol}//${window.location.hostname}:${window.location.port}` 
+      : `${window.location.protocol}//${window.location.hostname}`;
     let pedidosAtualizados = []; // Variável global para armazenar os dados
     let codemp;
     const timeElapsed = Date.now();

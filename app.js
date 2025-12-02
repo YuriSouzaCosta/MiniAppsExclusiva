@@ -1,4 +1,4 @@
-// app.js (trechos)
+// app.js
 require('dotenv').config({ override: true });
 
 const express = require('express');
@@ -20,7 +20,8 @@ const exportacaoRoutes = require('./routes/exportacaoRoutes');
 const controleCartaoRoutes = require('./routes/controleCartaoRoutes');
 const calculadoraCustoRoutes = require('./routes/calculadoraCustoRoutes');
 const consultaProdutosRoutes = require('./routes/consultaProdutosRoutes');
-const pedidoComprasRoutes = require('./routes/pedidoComprasRoutes');
+const pedidoComprasRoutes = require('./routes/pedidos/pedidoComprasRoutes');
+const transferenciasRoutes = require('./routes/transferencias/transferenciasRoutes');
 
 
 
@@ -72,6 +73,9 @@ app.get('/', (req, res) => {
   } else if (baseUrl.includes('exclusivarua4.duckdns.org')) {
     // Ambiente externo (DuckDNS)
     minhaVariavel = baseUrl;
+  } else if (baseUrl.includes('appexclusiva.innube.com.br')) {
+    // Ambiente de produção (Innube)
+    minhaVariavel = baseUrl;
   } else {
     // Caso nenhum dos casos acima seja atendido, usar o baseUrl padrão
     minhaVariavel = baseUrl;
@@ -90,6 +94,7 @@ app.use('/controle-cartao', controleCartaoRoutes);
 app.use('/calculadora-custo', calculadoraCustoRoutes);
 app.use('/consulta-produtos', consultaProdutosRoutes);
 app.use('/', pedidoComprasRoutes);
+app.use('/transferencias', transferenciasRoutes);
 app.use('/', homeRoutes);
 app.use('/', coletorRoutes);
 

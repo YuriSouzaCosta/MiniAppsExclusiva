@@ -1,6 +1,8 @@
 // public/js/script.js
 
-const apiBase = `${window.location.protocol}//${window.location.hostname}:${window.location.port || 3000}`;
+const apiBase = window.location.port
+  ? `${window.location.protocol}//${window.location.hostname}:${window.location.port}`
+  : `${window.location.protocol}//${window.location.hostname}`;
 
 async function buscarProduto() {
   const codigo = document.getElementById("codigo").value.trim();

@@ -1,31 +1,31 @@
-const db = require('../config/db/oracle');
+const db = require('../../config/db/oracle');
 const oracledb = require('oracledb');
 
 // ========== VIEW ROUTES ==========
 
 async function index(req, res) {
     console.log('=== PEDIDO COMPRAS INDEX - Rota acessada ===');
-    res.render('pedidoCompras', { user: req.user });
+    res.render('pedidos/pedidoCompras', { user: req.user });
 }
 
 async function listaPedidos(req, res) {
     console.log('=== LISTA PEDIDOS - Rota acessada ===');
-    res.render('listaPedidos', { user: req.user });
+    res.render('pedidos/listaPedidos', { user: req.user });
 }
 
 async function fazerPedidos(req, res) {
     console.log('=== FAZER PEDIDOS - Rota acessada ===');
-    res.render('fazerPedidos', { user: req.user });
+    res.render('pedidos/fazerPedidos', { user: req.user });
 }
 
 async function finalizarPedidos(req, res) {
     console.log('=== FINALIZAR PEDIDOS - Rota acessada ===');
-    res.render('finalizarPedidos', { user: req.user });
+    res.render('pedidos/finalizarPedidos', { user: req.user });
 }
 
 async function pedidosFinalizados(req, res) {
     console.log('=== PEDIDOS FINALIZADOS - Rota acessada ===');
-    res.render('pedidoFinalizados', { user: req.user });
+    res.render('pedidos/pedidoFinalizados', { user: req.user });
 }
 
 // ========== API ENDPOINTS ==========

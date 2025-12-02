@@ -1,4 +1,6 @@
-const apiBase = `${window.location.protocol}//${window.location.hostname}:3000`;
+const apiBase = window.location.port
+	? `${window.location.protocol}//${window.location.hostname}:${window.location.port}`
+	: `${window.location.protocol}//${window.location.hostname}`;
 async function carregarHistoricoPendencias() {
 	try {
 		// URL da API

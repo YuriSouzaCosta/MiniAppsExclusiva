@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Transferências de Estoque</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .main-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #718096;
+            margin-bottom: 2rem;
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success-custom {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-success-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(16, 185, 129, 0.4);
+        }
+
+        .product-info {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e9ecff 100%);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .product-info p {
+            margin: 0.25rem 0;
+            color: #4a5568;
+        }
+
+        .product-info strong {
+            color: #2d3748;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table thead {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e9ecff 100%);
+        }
+
+        .table thead th {
+            border-bottom: 2px solid #cbd5e0;
+            color: #4a5568;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            padding: 1rem 0.5rem;
+        }
+
+        .table tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        .table tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        .empresa-group {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            font-weight: 700;
+            color: #92400e;
+        }
+
+        .btn-remove {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #a0aec0;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-card">
+        <h1 class="page-title">
+            <i class="bi bi-arrow-left-right"></i> Transferências de Estoque
+        </h1>
+        <p class="page-subtitle">Gerencie transferências entre locais de estoque</p>
+
+        <!-- Seção 1: Busca de Produto -->
+        <div class="section-card">
+            <h2 class="section-title">
+                <i class="bi bi-search"></i> Buscar Produto
+            </h2>
+            <div class="row">
+                <div class="col-md-8">
+                    <label for="codigoBarras" class="form-label">Código de Barras</label>
+                    <input type="text" id="codigoBarras" class="form-control" placeholder="Digite ou escaneie o código de barras" />
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button class="btn btn-primary-custom w-100" onclick="buscarProduto()">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                </div>
+            </div>
+
+            <div id="produtoInfo" class="product-info mt-3" style="display: none;">
+                <p><strong>Código:</strong> <span id="prodCodigo">-</span></p>
+                <p><strong>Produto:</strong> <span id="prodNome">-</span></p>
+                <p><strong>Referência:</strong> <span id="prodReferencia">-</span></p>
+            </div>
+        </div>
+
+        <!-- Seção 2: Seleção de Estoque e Destino -->
+        <div class="section-card" id="selecaoSection" style="display: none;">
+            <h2 class="section-title">
+                <i class="bi bi-geo-alt"></i> Seleção de Origem e Destino
+            </h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="localOrigem" class="form-label">Local Origem</label>
+                    <select id="localOrigem" class="form-select">
+                        <option value="">Selecione o local de origem</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="localDestino" class="form-label">Local Destino</label>
+                    <select id="localDestino" class="form-select">
+                        <option value="">Selecione o local de destino</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="quantidade" class="form-label">Quantidade</label>
+                    <input type="number" id="quantidade" class="form-control" min="1" placeholder="Qtd" />
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-success-custom w-100" onclick="adicionarItem()">
+                        <i class="bi bi-plus-circle"></i> Adicionar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção 3: Lista de Transferências -->
+        <div class="section-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="section-title mb-0">
+                    <i class="bi bi-list-check"></i> Lista de Transferências
+                </h2>
+                <button class="btn btn-success-custom" onclick="transferirTudo()" id="btnTransferir" style="display: none;">
+                    <i class="bi bi-check-circle"></i> Transferir Tudo
+                </button>
+            </div>
+
+            <div id="listaVazia" class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <p>Nenhuma transferência adicionada</p>
+            </div>
+
+            <div id="tabelaTransferencias" style="display: none;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Referência</th>
+                            <th>Local Origem</th>
+                            <th>Local Destino</th>
+                            <th>Quantidade</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaItens">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/transferencias/scriptTransferencias.js"></script>
+</body>
+</html>
