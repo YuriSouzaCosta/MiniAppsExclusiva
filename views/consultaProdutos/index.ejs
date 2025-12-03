@@ -89,9 +89,7 @@
 
         async function loadMarcas() {
             try {
-                console.log('Carregando marcas...');
                 const response = await axios.get('/consulta-produtos/api/marcas');
-                console.log('Marcas recebidas:', response.data);
                 const select = document.getElementById('selectMarcas');
                 response.data.forEach(marca => {
                     const option = document.createElement('option');
@@ -101,15 +99,12 @@
                 });
             } catch (error) {
                 console.error('Erro ao carregar marcas:', error);
-                console.error('Detalhes do erro:', error.response);
             }
         }
 
         async function searchProducts() {
             const term = document.getElementById('inputCodigoEan').value;
             const marca = document.getElementById('selectMarcas').value;
-            
-            console.log('Buscando produtos...', { term, marca });
             
             if (!term && (!marca || marca === 'Selecione a Marca')) {
                 alert('Por favor, digite um termo de busca ou selecione uma marca.');
@@ -120,20 +115,16 @@
                 const response = await axios.get('/consulta-produtos/api/produtos', {
                     params: { term, marca }
                 });
-                console.log('Produtos recebidos:', response.data);
                 displayProducts(response.data);
                 document.getElementById('estoqueContainer').style.display = 'none';
                 document.getElementById('totalEstoque_F').style.display = 'none';
             } catch (error) {
                 console.error('Erro ao buscar produtos:', error);
-                console.error('Detalhes do erro:', error.response);
                 alert('Erro ao buscar produtos. Tente novamente.');
             }
         }
 
         function displayProducts(products) {
-            console.log('Exibindo produtos:', products);
-            
             const tbody = document.getElementById('produtosAvaria');
             tbody.innerHTML = '';
 
@@ -142,6 +133,7 @@
                 return;
             }
 
+            // Renderizar tabela (desktop)
             products.forEach(product => {
                 const tr = document.createElement('tr');
                 
@@ -168,6 +160,69 @@
                 
                 tbody.appendChild(tr);
             });
+
+            // Renderizar cards (mobile)
+            renderMobileCards(products);
+        }
+
+        function renderMobileCards(products) {
+            let cardsContainer = document.getElementById('productCardsContainer');
+            if (!cardsContainer) {
+                cardsContainer = document.createElement('div');
+                cardsContainer.id = 'productCardsContainer';
+                cardsContainer.className = 'product-cards-container';
+                document.querySelector('.table-responsive').parentNode.insertBefore(
+                    cardsContainer,
+                    document.querySelector('.table-responsive').nextSibling
+                );
+            }
+
+            cardsContainer.innerHTML = '';
+
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.onclick = () => loadStock(product.CODPROD);
+
+                let cardHTML = `
+                    <div class="product-card-header">${product.DESCRPROD}</div>
+                    <div class="product-card-row">
+                        <span class="product-card-label">Marca:</span>
+                        <span class="product-card-value">${product.MARCA}</span>
+                    </div>
+                    <div class="product-card-row">
+                        <span class="product-card-label">Referência:</span>
+                        <span class="product-card-value">${product.REFFORN || '-'}</span>
+                    </div>
+                    <div class="product-card-row">
+                        <span class="product-card-label">Cód. Barras:</span>
+                        <span class="product-card-value">${product.REFERENCIA}</span>
+                    </div>
+                `;
+
+                if (!isVendedor) {
+                    cardHTML += `
+                        <div class="product-card-row">
+                            <span class="product-card-label">Últ. Entrada:</span>
+                            <span class="product-card-value">${product.ULT_COMPRA || '-'}</span>
+                        </div>
+                        <div class="product-card-row">
+                            <span class="product-card-label">Vlr Custo:</span>
+                            <span class="product-card-value">R$ ${parseFloat(product.CUSTO).toFixed(2)}</span>
+                        </div>
+                    `;
+                }
+
+                cardHTML += `
+                    <div class="product-card-row">
+                        <span class="product-card-label">Vlr Venda:</span>
+                        <span class="product-card-value product-card-price">R$ ${parseFloat(product.PRECO).toFixed(2)}</span>
+                    </div>
+                `;
+
+                card.innerHTML = cardHTML;
+                cardsContainer.appendChild(card);
+            });
         }
 
         async function loadStock(codProd) {
@@ -186,6 +241,7 @@
             tbody.innerHTML = '';
             let totalEstoque = 0;
 
+            // Renderizar tabela (desktop)
             stockData.forEach(item => {
                 if (parseFloat(item.ESTOQUE) > 0) {
                     const tr = document.createElement('tr');
@@ -197,6 +253,28 @@
                     `;
                     tbody.appendChild(tr);
                     totalEstoque += parseFloat(item.ESTOQUE);
+                }
+            });
+
+            // Renderizar cards mobile
+            let stockCardsContainer = document.getElementById('stockCardsContainer');
+            if (!stockCardsContainer) {
+                stockCardsContainer = document.createElement('div');
+                stockCardsContainer.id = 'stockCardsContainer';
+                stockCardsContainer.className = 'product-cards-container';
+                document.getElementById('estoqueContainer').appendChild(stockCardsContainer);
+            }
+
+            stockCardsContainer.innerHTML = '';
+            stockData.forEach(item => {
+                if (parseFloat(item.ESTOQUE) > 0) {
+                    const card = document.createElement('div');
+                    card.className = 'stock-card';
+                    card.innerHTML = `
+                        <span class="stock-card-empresa">Empresa: ${item.CODEMP}</span>
+                        <span class="stock-card-qtd">Estoque: ${item.ESTOQUE}</span>
+                    `;
+                    stockCardsContainer.appendChild(card);
                 }
             });
 

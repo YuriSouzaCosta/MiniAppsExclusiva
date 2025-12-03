@@ -27,7 +27,7 @@ body {
     color: #500001;
 }
 
-/* Table Styles */
+/* Table Styles - Desktop */
 .responsive-table {
     width: 100%;
     border-collapse: collapse;
@@ -56,6 +56,94 @@ body {
 
 .responsive-table tbody tr:last-of-type {
     border-bottom: 2px solid #500001;
+}
+
+/* Mobile Card Layout */
+.product-cards-container {
+    display: none;
+}
+
+#productCardsContainer {
+    display: none;
+}
+
+#stockCardsContainer {
+    display: none;
+}
+
+.product-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.product-card-header {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #500001;
+    margin-bottom: 0.75rem;
+    border-bottom: 2px solid #500001;
+    padding-bottom: 0.5rem;
+}
+
+.product-card-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.product-card-row:last-child {
+    border-bottom: none;
+}
+
+.product-card-label {
+    font-weight: 600;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.product-card-value {
+    font-weight: 500;
+    color: #333;
+    text-align: right;
+}
+
+.product-card-price {
+    color: #198754;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+/* Stock Cards Mobile */
+.stock-card {
+    background: #fff3cd;
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stock-card-empresa {
+    font-weight: bold;
+    color: #500001;
+}
+
+.stock-card-qtd {
+    font-weight: bold;
+    color: #198754;
+    font-size: 1.1rem;
 }
 
 /* Floating Buttons */
@@ -113,4 +201,125 @@ emp {
 estoque {
     font-weight: bold;
     color: #198754;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    /* Hide table on mobile */
+    .table-responsive {
+        display: none !important;
+    }
+    
+    .table-responsive table {
+        display: none !important;
+    }
+    
+    /* Show cards on mobile */
+    #productCardsContainer {
+        display: block !important;
+        max-height: 50vh;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+    }
+    
+    #stockCardsContainer {
+        display: block !important;
+    }
+    
+    /* Scrollbar styling */
+    .product-cards-container::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .product-cards-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .product-cards-container::-webkit-scrollbar-thumb {
+        background: #500001;
+        border-radius: 10px;
+    }
+    
+    /* Adjust search inputs for mobile */
+    .card.p-4 {
+        padding: 1rem !important;
+    }
+    
+    .card h2 {
+        font-size: 1.25rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .input-group {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .input-group .form-control,
+    .input-group .form-select,
+    .input-group .btn {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Mobile stock display */
+    #estoqueContainer {
+        padding: 0.5rem;
+        max-height: 40vh;
+        overflow-y: auto;
+    }
+    
+    #estoqueContainer .responsive-table {
+        display: none;
+    }
+    
+    .floating-buttons-container {
+        bottom: 15px;
+        right: 15px;
+    }
+    
+    .btn-floating {
+        width: 45px;
+        height: 45px;
+        font-size: 1rem;
+    }
+    
+    /* Compact product cards */
+    .product-card {
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .product-card-header {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.4rem;
+    }
+    
+    .product-card-row {
+        padding: 0.35rem 0;
+        font-size: 0.9rem;
+    }
+    
+    /* Stock cards container mobile */
+    #stockCardsContainer {
+        max-height: 35vh;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+    }
+    
+    #stockCardsContainer::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    #stockCardsContainer::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    #stockCardsContainer::-webkit-scrollbar-thumb {
+        background: #500001;
+        border-radius: 10px;
+    }
 }
