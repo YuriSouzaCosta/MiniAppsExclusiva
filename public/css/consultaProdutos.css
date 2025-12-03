@@ -146,6 +146,20 @@ body {
     font-size: 1.1rem;
 }
 
+/* Copy icon */
+.copy-icon {
+    margin-left: 0.5rem;
+    color: #500001;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.2s ease;
+}
+
+.copy-icon:hover {
+    color: #7a0002;
+    transform: scale(1.2);
+}
+
 /* Floating Buttons */
 .floating-buttons-container {
     position: fixed;

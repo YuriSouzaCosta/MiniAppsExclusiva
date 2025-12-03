@@ -196,7 +196,10 @@
                     </div>
                     <div class="product-card-row">
                         <span class="product-card-label">Cód. Barras:</span>
-                        <span class="product-card-value">${product.REFERENCIA}</span>
+                        <span class="product-card-value">
+                            ${product.REFERENCIA}
+                            <i class="fas fa-copy copy-icon" onclick="event.stopPropagation(); copyToClipboard('${product.REFERENCIA}')" title="Copiar código"></i>
+                        </span>
                     </div>
                 `;
 
@@ -223,6 +226,44 @@
                 card.innerHTML = cardHTML;
                 cardsContainer.appendChild(card);
             });
+        }
+
+        // Função para copiar para clipboard
+        function copyToClipboard(text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    // Feedback visual
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 1500,
+                        timerProgressBar: true
+                    });
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Código copiado!'
+                    });
+                }).catch(err => {
+                    console.error('Erro ao copiar:', err);
+                    alert('Código: ' + text);
+                });
+            } else {
+                // Fallback para navegadores antigos
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    alert('Código copiado: ' + text);
+                } catch (err) {
+                    alert('Código: ' + text);
+                }
+                document.body.removeChild(textArea);
+            }
         }
 
         async function loadStock(codProd) {
