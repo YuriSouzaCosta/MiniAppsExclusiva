@@ -58,11 +58,7 @@ body {
     border-bottom: 2px solid #500001;
 }
 
-/* Mobile Card Layout */
-.product-cards-container {
-    display: none;
-}
-
+/* Mobile Card Layout - Hidden by default */
 #productCardsContainer {
     display: none;
 }
@@ -238,19 +234,25 @@ estoque {
     
     #stockCardsContainer {
         display: block !important;
+        max-height: 35vh;
+        overflow-y: auto;
+        padding-right: 0.5rem;
     }
     
     /* Scrollbar styling */
-    .product-cards-container::-webkit-scrollbar {
+    #productCardsContainer::-webkit-scrollbar,
+    #stockCardsContainer::-webkit-scrollbar {
         width: 6px;
     }
     
-    .product-cards-container::-webkit-scrollbar-track {
+    #productCardsContainer::-webkit-scrollbar-track,
+    #stockCardsContainer::-webkit-scrollbar-track {
         background: #f1f1f1;
         border-radius: 10px;
     }
     
-    .product-cards-container::-webkit-scrollbar-thumb {
+    #productCardsContainer::-webkit-scrollbar-thumb,
+    #stockCardsContainer::-webkit-scrollbar-thumb {
         background: #500001;
         border-radius: 10px;
     }
@@ -280,12 +282,10 @@ estoque {
     /* Mobile stock display */
     #estoqueContainer {
         padding: 0.5rem;
-        max-height: 40vh;
-        overflow-y: auto;
     }
     
     #estoqueContainer .responsive-table {
-        display: none;
+        display: none !important;
     }
     
     .floating-buttons-container {
@@ -314,26 +314,5 @@ estoque {
     .product-card-row {
         padding: 0.35rem 0;
         font-size: 0.9rem;
-    }
-    
-    /* Stock cards container mobile */
-    #stockCardsContainer {
-        max-height: 35vh;
-        overflow-y: auto;
-        padding-right: 0.5rem;
-    }
-    
-    #stockCardsContainer::-webkit-scrollbar {
-        width: 6px;
-    }
-    
-    #stockCardsContainer::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
-    }
-    
-    #stockCardsContainer::-webkit-scrollbar-thumb {
-        background: #500001;
-        border-radius: 10px;
     }
 }
