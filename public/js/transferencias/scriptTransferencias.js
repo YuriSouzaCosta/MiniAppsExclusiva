@@ -7,6 +7,9 @@ const apiBase = window.location.port
 let produtoAtual = null;
 let listaTransferencias = [];
 let locaisDestino = [];
+let locaisOrigem = [];
+let origemSelecionada = null;
+let destinoSelecionado = null;
 
 // Event listener para Enter no campo de código de barras
 document.addEventListener('DOMContentLoaded', function () {
@@ -17,9 +20,77 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // Event listeners para os campos de busca
+    setupSearchableInput('localOrigem', 'dropdownOrigem', () => locaisOrigem, (item) => origemSelecionada = item);
+    setupSearchableInput('localDestino', 'dropdownDestino', () => locaisDestino, (item) => destinoSelecionado = item);
+
     // Carregar locais de destino ao iniciar
     carregarLocaisDestino();
+
+    // Fechar dropdowns ao clicar fora
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.position-relative')) {
+            document.getElementById('dropdownOrigem').style.display = 'none';
+            document.getElementById('dropdownDestino').style.display = 'none';
+        }
+    });
 });
+
+// Configurar input com busca
+function setupSearchableInput(inputId, dropdownId, getDataFn, onSelectFn) {
+    const input = document.getElementById(inputId);
+    const dropdown = document.getElementById(dropdownId);
+
+    input.addEventListener('input', function () {
+        const searchTerm = this.value.toLowerCase();
+        const data = getDataFn();
+
+        if (!data || data.length === 0) {
+            dropdown.style.display = 'none';
+            return;
+        }
+
+        const filtered = data.filter(item => {
+            const text = `${item.RAZAOSOCIAL} - ${item.DESCRLOCAL}`.toLowerCase();
+            return text.includes(searchTerm);
+        });
+
+        renderDropdown(dropdown, filtered, input, onSelectFn);
+    });
+
+    input.addEventListener('focus', function () {
+        const data = getDataFn();
+        if (data && data.length > 0) {
+            renderDropdown(dropdown, data, input, onSelectFn);
+        }
+    });
+}
+
+// Renderizar dropdown
+function renderDropdown(dropdown, items, input, onSelectFn) {
+    dropdown.innerHTML = '';
+
+    if (items.length === 0) {
+        dropdown.style.display = 'none';
+        return;
+    }
+
+    items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'dropdown-item-custom';
+        div.textContent = `${item.RAZAOSOCIAL} - ${item.DESCRLOCAL}${item.ESTOQUE ? ` (Estoque: ${item.ESTOQUE})` : ''}`;
+
+        div.addEventListener('click', function () {
+            input.value = `${item.RAZAOSOCIAL} - ${item.DESCRLOCAL}`;
+            onSelectFn(item);
+            dropdown.style.display = 'none';
+        });
+
+        dropdown.appendChild(div);
+    });
+
+    dropdown.style.display = 'block';
+}
 
 // Buscar produto por código de barras
 async function buscarProduto() {
@@ -56,7 +127,8 @@ async function buscarProduto() {
         // Exibir informações do produto
         document.getElementById('prodCodigo').textContent = produto.CODPROD;
         document.getElementById('prodNome').textContent = produto.DESCRPROD;
-        document.getElementById('prodReferencia').textContent = produto.REFERENCIA || produto.REFFORN || '-';
+        document.getElementById('prodCodBarra').textContent = produto.REFERENCIA;
+        document.getElementById('prodRef').textContent = produto.REFFORN || '-';
         document.getElementById('produtoInfo').style.display = 'block';
 
         // Carregar locais de estoque
@@ -65,7 +137,7 @@ async function buscarProduto() {
         // Mostrar seção de seleção
         document.getElementById('selecaoSection').style.display = 'block';
 
-        // Focar no select de origem
+        // Focar no input de origem
         document.getElementById('localOrigem').focus();
 
     } catch (err) {
@@ -87,23 +159,11 @@ async function carregarEstoque(codProd) {
             throw new Error('Erro ao buscar estoque');
         }
 
-        const estoques = await response.json();
-        const selectOrigem = document.getElementById('localOrigem');
+        locaisOrigem = await response.json();
 
-        // Limpar select
-        selectOrigem.innerHTML = '<option value="">Selecione o local de origem</option>';
-
-        // Adicionar opções
-        estoques.forEach(estoque => {
-            const option = document.createElement('option');
-            option.value = JSON.stringify({
-                codemp: estoque.CODEMP,
-                razaosocial: estoque.RAZAOSOCIAL,
-                estoque: estoque.ESTOQUE
-            });
-            option.textContent = `${estoque.RAZAOSOCIAL} (Estoque: ${estoque.ESTOQUE})`;
-            selectOrigem.appendChild(option);
-        });
+        // Limpar seleção e input
+        origemSelecionada = null;
+        document.getElementById('localOrigem').value = '';
 
     } catch (err) {
         console.error('Erro ao carregar estoque:', err);
@@ -125,21 +185,6 @@ async function carregarLocaisDestino() {
         }
 
         locaisDestino = await response.json();
-        const selectDestino = document.getElementById('localDestino');
-
-        // Limpar select
-        selectDestino.innerHTML = '<option value="">Selecione o local de destino</option>';
-
-        // Adicionar opções
-        locaisDestino.forEach(local => {
-            const option = document.createElement('option');
-            option.value = JSON.stringify({
-                codemp: local.CODEMP,
-                razaosocial: local.RAZAOSOCIAL
-            });
-            option.textContent = local.RAZAOSOCIAL;
-            selectDestino.appendChild(option);
-        });
 
     } catch (err) {
         console.error('Erro ao carregar locais destino:', err);
@@ -157,11 +202,9 @@ function adicionarItem() {
         return;
     }
 
-    const selectOrigem = document.getElementById('localOrigem');
-    const selectDestino = document.getElementById('localDestino');
     const quantidade = document.getElementById('quantidade').value;
 
-    if (!selectOrigem.value || !selectDestino.value || !quantidade) {
+    if (!origemSelecionada || !destinoSelecionado || !quantidade) {
         Swal.fire({
             icon: 'warning',
             title: 'Atenção',
@@ -170,22 +213,20 @@ function adicionarItem() {
         return;
     }
 
-    const origem = JSON.parse(selectOrigem.value);
-    const destino = JSON.parse(selectDestino.value);
     const qtd = parseInt(quantidade);
 
     // Validar quantidade
-    if (qtd <= 0 || qtd > origem.estoque) {
+    if (qtd <= 0 || qtd > origemSelecionada.ESTOQUE) {
         Swal.fire({
             icon: 'warning',
             title: 'Quantidade inválida',
-            text: `Quantidade deve ser entre 1 e ${origem.estoque}`
+            text: `Quantidade deve ser entre 1 e ${origemSelecionada.ESTOQUE}`
         });
         return;
     }
 
     // Validar se origem e destino são diferentes
-    if (origem.codemp === destino.codemp) {
+    if (origemSelecionada.CODEMP === destinoSelecionado.CODEMP && origemSelecionada.CODLOCAL === destinoSelecionado.CODLOCAL) {
         Swal.fire({
             icon: 'warning',
             title: 'Atenção',
@@ -199,18 +240,24 @@ function adicionarItem() {
         codProd: produtoAtual.CODPROD,
         nomeProd: produtoAtual.DESCRPROD,
         referencia: produtoAtual.REFERENCIA || produtoAtual.REFFORN || '-',
-        empresaOrigem: origem.codemp,
-        razaoOrigem: origem.razaosocial,
-        localOrigem: origem.codemp, // Ajustar se tiver local específico
-        empresaDestino: destino.codemp,
-        razaoDestino: destino.razaosocial,
-        localDestino: destino.codemp, // Ajustar se tiver local específico
+        empresaOrigem: origemSelecionada.CODEMP,
+        razaoOrigem: origemSelecionada.RAZAOSOCIAL,
+        codLocalOrigem: origemSelecionada.CODLOCAL,
+        descrLocalOrigem: origemSelecionada.DESCRLOCAL,
+        empresaDestino: destinoSelecionado.CODEMP,
+        razaoDestino: destinoSelecionado.RAZAOSOCIAL,
+        codLocalDestino: destinoSelecionado.CODLOCAL,
+        descrLocalDestino: destinoSelecionado.DESCRLOCAL,
         quantidade: qtd
     });
 
     // Limpar campos
     document.getElementById('quantidade').value = '';
     document.getElementById('codigoBarras').value = '';
+    document.getElementById('localOrigem').value = '';
+    document.getElementById('localDestino').value = '';
+    origemSelecionada = null;
+    destinoSelecionado = null;
     limparProduto();
 
     // Renderizar lista
@@ -285,8 +332,8 @@ function renderizarLista() {
             tr.innerHTML = `
                 <td>${item.nomeProd}</td>
                 <td>${item.referencia}</td>
-                <td>${item.razaoOrigem}</td>
-                <td>${item.razaoDestino}</td>
+                <td>${item.razaoOrigem} - ${item.descrLocalOrigem}</td>
+                <td>${item.razaoDestino} - ${item.descrLocalDestino}</td>
                 <td>${item.quantidade}</td>
                 <td>
                     <button class="btn btn-danger btn-sm btn-remove" onclick="removerItem(${item.index})">
@@ -369,5 +416,6 @@ function limparProduto() {
     produtoAtual = null;
     document.getElementById('produtoInfo').style.display = 'none';
     document.getElementById('selecaoSection').style.display = 'none';
-    document.getElementById('localOrigem').innerHTML = '<option value="">Selecione o local de origem</option>';
+    locaisOrigem = [];
+    origemSelecionada = null;
 }

@@ -19,19 +19,39 @@ async function buscarProduto(req, res) {
     try {
         conn = await db.getConnection();
 
-        // TODO: Ajustar esta query conforme sua estrutura de banco
-        const query = `
-            SELECT CODPROD, DESCRPROD, REFERENCIA, REFFORN, MARCA
-            FROM VW_CONSULTA_SITE_YSC
-            WHERE REFERENCIA = :codigoBarras OR REFFORN = :codigoBarras
-            AND ROWNUM = 1
+        const searchTerm = codigoBarras ? codigoBarras.toUpperCase() : '';
+
+        let query = `
+            SELECT DISTINCT 
+                codprod, 
+                descrprod, 
+                referencia, 
+                refforn, 
+                ROUND(preco, 2) AS PRECO, 
+                marca, 
+                ROUND(custo, 2) AS CUSTO, 
+                TO_CHAR(ULT_COMPRA, 'DD/MM/YYYY') AS ULT_COMPRA 
+            FROM VW_CONSULTA_SITE_YSC 
+            WHERE 1=1
         `;
 
-        const result = await conn.execute(
-            query,
-            { codigoBarras },
-            { outFormat: oracledb.OUT_FORMAT_OBJECT }
-        );
+        const bindParams = {};
+
+        // Add search term filter if provided
+        if (searchTerm) {
+            query += ` AND (
+                UPPER(TO_CHAR(referencia)) LIKE '%' || :searchTerm || '%' 
+                OR UPPER(TO_CHAR(refforn)) LIKE '%' || :searchTerm || '%' 
+                OR UPPER(descrprod) LIKE '%' || :searchTerm || '%'
+            )`;
+            bindParams.searchTerm = searchTerm;
+        }
+
+        query += ` AND ROWNUM = 1 ORDER BY DESCRPROD`;
+
+        const result = await conn.execute(query, bindParams, {
+            outFormat: oracledb.OUT_FORMAT_OBJECT
+        });
 
         if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Produto não encontrado' });
@@ -63,14 +83,13 @@ async function buscarEstoque(req, res) {
     try {
         conn = await db.getConnection();
 
-        // TODO: Ajustar esta query conforme sua estrutura de banco
-        // Deve retornar: CODEMP, RAZAOSOCIAL, CODLOCAL, DESCRLOCAL, ESTOQUE
+        // Buscar locais de estoque com quantidade disponível
         const query = `
-            SELECT CODEMP, RAZAOSOCIAL, ESTOQUE
-            FROM VW_CONSULTA_SITE_YSC
+            SELECT CODEMP, RAZAOSOCIAL, CODLOCAL, DESCRLOCAL, ESTOQUE
+            FROM VW_MIRROR_EST_YSC
             WHERE CODPROD = :codProd
             AND ESTOQUE > 0
-            ORDER BY CODEMP
+            ORDER BY RAZAOSOCIAL, DESCRLOCAL
         `;
 
         const result = await conn.execute(
@@ -104,12 +123,11 @@ async function buscarLocaisDestino(req, res) {
     try {
         conn = await db.getConnection();
 
-        // TODO: Ajustar esta query conforme sua estrutura de banco
-        // Deve retornar todos os locais/empresas disponíveis
+        // Buscar todos os locais/empresas disponíveis
         const query = `
-            SELECT DISTINCT CODEMP, RAZAOSOCIAL
-            FROM VW_CONSULTA_SITE_YSC
-            ORDER BY CODEMP
+            SELECT DISTINCT CODEMP, RAZAOSOCIAL, CODLOCAL, DESCRLOCAL
+            FROM VW_MIRROR_EST_YSC
+            ORDER BY RAZAOSOCIAL, DESCRLOCAL
         `;
 
         const result = await conn.execute(
@@ -150,7 +168,7 @@ async function criarTransferencias(req, res) {
 
         // Processar cada transferência
         for (const transf of transferencias) {
-            const { codProd, empresaOrigem, localOrigem, empresaDestino, localDestino, quantidade } = transf;
+            const { codProd, empresaOrigem, codLocalOrigem, empresaDestino, codLocalDestino, quantidade } = transf;
 
             // TODO: Ajustar esta query/procedure conforme seu sistema
             // Exemplo: chamar procedure de transferência
@@ -164,9 +182,9 @@ async function criarTransferencias(req, res) {
                 {
                     codProd,
                     empOrigem: empresaOrigem,
-                    localOrigem,
+                    localOrigem: codLocalOrigem,
                     empDestino: empresaDestino,
-                    localDestino,
+                    localDestino: codLocalDestino,
                     qtd: quantidade,
                     resultado: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 4000 }
                 }
@@ -175,7 +193,9 @@ async function criarTransferencias(req, res) {
             resultados.push({
                 codProd,
                 empresaOrigem,
+                localOrigem: codLocalOrigem,
                 empresaDestino,
+                localDestino: codLocalDestino,
                 status: 'success',
                 mensagem: result.outBinds.resultado
             });

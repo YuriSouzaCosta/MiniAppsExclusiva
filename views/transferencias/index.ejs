@@ -13,7 +13,7 @@
         }
 
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             min-height: 100vh;
             padding: 2rem;
         }
@@ -59,7 +59,7 @@
         }
 
         .btn-primary-custom {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             border: none;
             color: white;
             padding: 0.75rem 1.5rem;
@@ -70,7 +70,7 @@
 
         .btn-primary-custom:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 16px rgba(239, 68, 68, 0.4);
         }
 
         .btn-success-custom {
@@ -151,6 +151,42 @@
             font-size: 4rem;
             margin-bottom: 1rem;
         }
+
+        .dropdown-custom {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            margin-top: 0.25rem;
+            max-height: 300px;
+            overflow-y: auto;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .dropdown-item-custom {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            border-bottom: 1px solid #f7fafc;
+        }
+
+        .dropdown-item-custom:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item-custom:hover {
+            background: #f7fafc;
+        }
+
+        .dropdown-item-custom.selected {
+            background: #fef2f2;
+            color: #dc2626;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -180,7 +216,8 @@
             <div id="produtoInfo" class="product-info mt-3" style="display: none;">
                 <p><strong>Código:</strong> <span id="prodCodigo">-</span></p>
                 <p><strong>Produto:</strong> <span id="prodNome">-</span></p>
-                <p><strong>Referência:</strong> <span id="prodReferencia">-</span></p>
+                <p><strong>Codigo Barra:</strong> <span id="prodCodBarra">-</span></p>
+                <p><strong>Referência:</strong> <span id="prodRef">-</span></p>
             </div>
         </div>
 
@@ -192,15 +229,17 @@
             <div class="row">
                 <div class="col-md-4">
                     <label for="localOrigem" class="form-label">Local Origem</label>
-                    <select id="localOrigem" class="form-select">
-                        <option value="">Selecione o local de origem</option>
-                    </select>
+                    <div class="position-relative">
+                        <input type="text" id="localOrigem" class="form-control" placeholder="Digite para buscar..." autocomplete="off" />
+                        <div id="dropdownOrigem" class="dropdown-custom" style="display: none;"></div>
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <label for="localDestino" class="form-label">Local Destino</label>
-                    <select id="localDestino" class="form-select">
-                        <option value="">Selecione o local de destino</option>
-                    </select>
+                    <div class="position-relative">
+                        <input type="text" id="localDestino" class="form-control" placeholder="Digite para buscar..." autocomplete="off" />
+                        <div id="dropdownDestino" class="dropdown-custom" style="display: none;"></div>
+                    </div>
                 </div>
                 <div class="col-md-2">
                     <label for="quantidade" class="form-label">Quantidade</label>

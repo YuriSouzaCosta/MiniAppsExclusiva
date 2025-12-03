@@ -210,7 +210,7 @@ async function consultarPedidosFeitos(req, res) {
         conn = await db.getConnection();
         const result = await conn.execute(
             `SELECT NUMERO_PEDIDO, MARCA, DATA_PEDIDO, DATAFATURAMENTO, DATAENTREGA, 
-                    GRUPO, ANDAMENTO, VLRTOTAL 
+                    GRUPO, ANDAMENTO, VLRTOTAL , CODEMP
              FROM CABECALHO_PEDIDO_YSC 
              WHERE ANDAMENTO = 'FEITO'
              ORDER BY DATA_PEDIDO DESC`,
@@ -474,9 +474,9 @@ async function exportarPdf(req, res) {
     try {
         conn = await db.getConnection();
         const result = await conn.execute(
-            `SELECT * FROM PEDIDO_PROCESSADO_YSC 
-             WHERE NUMERO_PEDIDO = :numPedido
-             ORDER BY CODPROD`,
+            `select CAB.NUMERO_PEDIDO, ITE.DESCRPROD, ITE.REFFORN , ITE.QTD_PEDIR, CAB.CODEMP from PEDIDO_PROCESSADO_YSC ITE 
+INNER JOIN CABECALHO_PEDIDO_YSC CAB ON CAB.NUMERO_PEDIDO = ITE.NUMERO_PEDIDO 
+    WHERE CAB.NUMERO_PEDIDO = :numPedido ORDER BY CODPROD`,
             { numPedido: numero_pedido },
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
