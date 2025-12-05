@@ -281,11 +281,17 @@ estoque {
     
     /* Mobile stock display */
     #estoqueContainer {
+        display: block !important;
         padding: 0.5rem;
     }
     
-    #estoqueContainer .responsive-table {
+    #estoqueContainer .table-responsive {
         display: none !important;
+    }
+    
+    #estoqueContainer h4 {
+        display: block !important;
+        margin-bottom: 1rem;
     }
     
     .floating-buttons-container {
