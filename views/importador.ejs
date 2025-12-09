@@ -23,7 +23,10 @@
 				formData.append("arquivo", arquivo);
 
 				try {
-					const response = await fetch("http://localhost:3000/importar", {
+					const apiBase = window.location.port 
+					? `${window.location.protocol}//${window.location.hostname}:${window.location.port}` 
+					: `${window.location.protocol}//${window.location.hostname}`;
+				const response = await fetch(`${apiBase}/importar`, {
 						method: "POST",
 						body: formData,
 					});

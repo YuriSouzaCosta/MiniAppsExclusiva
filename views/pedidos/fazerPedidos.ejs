@@ -14,6 +14,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <link rel="stylesheet" href="css/style.css" />
     <style>
@@ -314,7 +316,6 @@
 
       .table tbody tr:hover {
         background: #fef2f2;
-        transform: scale(1.01);
       }
 
       .header_table {
@@ -537,6 +538,48 @@
 
       .sort-icons:hover i:not(.active) {
         opacity: 0.8;
+      }
+
+      /* Floating Buttons */
+      .floating-buttons-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 1000;
+      }
+
+      .btn-floating {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #500001;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        transition: transform 0.2s, background-color 0.2s;
+        border: none;
+        cursor: pointer;
+        font-size: 1.2rem;
+      }
+
+      .btn-floating:hover {
+        transform: scale(1.1);
+        background-color: #7a0002;
+        color: white;
+      }
+
+      .btn-logout {
+        background-color: #d33;
+      }
+
+      .btn-logout:hover {
+        background-color: #ff4d4d;
       }
     </style>
     <link
@@ -894,50 +937,32 @@
     </div>
     <!-- End Main Content -->
 
-    <!-- Modals -->
-    <div
-      class="modal fade"
-      id="alertModal"
-      tabindex="-1"
-      aria-labelledby="alertModalLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="alertModalLabel">Status do Pedido</h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="modal-body" id="modalBody">
-            <!-- Mensagem será inserida aqui -->
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              Fechar
-            </button>
-          </div>
-        </div>
-      </div>
+    <!-- Modals removed - now using SweetAlert2 for all notifications -->
+
+    <!-- Floating Buttons -->
+    <div class="floating-buttons-container">
+      <a href="/" class="btn-floating" title="Voltar ao Menu">
+        <i class="fas fa-home"></i>
+      </a>
+      <button id="logoutBtn" class="btn-floating btn-logout" title="Sair">
+      </button>
     </div>
+
+    <form id="logoutForm" action="/logout" method="POST" style="display: none;"></form>
   </body>
-  <script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
-    crossorigin="anonymous"
-  ></script>
+  
+  <!-- ExcelJS for beautiful Excel exports -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+  <!-- FileSaver for saving files -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
     let somaTotal = 0;
-    const apiBase = `${window.location.protocol}//${window.location.hostname}:3000`;
+    const apiBase = window.location.port 
+      ? `${window.location.protocol}//${window.location.hostname}:${window.location.port}` 
+      : `${window.location.protocol}//${window.location.hostname}`;
     let pedidosAtualizados = []; // Variável global para armazenar os dados
     let codemp;
     const timeElapsed = Date.now();
@@ -951,7 +976,7 @@
         console.log("URL da API:", apiUrl); // Log para depuração
 
         const response = await fetch(apiUrl, {
-          method: "POST",
+          method: "GET",
           headers: { "Content-Type": "application/json" },
         });
 
@@ -969,14 +994,23 @@
         const tabelaBody = document.querySelector("table tbody");
         tabelaBody.innerHTML = "";
         pedidosAtualizados = []; // Resetar os pedidos armazenados
+        somaTotal = 0; // Resetar soma total
 
         pedidoCompra.forEach((pedido) => {
+          // Converter valores vindos do banco
+          const qtdInicial = parseFloat(pedido.QTD_PEDIR) || 0;
+          const vlrTotalInicial = parseFloat(pedido.VLR_TOTAL) || 0;
+          
+          // Adicionar ao array de controle com os valores existentes
           pedidosAtualizados.push({
             id: id_pedido,
             codProd: pedido.CODPROD,
-            quantidade: 0,
-            valorTotal: 0,
+            quantidade: qtdInicial,
+            valorTotal: vlrTotalInicial.toFixed(2),
           });
+
+          // Somar ao total geral
+          somaTotal += vlrTotalInicial;
 
           const row = document.createElement("tr");
           row.innerHTML = `
@@ -997,12 +1031,19 @@
                 pedido.CODPROD
               }" data-preco="${(pedido.ENTRADACOMICMS || 0).toFixed(
             2
-          )}" value="${pedido.QTD_PEDIR || ""}">
+          )}" value="${qtdInicial > 0 ? qtdInicial : ""}">
             </td>
-            <td class="total">R$ ${(pedido.VLR_TOTAL || 0).toFixed(2)}</td>
+            <td class="total">R$ ${(vlrTotalInicial || 0).toFixed(2)}</td>
           `;
           tabelaBody.appendChild(row);
         });
+
+        // Atualizar o display do valor total na tela
+        const totalPedidoElement = document.getElementById("valorTotal");
+        if (totalPedidoElement) {
+            totalPedidoElement.innerHTML = `Valor Total: R$ ${somaTotal.toFixed(2)}`;
+        }
+
       } catch (error) {
         console.error("Erro ao carregar Pedidos:", error.message);
       }
@@ -1097,493 +1138,9 @@
           (acc, p) => Number(acc) + Number(p.valorTotal),
           0
         );
-
-        // Atualiza o valor total no span
-        totalPedido.innerHTML = `Valor Total: R$ ${somaTotal.toFixed(2)}`;
       }
     });
 
-    document.addEventListener("DOMContentLoaded", function () {
-      // Evento para exportar PDF
-      document
-        .getElementById("btn-exportar-pdf")
-        .addEventListener("click", async function () {
-          const btn = this;
-          try {
-            btn.disabled = true;
-            btn.innerHTML =
-              '<span class="spinner-border spinner-border-sm"></span> Enviando...';
-
-            // Validar e formatar os dados
-            const dadosParaEnvio = prepararPedidosParaEnvio(pedidosAtualizados);
-
-            if (dadosParaEnvio.length === 0) {
-              throw new Error("Nenhum pedido válido para enviar");
-            }
-
-            console.log("Dados formatados:", dadosParaEnvio);
-
-            // Enviar para o servidor
-            const response = await fetch(`${apiBase}/salvarPedidos`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(dadosParaEnvio),
-            });
-
-            if (!response.ok) {
-              const errorData = await response.json();
-              throw new Error(errorData.message || "Erro no servidor");
-            }
-
-            const result = await response.json();
-            console.log("Sucesso:", result);
-
-            exportarPDF();
-            mostrarModal("Pedidos salvos com sucesso!", "success");
-          } catch (error) {
-            console.error("Erro ao enviar pedidos:", error);
-            mostrarModal(`Erro: ${error.message}`, "error");
-          } finally {
-            btn.disabled = false;
-            btn.textContent = "PDF";
-          }
-        });
-
-      // Evento para exportar Excel
-      document
-        .getElementById("btn-exportar-excel")
-        .addEventListener("click", async function () {
-          const btn = this;
-          try {
-            btn.disabled = true;
-            btn.innerHTML =
-              '<span class="spinner-border spinner-border-sm"></span> Enviando...';
-
-            // Validar e formatar os dados
-            const dadosParaEnvio = prepararPedidosParaEnvio(pedidosAtualizados);
-
-            if (dadosParaEnvio.length === 0) {
-              throw new Error("Nenhum pedido válido para enviar");
-            }
-
-            console.log("Dados formatados:", dadosParaEnvio);
-
-            // Enviar para o servidor
-            const response = await fetch(`${apiBase}/salvarPedidos`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(dadosParaEnvio),
-            });
-
-            if (!response.ok) {
-              const errorData = await response.json();
-              throw new Error(errorData.message || "Erro no servidor");
-            }
-
-            const result = await response.json();
-            console.log("Sucesso:", result);
-
-            exportarExcel();
-            mostrarModal("Pedidos salvos com sucesso!", "success");
-          } catch (error) {
-            console.error("Erro ao enviar pedidos:", error);
-            mostrarModal(`Erro: ${error.message}`, "error");
-          } finally {
-            btn.disabled = false;
-            btn.textContent = "Excel";
-          }
-        });
-    });
-
-    // Evento de clique do botão "Finalizar"
-    function mostrarModal(mensagem, tipo) {
-      const modalBody = document.getElementById("modalBody");
-      const alertModalLabel = document.getElementById("alertModalLabel");
-
-      // Define o título e a mensagem do modal
-      if (tipo === "success") {
-        alertModalLabel.textContent = "Sucesso!";
-        modalBody.innerHTML = `
-                <div class="alert alert-success" role="alert">
-                    ${mensagem}
-                </div>
-            `;
-      } else if (tipo === "error") {
-        alertModalLabel.textContent = "Erro!";
-        modalBody.innerHTML = `
-                <div class="alert alert-danger" role="alert">
-                    ${mensagem}
-                </div>
-            `;
-      }
-
-      // Exibe o modal
-      const modal = new bootstrap.Modal(document.getElementById("alertModal"));
-      modal.show();
-    }
-
-    // Evento de clique do botão "Finalizar"
-    document
-      .getElementById("btn-finalizar")
-      .addEventListener("click", async function () {
-        if (!id_pedido || !codemp) {
-          mostrarModal(
-            "Erro: id_pedido ou codemp não estão definidos.",
-            "error"
-          );
-          return;
-        }
-
-        let dados = {
-          id: parseInt(id_pedido, 10),
-          CodEmp: parseInt(codemp, 10),
-          dataFaturamento: document.getElementById("dtFat").value,
-          dataEntrega: document.getElementById("dtEntrega").value,
-          valorTotal: somaTotal,
-        };
-        console.log("Dados antes de finalizar:", dados);
-        console.log("Dados antes de finalizar:", pedidosAtualizados);
-
-        try {
-          const response = await fetch(`${apiBase}/fecharPedido`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(dados),
-          });
-
-          if (!response.ok) {
-            throw new Error("Erro ao finalizar pedido");
-          }
-
-          const result = await response.json();
-          console.log("Pedido finalizado com sucesso:", result);
-          atualizaPlanilhaPedidos();
-
-          // Exibe modal de sucesso
-          mostrarModal("Pedido finalizado com sucesso!", "success");
-        } catch (error) {
-          console.error("Erro ao finalizar pedido:", error.message);
-
-          // Exibe modal de erro
-          mostrarModal(`Erro ao finalizar pedido: ${error.message}`, "error");
-        }
-      });
-
-    // Função para gerar o PDF
-    async function exportarPDF() {
-      console.log("Entrei");
-      try {
-        console.log("Iniciando geração do PDF...");
-
-        if (!id_pedido) {
-          throw new Error("ID do pedido não encontrado na URL");
-        }
-
-        // 1. Buscar os dados do pedido na API
-        const response = await fetch(
-          `${apiBase}/exportarPdf?numero_pedido=${id_pedido}`
-        );
-        if (!response.ok) {
-          throw new Error(`Erro ao buscar dados do pedido: ${response.status}`);
-        }
-
-        const dadosPedido = await response.json();
-        console.log("Dados recebidos da API:", dadosPedido);
-
-        if (!dadosPedido || dadosPedido.length === 0) {
-          throw new Error("Nenhum item encontrado para este pedido");
-        }
-
-        // 2. Determinar empresa e CNPJ com base no primeiro item (todos devem ter o mesmo CODEMP)
-        marca_pedido = dadosPedido[0].MARCA;
-
-        // Definir empresa e CNPJ dinâmicos
-        let empresa = "";
-        let EmpresaAbreviada = "";
-        let cnpj = "";
-        switch (Number(codemp)) {
-          case 1:
-            empresa = "Exclusiva Utilidades e Embalagens LTDA";
-            cnpj = "04.023.539/0001-17";
-            EmpresaAbreviada = "Exclusiva";
-            console.log(empresa, cnpj);
-            break;
-          case 2:
-            empresa = "SG Utilidades";
-            cnpj = "02.444.585/0001-64";
-            EmpresaAbreviada = "SG";
-            console.log(empresa, cnpj);
-            break;
-          case 3:
-            empresa = "Exclusiva Util Equipamentos LTDA";
-            cnpj = "09.666.638/0001-30";
-            EmpresaAbreviada = "UTIL";
-            console.log(empresa, cnpj);
-            break;
-          case 4:
-            empresa = "Exclusiva Prime 85 LTDA";
-            cnpj = "21.518.354/0001-00";
-            EmpresaAbreviada = "PRIME";
-            console.log(empresa, cnpj);
-            break;
-          case 5:
-            empresa = "Seg Center Comercial LTDA";
-            cnpj = "24.486.321/0002-97";
-            EmpresaAbreviada = "SITE";
-            console.log(empresa, cnpj);
-            break;
-          case 6:
-            empresa = "Seg Center Comercial LTDA";
-            cnpj = "24.486.321/0001-06";
-            EmpresaAbreviada = "DECORA";
-            console.log(empresa, cnpj);
-            break;
-          case 7:
-            empresa = "Asg Distribuição LTDA";
-            cnpj = "49.318.824/0001-01";
-            EmpresaAbreviada = "ASG";
-            console.log(empresa, cnpj);
-            break;
-        }
-        console.log(empresa, cnpj);
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        // Adiciona a logo
-        const img = new Image();
-        img.src = "/images/logo.png"; // Substitua pelo caminho da sua logo
-
-        img.onload = function () {
-          doc.addImage(img, "PNG", 120, 10, 70, 20);
-          // Adiciona título e informações do cabeçalho
-          doc.setFontSize(20, "bold");
-          doc.text("Pedido de Compra", 14, 20);
-
-          doc.setFontSize(12);
-          doc.text(`Número do Pedido: ${id_pedido}`, 14, 30);
-          doc.text(`Razão Social: ${empresa}`, 14, 36);
-          doc.text(`CNPJ: ${cnpj}`, 14, 42);
-          doc.text(`Data: ${new Date().toLocaleDateString()}`, 14, 48);
-
-          // Captura os dados da tabela
-          const tabela = document.querySelector("table tbody");
-          const dados = [];
-          let totalizador = 0;
-
-          tabela.querySelectorAll("tr").forEach((linha) => {
-            const refforn = linha.cells[3]?.innerText || ""; // REF FORN
-            const descrprod = linha.cells[4]?.innerText || ""; // DESCR PROD
-            const qtd = linha.cells[12]?.querySelector("input")?.value || "0"; // QTD PEDIDO
-            const valorUnitario = parseFloat(
-              linha.cells[5]?.innerText.replace("R$", "").replace(",", ".") ||
-                "0"
-            ); // VALOR UNITÁRIO
-
-            if (qtd > 0 && valorUnitario > 0) {
-              let totalLinha = qtd * valorUnitario; // Multiplica quantidade pelo valor unitário
-              totalizador += totalLinha; // Soma ao totalizador geral
-              dados.push([refforn, descrprod, qtd]);
-            }
-          });
-
-          console.log("Dados para o PDF:", dados); // Log para depuração
-
-          // Adiciona a tabela no PDF
-          doc.autoTable({
-            startY: 55,
-            head: [["REFERENCIA", "PRODUTO", "QTD PEDIDO"]],
-            body: dados,
-            styles: {
-              fontSize: 9,
-              cellPadding: 2,
-              overflow: "linebreak",
-            },
-            columnStyles: {
-              0: { cellWidth: 30 },
-              1: { cellWidth: 130 },
-              2: { cellWidth: 30 },
-            },
-            margin: { left: 10, right: 10 },
-            theme: "grid",
-            compress: true, // ATIVA COMPRESSÃO
-          });
-
-          // Salva o PDF
-          doc.save(`PEDIDOS_${marca_pedido}_${EmpresaAbreviada}_${id_pedido}`, {
-            returnPromise: true,
-            compression: "FAST",
-          });
-        };
-
-        img.onerror = function () {
-          console.error("Erro ao carregar a logo.");
-        };
-      } catch (error) {
-        console.error("Erro ao gerar PDF:", error);
-      }
-    }
-    async function atualizaPlanilhaPedidos() {
-      const dados = []; // Array para armazenar os dados, se necessário
-
-      try {
-        // URL da API para obter os dados do pedido
-        const apiUrl = `${apiBase}/dadosPlanilhas/${id_pedido}`; // Substitua pelo endpoint correto
-
-        // Faz a requisição para obter os pedidos
-        const response = await fetch(apiUrl);
-
-        // Verifica se a resposta foi bem-sucedida
-        if (!response.ok) {
-          throw new Error("Erro ao carregar pedidos");
-        }
-
-        // Converte a resposta em JSON
-        const pedidosCompras = await response.json();
-
-        // Verifica se os dados foram recebidos corretamente
-        if (!pedidosCompras) {
-          throw new Error("Dados dos pedidos não encontrados");
-        }
-        console.log(pedidosCompras);
-        var data = [];
-        let empresa = "";
-        pedidosCompras.forEach((pedidos) => {
-          // Mapeia o código da empresa para o nome da empresa
-          switch (pedidos.CODEMP) {
-            case 1:
-              empresa = "Exclusiva";
-              break;
-            case 2:
-              empresa = "SG";
-              break;
-            case 3:
-              empresa = "Util";
-              break;
-            case 4:
-              empresa = "Prime 85";
-              break;
-            case 5:
-              empresa = "Site";
-              break;
-            case 6:
-              empresa = "Seg Center";
-              break;
-            case 7:
-              empresa = "Asg";
-              break;
-            default:
-              empresa = "Empresa não encontrada"; // Caso o código não corresponda a nenhuma empresa
-              break;
-          }
-          data = {
-            "Carimbo de data/hora": dataPedido, // Certifique-se de que `dataPedido` está definido
-            Fornecedor: pedidos.MARCA,
-            Empresa: empresa, // Certifique-se de que `CodEmp` está definido
-            "Grupo Empresa": pedidos.GRUPO,
-            "Data faturamento": pedidos.DATAFATURAMENTO,
-            "Data entrega": pedidos.DATAENTREGA,
-            Regional: "Não",
-          };
-        });
-        // Faz a requisição para atualizar a planilha via SheetMonkey
-        const sheetMonkeyResponse = await fetch(
-          "https://api.sheetmonkey.io/form/sxqv9ux7Fx3c3cwBjzhEov",
-          {
-            method: "POST",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-          }
-        ).then((result) => {
-          console.log(result);
-        });
-
-        // Log dos dados recebidos para depuração
-        console.log("Dados recebidos:", data, response);
-      } catch (error) {
-        // Captura e log de erros
-        console.error("Erro durante a execução da função:", error);
-      }
-    }
-    function exportarExcel() {
-      // Definir empresa baseado no código
-      let empresa = "";
-      switch (Number(codemp)) {
-        case 1:
-          empresa = "Exclusiva Utilidades e Embalagens LTDA";
-          break;
-        case 2:
-          empresa = "SG Utilidades";
-          break;
-        case 3:
-          empresa = "Exclusiva Util Equipamentos LTDA";
-          break;
-        case 4:
-          empresa = "Exclusiva Prime 85 LTDA";
-          break;
-        case 5:
-          empresa = "Seg Center Comercial LTDA";
-          break;
-        case 6:
-          empresa = "Seg Center Comercial LTDA";
-          break;
-        case 7:
-          empresa = "Asg Distribuição LTDA";
-          break;
-      }
-
-      console.log("Empresa:", empresa);
-
-      // Captura os dados da tabela
-      const tabela = document.querySelector("table tbody");
-      const dados = [];
-
-      // Adicionar cabeçalho com informações do pedido
-      dados.push(["Pedido de Compra"]);
-      dados.push(["Número do Pedido:", id_pedido]);
-      dados.push(["Razão Social:", empresa]);
-      dados.push(["Data:", new Date().toLocaleDateString()]);
-      dados.push([]); // Linha em branco
-
-      // Adicionar cabeçalho da tabela - sem valores unitários ou totais
-      dados.push(["REFERENCIA", "PRODUTO", "QTD PEDIDO"]);
-
-      // Adicionar dados - sem valores unitários ou totais
-      tabela.querySelectorAll("tr").forEach((linha) => {
-        const refforn = linha.cells[3]?.innerText || "";
-        const descrprod = linha.cells[4]?.innerText || "";
-        const qtd = linha.cells[12]?.querySelector("input")?.value || "0";
-
-        if (qtd > 0) {
-          dados.push([refforn, descrprod, parseInt(qtd)]);
-        }
-      });
-
-      // Criar workbook e worksheet
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet(dados);
-
-      // Aplicar estilos (limitado no xlsx)
-      const colWidths = [
-        { wch: 15 }, // REFERENCIA
-        { wch: 40 }, // PRODUTO
-        { wch: 12 }, // QTD PEDIDO
-      ];
-
-      ws["!cols"] = colWidths;
-
-      // Adicionar a planilha ao workbook
-      XLSX.utils.book_append_sheet(wb, ws, "Pedido");
-
-      // Salvar o arquivo
-      XLSX.writeFile(wb, `Pedido_${id_pedido}.xlsx`);
-    }
-    // Variável para armazenar os filtros ativos
-    const activeFilters = {};
-
-    // Função para filtrar a tabela
     function applyFilters() {
       const rows = document.querySelectorAll("table tbody tr");
       let hasVisibleRows = false;
@@ -1862,6 +1419,372 @@
         }
 
         applyFiltersAndSort(); // Agora aplica filtros e mantém ordenação
+      });
+    });
+
+    // Event Listeners para Exportação
+    document.addEventListener("DOMContentLoaded", function () {
+      // Evento para exportar PDF
+      const btnPdf = document.getElementById("btn-exportar-pdf");
+      if (btnPdf) {
+        btnPdf.addEventListener("click", async function () {
+          const btn = this;
+          try {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Gerando PDF...';
+
+            await exportarPDF();
+            mostrarModal("PDF gerado com sucesso!", "success");
+          } catch (error) {
+            console.error("Erro ao gerar PDF:", error);
+            mostrarModal(`Erro ao gerar PDF: ${error.message}`, "error");
+          } finally {
+            btn.disabled = false;
+            btn.textContent = "PDF";
+          }
+        });
+      }
+
+      // Evento para exportar Excel
+      const btnExcel = document.getElementById("btn-exportar-excel");
+      if (btnExcel) {
+        btnExcel.addEventListener("click", async function () {
+          const btn = this;
+          try {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Gerando Excel...';
+
+            await exportarExcel();
+            mostrarModal("Excel gerado com sucesso!", "success");
+          } catch (error) {
+            console.error("Erro ao gerar Excel:", error);
+            mostrarModal(`Erro ao gerar Excel: ${error.message}`, "error");
+          } finally {
+            btn.disabled = false;
+            btn.textContent = "Excel";
+          }
+        });
+      }
+    });
+
+    // Modern modal function using SweetAlert2
+    function mostrarModal(mensagem, tipo) {
+      const config = {
+        title: tipo === 'success' ? 'Sucesso!' : 'Erro!',
+        text: mensagem,
+        icon: tipo === 'success' ? 'success' : 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: tipo === 'success' ? '#28a745' : '#dc3545',
+        timer: tipo === 'success' ? 3000 : undefined,
+        showConfirmButton: true
+      };
+
+      Swal.fire(config);
+    }
+
+    // Evento de clique do botão "Finalizar"
+    const btnFinalizar = document.getElementById("btn-finalizar");
+    if (btnFinalizar) {
+      btnFinalizar.addEventListener("click", async function () {
+        if (!id_pedido || !codemp) {
+          mostrarModal("Erro: Alguma Informação não foi preenchida.", "error");
+          return;
+        }
+
+        // Validar e formatar os dados dos pedidos
+        const dadosParaEnvio = prepararPedidosParaEnvio(pedidosAtualizados);
+
+        if (dadosParaEnvio.length === 0) {
+          mostrarModal("Erro: Nenhum pedido válido para finalizar", "error");
+          return;
+        }
+
+        console.log("Dados antes de finalizar:", dadosParaEnvio);
+
+        try {
+          // 1. Salvar os itens do pedido
+          const responseSalvar = await fetch(`${apiBase}/salvarPedidos`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dadosParaEnvio),
+          });
+
+          if (!responseSalvar.ok) {
+            const errorData = await responseSalvar.json();
+            throw new Error(errorData.error || "Erro ao salvar itens do pedido");
+          }
+
+          // 2. Atualizar o cabeçalho do pedido (Status FEITO, Empresa, Datas, Total)
+          const dadosCabecalho = {
+            id: parseInt(id_pedido, 10),
+            CodEmp: parseInt(codemp, 10),
+            dataFaturamento: document.getElementById("dtFat").value,
+            dataEntrega: document.getElementById("dtEntrega").value,
+            valorTotal: somaTotal
+          };
+
+          const responseAtualizar = await fetch(`${apiBase}/atualizarPedidoFeito`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dadosCabecalho),
+          });
+
+          if (!responseAtualizar.ok) {
+            const errorData = await responseAtualizar.json();
+            throw new Error(errorData.error || "Erro ao atualizar status do pedido");
+          }
+
+          const result = await responseAtualizar.json();
+          console.log("Pedido finalizado com sucesso:", result);
+          
+          // 3. Atualizar planilha
+          if (typeof atualizaPlanilhaPedidos === 'function') {
+             await atualizaPlanilhaPedidos();
+          }
+
+          // Exibe modal de sucesso
+          mostrarModal("Pedido finalizado com sucesso!", "success");
+        } catch (error) {
+          console.error("Erro ao finalizar pedido:", error.message);
+          mostrarModal(`Erro ao finalizar pedido: ${error.message}`, "error");
+        }
+      });
+    }
+
+    // Função para gerar o PDF (Premium Version)
+    async function exportarPDF() {
+      return new Promise(async (resolve, reject) => {
+        try {
+          if (!id_pedido) throw new Error("ID do pedido não encontrado");
+
+          // Obter dados da API
+          const response = await fetch(`${apiBase}/exportarPdf?numero_pedido=${id_pedido}`);
+          if (!response.ok) throw new Error("Erro ao buscar dados do pedido");
+          
+          const dadosPedido = await response.json();
+          if (!dadosPedido || dadosPedido.length === 0) throw new Error("Nenhum item encontrado");
+
+          // Configurar Empresa
+          let empresaNome = "Empresa Desconhecida";
+          let cnpj = "";
+          const codEmpresa = parseInt(codemp || dadosPedido[0].CODEMP || 0);
+          
+          switch (codEmpresa) {
+            case 1: empresaNome = "Exclusiva Utilidades e Embalagens LTDA"; cnpj = "04.023.539/0001-17"; break;
+            case 2: empresaNome = "SG Utilidades"; cnpj = "02.444.585/0001-64"; break;
+            case 3: empresaNome = "Exclusiva Util Equipamentos LTDA"; cnpj = "09.666.638/0001-30"; break;
+            case 4: empresaNome = "Exclusiva Prime 85 LTDA"; cnpj = "21.518.354/0001-00"; break;
+            case 5: empresaNome = "Seg Center Comercial LTDA"; cnpj = "24.486.321/0002-97"; break;
+            case 6: empresaNome = "Seg Center Comercial LTDA"; cnpj = "24.486.321/0001-06"; break;
+            case 7: empresaNome = "Asg Distribuição LTDA"; cnpj = "49.318.824/0001-01"; break;
+          }
+
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF();
+
+          // Adicionar Logo (se existir)
+          const img = new Image();
+          img.src = "/images/logo.png";
+          
+          img.onload = () => {
+            doc.addImage(img, "PNG", 14, 10, 60, 15);
+            gerarConteudoPDF(doc, empresaNome, cnpj, dadosPedido, resolve);
+          };
+          
+          img.onerror = () => {
+            // Se não carregar logo, gera sem logo
+            gerarConteudoPDF(doc, empresaNome, cnpj, dadosPedido, resolve);
+          };
+
+        } catch (error) {
+          reject(error);
+        }
+      });
+    }
+
+    function gerarConteudoPDF(doc, empresaNome, cnpj, dadosPedido, resolve) {
+      // Cabeçalho
+      doc.setFontSize(18);
+      doc.setTextColor(80, 0, 1); // Bordô
+      doc.text("PEDIDO DE COMPRA", 195, 20, { align: "right" });
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Nº Pedido: ${id_pedido}`, 195, 28, { align: "right" });
+      doc.text(`Data: ${new Date().toLocaleDateString()}`, 195, 33, { align: "right" });
+
+      // Info Empresa
+      doc.setFontSize(11);
+      doc.setTextColor(0);
+      doc.text(empresaNome, 14, 35);
+      doc.setFontSize(9);
+      doc.setTextColor(100);
+      doc.text(`CNPJ: ${cnpj}`, 14, 40);
+
+      // Tabela
+      const colunas = ["REF", "PRODUTO", "QTD"];
+      const linhas = dadosPedido
+        .filter(item => parseFloat(item.QTD_PEDIR) > 0)
+        .map(item => [
+          item.REFFORN || item.REFERENCIA,
+          item.DESCRPROD,
+          item.QTD_PEDIR
+        ]);
+
+      doc.autoTable({
+        startY: 50,
+        head: [colunas],
+        body: linhas,
+        theme: 'grid',
+        headStyles: {
+          fillColor: [80, 0, 1], // Bordô
+          textColor: 255,
+          fontSize: 10,
+          fontStyle: 'bold'
+        },
+        bodyStyles: {
+          fontSize: 9,
+          textColor: 50
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245]
+        },
+        columnStyles: {
+          0: { cellWidth: 40 },
+          1: { cellWidth: 'auto' },
+          2: { cellWidth: 20, halign: 'center' }
+        },
+        margin: { top: 50 }
+      });
+
+      // Rodapé
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`Página ${i} de ${pageCount}`, 195, 290, { align: "right" });
+        doc.text(`Gerado em ${new Date().toLocaleString()}`, 14, 290, { align: "left" });
+      }
+
+      doc.save(`Pedido_${id_pedido}_${empresaNome.split(' ')[0]}.pdf`);
+      resolve();
+    }
+
+    // Função para gerar Excel (Premium Version com ExcelJS)
+    async function exportarExcel() {
+      if (!id_pedido) throw new Error("ID do pedido não encontrado");
+
+      // Obter dados da API (mesma lógica do PDF para garantir dados atualizados)
+      const response = await fetch(`${apiBase}/exportarPdf?numero_pedido=${id_pedido}`);
+      if (!response.ok) throw new Error("Erro ao buscar dados");
+      const dadosPedido = await response.json();
+      
+      // Configurar Empresa
+      let empresaNome = "Empresa Desconhecida";
+      const codEmpresa = parseInt(codemp || dadosPedido[0].CODEMP || 0);
+      switch (codEmpresa) {
+        case 1: empresaNome = "Exclusiva Utilidades"; break;
+        case 2: empresaNome = "SG Utilidades"; break;
+        case 3: empresaNome = "Exclusiva Util Equipamentos"; break;
+        case 4: empresaNome = "Exclusiva Prime 85"; break;
+        case 5: empresaNome = "Seg Center Comercial"; break;
+        case 6: empresaNome = "Seg Center Comercial"; break;
+        case 7: empresaNome = "Asg Distribuição"; break;
+      }
+
+      // Criar Workbook
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Pedido de Compra');
+
+      // Estilos
+      const headerStyle = {
+        font: { name: 'Arial', size: 16, bold: true, color: { argb: 'FFFFFFFF' } },
+        fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF500001' } }, // Bordô
+        alignment: { horizontal: 'center', vertical: 'middle' }
+      };
+
+      const subHeaderStyle = {
+        font: { name: 'Arial', size: 11, bold: true },
+        alignment: { horizontal: 'left' }
+      };
+
+      const tableHeaderStyle = {
+        font: { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } },
+        fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF800000' } }, // Vermelho escuro
+        alignment: { horizontal: 'center' },
+        border: { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} }
+      };
+
+      // Cabeçalho Principal
+      worksheet.mergeCells('A1:C2');
+      const titleCell = worksheet.getCell('A1');
+      titleCell.value = 'PEDIDO DE COMPRA';
+      titleCell.style = headerStyle;
+
+      // Informações
+      worksheet.mergeCells('A4:C4');
+      worksheet.getCell('A4').value = `Empresa: ${empresaNome}`;
+      worksheet.getCell('A4').style = subHeaderStyle;
+
+      worksheet.mergeCells('A5:C5');
+      worksheet.getCell('A5').value = `Nº Pedido: ${id_pedido} | Data: ${new Date().toLocaleDateString()}`;
+      worksheet.getCell('A5').style = subHeaderStyle;
+
+      // Cabeçalho da Tabela
+      worksheet.getRow(7).values = ['REFERÊNCIA', 'PRODUTO', 'QUANTIDADE'];
+      ['A7', 'B7', 'C7'].forEach(cell => {
+        worksheet.getCell(cell).style = tableHeaderStyle;
+      });
+
+      // Dados
+      let currentRow = 8;
+      dadosPedido.forEach(item => {
+        if (parseFloat(item.QTD_PEDIR) > 0) {
+          const row = worksheet.getRow(currentRow);
+          row.values = [
+            item.REFFORN || item.REFERENCIA,
+            item.DESCRPROD,
+            parseFloat(item.QTD_PEDIR)
+          ];
+          
+          // Bordas e alinhamento
+          row.eachCell((cell, colNumber) => {
+            cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+            if (colNumber === 3) cell.alignment = { horizontal: 'center' };
+          });
+          
+          currentRow++;
+        }
+      });
+
+      // Largura das colunas
+      worksheet.getColumn(1).width = 20;
+      worksheet.getColumn(2).width = 60;
+      worksheet.getColumn(3).width = 15;
+
+      // Gerar e Salvar
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      saveAs(blob, `Pedido_${id_pedido}_${empresaNome.split(' ')[0]}.xlsx`);
+    }
+
+    // Logout functionality with SweetAlert2
+    document.getElementById('logoutBtn').addEventListener('click', function(e) {
+      e.preventDefault();
+      Swal.fire({
+        title: 'Tem certeza?',
+        text: "Você será desconectado do sistema.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, sair!',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          document.getElementById('logoutForm').submit();
+        }
       });
     });
   </script>
