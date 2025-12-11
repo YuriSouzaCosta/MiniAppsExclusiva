@@ -364,6 +364,28 @@
         .btn-logout:hover {
             background-color: #ff4d4d;
         }
+
+        /* Fix search input alignment */
+        .input-group-lg .form-control {
+            height: 48px;
+            line-height: 1.5;
+            padding: 0.5rem 1rem;
+        }
+
+        .input-group-lg .input-group-text {
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+        }
+
+        .input-group-lg .btn {
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+        }
     </style>
 </head>
 <body>
@@ -416,6 +438,51 @@
         <div class="page-header">
             <h1 class="page-title">Finalizar Pedidos</h1>
             <p class="page-subtitle">Complete os pedidos com fornecedor e forma de pagamento</p>
+            
+            <!-- Search Bar -->
+            <div class="mt-3">
+                <div class="row g-3 align-items-center">
+                    <!-- Search Input -->
+                    <div class="col-md-5">
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input 
+                                type="text" 
+                                id="searchSupplier" 
+                                class="form-control" 
+                                placeholder="Buscar por fornecedor ou marca..."
+                                autocomplete="off"
+                            >
+                            <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Store Filter -->
+                    <div class="col-md-3">
+                        <select id="storeFilter" class="form-select form-select-lg">
+                            <option value="">Todas as Lojas</option>
+                            <option value="PRIME">PRIME</option>
+                            <option value="EXCLUSIVA">EXCLUSIVA</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Generate Report Button -->
+                    <div class="col-md-4">
+                        <button type="button" id="btnGenerateReport" class="btn btn-lg w-100" style="background: linear-gradient(135deg, #500001 0%, #8F1111 100%); color: white; border: none;">
+                            <i class="bi bi-file-earmark-text"></i> Gerar Relatório
+                        </button>
+                    </div>
+                </div>
+                
+                <small class="text-muted d-block mt-2">
+                    <i class="bi bi-info-circle"></i> 
+                    Use os filtros acima para buscar e filtrar pedidos
+                </small>
+            </div>
         </div>
 
         <!-- Pedidos Container -->

@@ -654,140 +654,311 @@ async function carregaPedidosFeitos() {
     }
 }
 
+// Function to filter orders by supplier name, brand, and store
+function filtrarPedidosPorFornecedor() {
+    const searchInput = document.getElementById('searchSupplier');
+    const storeFilter = document.getElementById('storeFilter');
 
+    if (!searchInput) return;
 
-// Function to initialize payment method dropdowns
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    const selectedStore = storeFilter ? storeFilter.value.toUpperCase() : '';
+    const pedidosCards = document.querySelectorAll('.pedido-card');
+    let visibleCount = 0;
 
-function initializeFormaPagDropdowns() {
-    // Find all payment method input fields
-    const formaPagInputs = document.querySelectorAll("[id^='formaPag_']");
+    pedidosCards.forEach(card => {
+        // Find the supplier input field within this card
+        const fornecedorInput = card.querySelector('[id^="fornecedor_"]');
 
-    formaPagInputs.forEach(input => {
-        input.addEventListener("input", function () {
-            const dropdownId = input.id.replace('formaPag_', 'pagLista_');
-            filtrarFormaPagamento(input.id, dropdownId);
+        // Find the store/group label within this card
+        const lojaElement = card.querySelector('.pedido-loja');
+
+        // Find the brand (marca) within this card
+        const infoItems = card.querySelectorAll('.info-item');
+        let marcaValue = '';
+        infoItems.forEach(item => {
+            const label = item.querySelector('.info-label');
+            if (label && label.textContent.trim().toLowerCase() === 'marca') {
+                const value = item.querySelector('.info-value');
+                if (value) marcaValue = value.textContent.toLowerCase();
+            }
         });
+
+        if (!fornecedorInput) {
+            card.style.display = 'none';
+            return;
+        }
+
+        const fornecedorValue = fornecedorInput.value.toLowerCase();
+        const lojaValue = lojaElement ? lojaElement.textContent.toUpperCase() : '';
+
+        // Check supplier match OR brand match
+        const supplierMatch = searchTerm === '' ||
+            fornecedorValue.includes(searchTerm) ||
+            marcaValue.includes(searchTerm);
+
+        // Check store match
+        const storeMatch = selectedStore === '' || lojaValue.includes(selectedStore);
+
+        // Show card if both filters match
+        if (supplierMatch && storeMatch) {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
     });
 
-}
-// Function to initialize supplier dropdowns after loading data
-function initializeFornecedorDropdowns() {
-    // Find all supplier input fields
-    const fornecedorInputs = document.querySelectorAll("[id^='fornecedor_']");
+    // Show/hide empty state
+    const emptyState = document.getElementById('emptyState');
+    const pedidosContainer = document.getElementById('pedidosContainer');
 
-    fornecedorInputs.forEach(input => {
-        input.addEventListener("input", function () {
-            const dropdownId = input.id.replace('fornecedor_', 'fornecedorLista_');
-            filtrarFornecedor(input.id, dropdownId);
-        });
-    });
-}
+    if (visibleCount === 0 && pedidosCards.length > 0) {
+        if (emptyState) {
+            emptyState.style.display = 'block';
+            emptyState.querySelector('h3').textContent = 'Nenhum pedido encontrado';
 
+            let filterMsg = 'Nenhum pedido corresponde aos filtros aplicados';
+            if (searchTerm && selectedStore) {
+                filterMsg = `Nenhum pedido encontrado para "${searchInput.value}" na loja ${selectedStore}`;
+            } else if (searchTerm) {
+                filterMsg = `Nenhum pedido corresponde à busca "${searchInput.value}"`;
+            } else if (selectedStore) {
+                filterMsg = `Nenhum pedido encontrado para a loja ${selectedStore}`;
+            }
 
-async function salvarPedidoSystem(fornecedorId, formaPagId, numeroPedido) {
-    console.log('Dados recebidos:', { formaPagId, fornecedorId, numeroPedido });
-
-    const formaPagElement = document.getElementById(formaPagId);
-    const fornecedorElement = document.getElementById(fornecedorId);
-
-    if (!formaPagElement || !fornecedorElement) {
-        const errorMsg = 'Elementos não encontrados no DOM';
-        console.error(errorMsg, formaPagId, fornecedorId);
-        exibirModal(errorMsg, 'error');
-        return;
+            emptyState.querySelector('p').textContent = filterMsg;
+        }
+        if (pedidosContainer) pedidosContainer.style.display = 'none';
+    } else {
+        if (emptyState) emptyState.style.display = 'none';
+        if (pedidosContainer) pedidosContainer.style.display = 'block';
     }
+}
 
-    const idPagamento = formaPagElement.value;
-    const idFornecedor = fornecedorElement.value;
-    const cod_pagamento = formaPagElement.dataset.codtipvenda;
-    const cod_fornecedor = fornecedorElement.dataset.codparc;
+// Initialize search functionality after page loads
+document.addEventListener('DOMContentLoaded', function () {
+    // Wait a bit for the orders to load
+    setTimeout(() => {
+        const searchInput = document.getElementById('searchSupplier');
+        const clearButton = document.getElementById('clearSearch');
+        const storeFilter = document.getElementById('storeFilter');
+        const reportButton = document.getElementById('btnGenerateReport');
 
-    // Validação dos campos obrigatórios
-    if (!idPagamento || !idFornecedor || !cod_pagamento || !cod_fornecedor) {
-        const errorMsg = 'Todos os campos são obrigatórios';
-        console.error(errorMsg);
-        exibirModal(errorMsg, 'error');
-        return;
-    }
+        if (searchInput) {
+            // Filter as user types
+            searchInput.addEventListener('input', filtrarPedidosPorFornecedor);
 
-    const data = {
-        idPagamento: idPagamento,
-        idFornecedor: idFornecedor,
-        cod_pagamento: cod_pagamento,
-        cod_fornecedor: cod_fornecedor,
-        numero_pedido: numeroPedido
-    };
+            // Filter on Enter key
+            searchInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    filtrarPedidosPorFornecedor();
+                }
+            });
+        }
 
-    console.log('Dados enviados:', data);
+        if (clearButton) {
+            clearButton.addEventListener('click', function () {
+                if (searchInput) {
+                    searchInput.value = '';
+                    if (storeFilter) storeFilter.value = '';
+                    filtrarPedidosPorFornecedor();
+                    searchInput.focus();
+                }
+            });
+        }
 
+        if (storeFilter) {
+            storeFilter.addEventListener('change', filtrarPedidosPorFornecedor);
+        }
+
+        if (reportButton) {
+            reportButton.addEventListener('click', gerarRelatorioPedidosAbertos);
+        }
+    }, 1000);
+});
+
+
+// Function to generate open orders report
+async function gerarRelatorioPedidosAbertos() {
     try {
-        // Mostrar loader enquanto processa
-        showLoader(true);
-
-        const response = await fetch('/finalizarPedidoFinal', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
+        // Show loading with SweetAlert2
+        Swal.fire({
+            title: 'Gerando Relatório...',
+            text: 'Por favor, aguarde',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
         });
 
-        const result = await response.json();
+        const response = await fetch(`${apiBase}/consultarPedidosFeitos`, {
+            method: "GET"
+        });
 
         if (!response.ok) {
-            throw new Error(result.error || 'Erro ao finalizar pedido');
+            throw new Error("Erro ao carregar pedidos");
         }
 
-        console.log('Resposta do servidor:', result);
+        let pedidos = await response.json();
 
-        // Montar mensagem completa com resposta da procedure
-        let mensagemSucesso = '✅ Pedido finalizado com sucesso!';
-        if (result.mensagemProcedure) {
-            mensagemSucesso += `\n\nStatus da geração: ${result.mensagemProcedure}`;
+        // Apply filters to the report
+        const searchInput = document.getElementById('searchSupplier');
+        const storeFilter = document.getElementById('storeFilter');
+
+        if (searchInput || storeFilter) {
+            const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            const selectedStore = storeFilter ? storeFilter.value.toUpperCase() : '';
+
+            // Filter pedidos based on active filters
+            pedidos = pedidos.filter(pedido => {
+                // Check supplier/brand match
+                let supplierMatch = true;
+                if (searchTerm) {
+                    const marcaMatch = pedido.MARCA && pedido.MARCA.toLowerCase().includes(searchTerm);
+                    // Note: We can't check supplier here as it's not in the data, only marca
+                    supplierMatch = marcaMatch;
+                }
+
+                // Check store match
+                let storeMatch = true;
+                if (selectedStore) {
+                    storeMatch = pedido.GRUPO && pedido.GRUPO.toUpperCase().includes(selectedStore);
+                }
+
+                return supplierMatch && storeMatch;
+            });
         }
 
-        exibirModal(mensagemSucesso, 'success');
+        if (pedidos.length === 0) {
+            Swal.fire({
+                title: 'Nenhum Pedido',
+                text: 'Não há pedidos que correspondam aos filtros aplicados.',
+                icon: 'info',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
 
-        // Recarregar a lista de pedidos após 3 segundos
-        setTimeout(() => {
-            carregaPedidosFeitos();
-        }, 3000);
+        // Get filter description for report header
+        const searchInput2 = document.getElementById('searchSupplier');
+        const storeFilter2 = document.getElementById('storeFilter');
+        let filterDescription = '';
+
+        if (searchInput2 && searchInput2.value) {
+            filterDescription += `Busca: "${searchInput2.value}"`;
+        }
+        if (storeFilter2 && storeFilter2.value) {
+            if (filterDescription) filterDescription += ' | ';
+            filterDescription += `Loja: ${storeFilter2.value}`;
+        }
+        if (!filterDescription) {
+            filterDescription = 'Todos os pedidos';
+        }
+
+        // Generate report HTML
+        let reportHTML = `
+            <div style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2 style="color: #500001; text-align: center; margin-bottom: 20px;">
+                    📋 Relatório de Pedidos em Aberto
+                </h2>
+                <p style="text-align: center; color: #666; margin-bottom: 10px;">
+                    Gerado em: ${new Date().toLocaleString('pt-BR')}
+                </p>
+                <p style="text-align: center; color: #666; margin-bottom: 30px; font-weight: 600;">
+                    Filtros: ${filterDescription}
+                </p>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                    <thead>
+                        <tr style="background-color: #500001; color: white;">
+                            <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Pedido #</th>
+                            <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Marca</th>
+                            <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Loja</th>
+                            <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Data Pedido</th>
+                            <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Data Faturamento</th>
+                            <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        pedidos.forEach((pedido, index) => {
+            const bgColor = index % 2 === 0 ? '#f9f9f9' : 'white';
+            reportHTML += `
+                <tr style="background-color: ${bgColor};">
+                    <td style="padding: 10px; border: 1px solid #ddd;">${pedido.NUMERO_PEDIDO}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">${pedido.MARCA}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">${pedido.GRUPO}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">${new Date(pedido.DATA_PEDIDO).toLocaleDateString('pt-BR')}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">${new Date(pedido.DATAFATURAMENTO).toLocaleDateString('pt-BR')}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;"><span style="background: #3b82f6; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${pedido.ANDAMENTO}</span></td>
+                </tr>
+            `;
+        });
+
+        reportHTML += `
+                    </tbody>
+                </table>
+                <p style="margin-top: 30px; text-align: center; color: #666; font-size: 14px;">
+                    Total de pedidos: <strong>${pedidos.length}</strong>
+                </p>
+            </div>
+        `;
+
+        // Show report in modal
+        Swal.fire({
+            title: 'Relatório de Pedidos em Aberto',
+            html: reportHTML,
+            width: '90%',
+            showCancelButton: true,
+            confirmButtonText: '<i class="bi bi-printer"></i> Imprimir',
+            cancelButtonText: 'Fechar',
+            confirmButtonColor: '#500001',
+            customClass: {
+                popup: 'swal-wide'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Print the report
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Relatório de Pedidos em Aberto</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; }
+                            @media print {
+                                button { display: none; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        ${reportHTML}
+                        <div style="text-align: center; margin-top: 20px;">
+                            <button onclick="window.print()" style="padding: 10px 20px; background: #500001; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                Imprimir
+                            </button>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+            }
+        });
 
     } catch (error) {
-        console.error('Erro ao finalizar pedido:', error);
-
-        let errorMessage = '❌ Erro ao finalizar pedido';
-        if (error.message.includes('ORA-') || error.message.includes('Oracle')) {
-            errorMessage += '\nErro no banco de dados: ' + error.message;
-        } else {
-            errorMessage += ': ' + error.message;
-        }
-
-        exibirModal(errorMessage, 'error');
-    } finally {
-        // Esconder loader
-        showLoader(false);
+        console.error('Erro ao gerar relatório:', error);
+        Swal.fire({
+            title: 'Erro!',
+            text: 'Erro ao gerar relatório de pedidos: ' + error.message,
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
     }
 }
 
-// Função para exibir/ocultar loader
-function showLoader(show) {
-    const loader = document.getElementById('loader');
-    if (loader) {
-        loader.style.display = show ? 'block' : 'none';
-    }
-}
-
-// Função para exibir o modal com a mensagem usando SweetAlert2
-function exibirModal(mensagem, tipo) {
-    Swal.fire({
-        title: tipo === 'success' ? 'Sucesso!' : 'Erro!',
-        html: mensagem.replace(/\n/g, '<br>'),
-        icon: tipo === 'success' ? 'success' : 'error',
-        confirmButtonText: 'OK',
-        confirmButtonColor: tipo === 'success' ? '#28a745' : '#dc3545'
-    });
-}
 
 async function carregaPedidosFeitosFinalizados() {
     try {

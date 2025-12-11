@@ -9,7 +9,8 @@
 
 .main-content {
 	margin: 0 auto;
-	max-width: 70%;
+	max-width: min(90%, 1400px);
+	padding: 1.5rem;
 }
 
 body {
@@ -38,7 +39,7 @@ div.table-cast div.container table.table {
 	margin: auto;
 	margin-bottom: 10px;
 	font-weight: 500;
-	font-size: 25px;
+	font-size: clamp(1rem, 1.2vw, 1.25rem);
 	border-radius: 10px;
 	border: 0;
 }

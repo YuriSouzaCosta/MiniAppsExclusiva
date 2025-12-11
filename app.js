@@ -65,20 +65,11 @@ app.get('/', (req, res) => {
 
   // Detectar ambiente com base no host e NODE_ENV
   if (process.env.NODE_ENV === 'development' || baseUrl.includes('localhost')) {
-    // Ambiente de desenvolvimento (localhost)
-    minhaVariavel = baseUrl;
-  } else if (baseUrl.includes('exclusiva.intranet')) {
-    // Ambiente de produção (intranet)
-    minhaVariavel = baseUrl;
-  } else if (baseUrl.includes('exclusivarua4.duckdns.org')) {
-    // Ambiente externo (DuckDNS)
-    minhaVariavel = baseUrl;
-  } else if (baseUrl.includes('appexclusiva.innube.com.br')) {
-    // Ambiente de produção (Innube)
+    // Ambiente de desenvolvimento (localhost) - usa a URL com porta
     minhaVariavel = baseUrl;
   } else {
-    // Caso nenhum dos casos acima seja atendido, usar o baseUrl padrão
-    minhaVariavel = baseUrl;
+    // Qualquer outro ambiente - vai direto para o domínio de produção
+    minhaVariavel = 'https://appexclusiva.innube.com.br';
   }
 
   console.log('minhaVariavel definida como:', minhaVariavel);
