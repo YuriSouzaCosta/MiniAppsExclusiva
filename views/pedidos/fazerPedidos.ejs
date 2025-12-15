@@ -431,13 +431,13 @@
 
       .input-pequeno {
         font-size: 10px;
-        /* Ajuste conforme necessário */
         text-align: center;
-        /* Para alinhar os números */
-        height: 100%;
-        /* Garante que o input não cresça além da célula */
-        padding: 1px;
-        /* Reduz espaço interno */
+        height: 20px; /* Altura fixa menor */
+        padding: 0 2px; /* Padding mínimo */
+        width: 100%;
+        max-width: 60px; /* Limita a largura */
+        border: 1px solid #ced4da;
+        border-radius: 4px;
       }
 
       .filter-row {
@@ -1311,6 +1311,7 @@
     // Variáveis para controle de ordenação
     let currentSortColumn = null;
     let isAscending = true;
+    let activeFilters = {}; // Variável para armazenar os filtros ativos
 
     // Função para ordenar a tabela
     function sortTable(columnIndex, ascending) {
@@ -1342,18 +1343,18 @@
         // Tratamento especial para colunas numéricas
         if ([5, 6, 8, 9, 10, 11, 12, 13].includes(columnIndex)) {
           // Para colunas de valores (VLR VENDA, ULT CUS, etc.)
-          valueA =
-            parseFloat(
-              cellA.textContent.replace("R$", "").replace(",", "").trim()
-            ) || 0;
-          valueB =
-            parseFloat(
-              cellB.textContent.replace("R$", "").replace(",", "").trim()
-            ) || 0;
+          // Remove "R$", espaços, pontos de milhar e substitui vírgula por ponto
+          const cleanNumber = (text) => {
+             return parseFloat(text.replace("R$", "").replace(/\s/g, "").replace(/\./g, "").replace(",", ".")) || 0;
+          };
+
+          valueA = cleanNumber(cellA.textContent);
+          valueB = cleanNumber(cellB.textContent);
+
         } else if (columnIndex === 12) {
           // Para coluna QTD PEDIDO (input)
-          valueA = parseFloat(cellA.querySelector("input").value) || 0;
-          valueB = parseFloat(cellB.querySelector("input").value) || 0;
+          valueA = parseFloat(cellA.querySelector("input").value.replace(",", ".")) || 0;
+          valueB = parseFloat(cellB.querySelector("input").value.replace(",", ".")) || 0;
         } else {
           // Para colunas de texto
           valueA = cellA.textContent.trim().toLowerCase();

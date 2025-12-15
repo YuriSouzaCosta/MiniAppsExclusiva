@@ -406,9 +406,30 @@ function carregarDadosPedido(id) {
 
 
 async function apagarPedido(id_pedido) {
-    if (id_pedido && confirm("Deseja realmente apagar o pedido?")) {
+    if (!id_pedido) return;
+
+    const result = await Swal.fire({
+        title: 'Tem certeza?',
+        text: "Deseja realmente apagar este pedido? Esta ação não pode ser desfeita!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, apagar!',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
         try {
-            console.log(id_pedido);
+            // Show loading state
+            Swal.fire({
+                title: 'Apagando...',
+                text: 'Por favor, aguarde.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
             // Faz a requisição para excluir o pedido
             const response = await fetch(`${apiBase}/fecharPedido?id_pedido=${id_pedido}`, {
@@ -421,14 +442,144 @@ async function apagarPedido(id_pedido) {
             }
 
             // Exibe mensagem de sucesso
-            alert("Pedido apagado com sucesso!");
+            await Swal.fire({
+                icon: 'success',
+                title: 'Apagado!',
+                text: 'Pedido apagado com sucesso.',
+                timer: 2000,
+                showConfirmButton: false
+            });
 
             // Recarrega a lista de pedidos após a exclusão
-            await carregarPedidos(); // Aguarda a conclusão de carregarPedidos
+            if (typeof carregarPedidos === 'function') {
+                await carregarPedidos();
+            } else if (typeof carregaPedidosFeitos === 'function') {
+                await carregaPedidosFeitos();
+            } else {
+                window.location.reload();
+            }
+
         } catch (error) {
             console.error("Erro ao apagar o pedido:", error.message);
-            alert("Erro ao apagar o pedido. Tente novamente.");
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro!',
+                text: 'Erro ao apagar o pedido. Tente novamente.'
+            });
         }
+    }
+}
+
+// Function to save/finalize a pedido with supplier and payment method
+async function salvarPedidoSystem(fornecedorId, formaPagId, numeroPedido) {
+    console.log('Dados recebidos:', { formaPagId, fornecedorId, numeroPedido });
+
+    const formaPagElement = document.getElementById(formaPagId);
+    const fornecedorElement = document.getElementById(fornecedorId);
+
+    if (!formaPagElement || !fornecedorElement) {
+        const errorMsg = 'Elementos não encontrados no DOM';
+        console.error(errorMsg, formaPagId, fornecedorId);
+        Swal.fire({
+            title: 'Erro!',
+            text: errorMsg,
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    const idPagamento = formaPagElement.value;
+    const idFornecedor = fornecedorElement.value;
+    const cod_pagamento = formaPagElement.dataset.codtipvenda;
+    const cod_fornecedor = fornecedorElement.dataset.codparc;
+
+    // Validação dos campos obrigatórios
+    if (!idPagamento || !idFornecedor || !cod_pagamento || !cod_fornecedor) {
+        const errorMsg = 'Todos os campos são obrigatórios';
+        console.error(errorMsg);
+        Swal.fire({
+            title: 'Atenção!',
+            text: 'Por favor, preencha o fornecedor e a forma de pagamento antes de finalizar.',
+            icon: 'warning',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    const data = {
+        idPagamento: idPagamento,
+        idFornecedor: idFornecedor,
+        cod_pagamento: cod_pagamento,
+        cod_fornecedor: cod_fornecedor,
+        numero_pedido: numeroPedido
+    };
+
+    console.log('Dados enviados:', data);
+
+    try {
+        // Mostrar loader
+        Swal.fire({
+            title: 'Finalizando Pedido...',
+            text: 'Por favor, aguarde',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        const response = await fetch('/finalizarPedidoFinal', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Erro ao finalizar pedido');
+        }
+
+        console.log('Resposta do servidor:', result);
+
+        // Montar mensagem completa com resposta da procedure
+        let mensagemSucesso = '✅ Pedido finalizado com sucesso!';
+        if (result.mensagemProcedure) {
+            mensagemSucesso += `\n\nStatus da geração: ${result.mensagemProcedure}`;
+        }
+
+        Swal.fire({
+            title: 'Sucesso!',
+            html: mensagemSucesso.replace(/\n/g, '<br>'),
+            icon: 'success',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#28a745'
+        });
+
+        // Recarregar a lista de pedidos após 2 segundos
+        setTimeout(() => {
+            carregaPedidosFeitos();
+        }, 2000);
+
+    } catch (error) {
+        console.error('Erro ao finalizar pedido:', error);
+
+        let errorMessage = '❌ Erro ao finalizar pedido';
+        if (error.message.includes('ORA-') || error.message.includes('Oracle')) {
+            errorMessage += '\nErro no banco de dados: ' + error.message;
+        } else {
+            errorMessage += ': ' + error.message;
+        }
+
+        Swal.fire({
+            title: 'Erro!',
+            html: errorMessage.replace(/\n/g, '<br>'),
+            icon: 'error',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#dc3545'
+        });
     }
 }
 

@@ -30,24 +30,26 @@
    ======================================== */
 @media (min-width: 1280px) and (max-width: 1365px) {
     :root {
-        --sidebar-width: 200px;
+        --sidebar-width: 180px;
     }
     
     /* Table improvements - REDUCED SIZES TO PREVENT WRAPPING */
     .table {
-        font-size: 9px !important;
+        font-size: 8px !important;
+        width: 100% !important;
     }
     
     .table thead th {
-        font-size: 8px !important;
-        padding: 0.3rem 0.2rem !important;
+        font-size: 7px !important;
+        padding: 0.25rem 0.15rem !important;
         white-space: nowrap !important;
+        font-weight: 600 !important;
     }
     
     .table tbody td {
-        font-size: 9px !important;
-        padding: 0.25rem 0.15rem !important;
-        line-height: 1.2 !important;
+        font-size: 8px !important;
+        padding: 0.2rem 0.1rem !important;
+        line-height: 1.1 !important;
         white-space: nowrap !important;
     }
     
@@ -57,74 +59,83 @@
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
+        max-width: none !important;
     }
     
-    /* Sidebar adjustments */
+    /* Sidebar adjustments - SMALLER */
     .sidebar {
-        width: 200px !important;
+        width: 180px !important;
     }
     
     .main-content {
-        margin-left: 200px !important;
-        padding: 1rem !important;
+        margin-left: 180px !important;
+        padding: 0.75rem !important;
+        max-width: calc(100% - 180px) !important;
+    }
+    
+    /* Make container use more space */
+    .container-fluid {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
     }
     
     /* Dashboard cards */
     .app-card {
-        padding: 1rem 0.5rem !important;
+        padding: 0.75rem 0.4rem !important;
     }
     
     .app-icon {
-        font-size: 2rem !important;
+        font-size: 1.8rem !important;
     }
     
     .app-title {
-        font-size: 0.85rem !important;
+        font-size: 0.75rem !important;
     }
     
     /* Page headers */
     .page-title {
-        font-size: 1.3rem !important;
+        font-size: 1.2rem !important;
     }
     
     .page-subtitle {
-        font-size: 0.8rem !important;
+        font-size: 0.75rem !important;
     }
     
     /* Stats cards */
     .stat-card {
-        padding: 0.75rem !important;
+        padding: 0.6rem !important;
     }
     
     .stat-value {
-        font-size: 1.2rem !important;
+        font-size: 1.1rem !important;
     }
     
     .stat-label {
-        font-size: 0.7rem !important;
+        font-size: 0.65rem !important;
     }
     
     /* Buttons */
-    .btn-action-modern {
-        padding: 0.5rem 1rem !important;
-        font-size: 0.75rem !important;
+    .btn-action-modern,
+    .btn {
+        padding: 0.4rem 0.8rem !important;
+        font-size: 0.7rem !important;
     }
     
     /* Form inputs */
     .form-control {
-        font-size: 0.8rem !important;
-        padding: 0.3rem 0.5rem !important;
+        font-size: 0.75rem !important;
+        padding: 0.25rem 0.4rem !important;
     }
     
     .filter-input {
-        font-size: 9px !important;
-        height: 20px !important;
-        padding: 0.1rem 0.2rem !important;
+        font-size: 8px !important;
+        height: 18px !important;
+        padding: 0.1rem 0.15rem !important;
     }
     
     /* Product cards */
     .product-card {
-        padding: 0.75rem !important;
+        padding: 0.6rem !important;
     }
     
     .product-card-header {
@@ -154,88 +165,128 @@
 }
 
 /* ========================================
-   1366x768 (WXGA) - Optimized Styles
+   1366x768 (WXGA) - Optimized for Maximum Table Space
    ======================================== */
 @media (min-width: 1366px) and (max-width: 1919px) {
     :root {
-        --sidebar-width: 240px;
+        --sidebar-width: 160px;
     }
     
-    /* Table improvements */
-    .table {
-        font-size: 13px !important;
-    }
-    
-    .table thead th {
-        font-size: 12px !important;
-        padding: 0.6rem 0.5rem !important;
-    }
-    
-    .table tbody td {
-        font-size: 13px !important;
-        padding: 0.5rem 0.4rem !important;
-        line-height: 1.5 !important;
-    }
-    
-    /* Sidebar adjustments */
+    /* MAXIMIZE TABLE SPACE */
     .sidebar {
-        width: 240px !important;
+        width: 160px !important;
     }
     
     .main-content {
-        margin-left: 240px !important;
-        padding: 1.5rem !important;
+        margin-left: 160px !important;
+        padding: 0.5rem !important;
+        max-width: calc(100% - 160px) !important;
     }
     
-    /* Dashboard cards */
+    .container-fluid {
+        padding-left: 0.25rem !important;
+        padding-right: 0.25rem !important;
+        max-width: 100% !important;
+    }
+    
+    /* TABLE OPTIMIZATION - NO LINE BREAKS */
+    .table {
+        font-size: 9px !important;
+        width: 100% !important;
+        table-layout: auto !important;
+    }
+    
+    .table thead th {
+        font-size: 8px !important;
+        padding: 0.2rem 0.15rem !important;
+        white-space: nowrap !important;
+        font-weight: 600 !important;
+        line-height: 1.1 !important;
+    }
+    
+    .table tbody td {
+        font-size: 9px !important;
+        padding: 0.15rem 0.1rem !important;
+        line-height: 1.1 !important;
+        white-space: nowrap !important;
+    }
+    
+    /* FORCE NO WRAPPING */
+    .table td,
+    .table th {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: none !important;
+    }
+    
+    /* Input fields in tables - smaller */
+    .input-pequeno,
+    .f_size {
+        font-size: 8px !important;
+        padding: 0.1rem 0.2rem !important;
+        height: auto !important;
+    }
+    
+    /* Buttons in tables - smaller */
+    .table .btn {
+        padding: 0.15rem 0.3rem !important;
+        font-size: 8px !important;
+    }
+    
+    /* Dashboard cards - compact */
     .app-card {
-        padding: 1.5rem 1rem !important;
+        padding: 1rem 0.5rem !important;
     }
     
     .app-icon {
-        font-size: 2.75rem !important;
+        font-size: 2rem !important;
     }
     
     .app-title {
-        font-size: 1.05rem !important;
+        font-size: 0.85rem !important;
     }
     
-    /* Page headers */
+    /* Page headers - compact */
     .page-title {
-        font-size: 1.75rem !important;
+        font-size: 1.4rem !important;
+        margin-bottom: 0.5rem !important;
     }
     
     .page-subtitle {
-        font-size: 0.95rem !important;
+        font-size: 0.85rem !important;
     }
     
-    /* Stats cards */
+    /* Stats cards - compact */
     .stat-card {
-        padding: 1.25rem !important;
+        padding: 0.75rem !important;
     }
     
     .stat-value {
-        font-size: 1.6rem !important;
+        font-size: 1.3rem !important;
     }
     
     .stat-label {
+        font-size: 0.75rem !important;
+    }
+    
+    /* Buttons - compact */
+    .btn-action-modern,
+    .btn {
+        padding: 0.4rem 0.8rem !important;
         font-size: 0.8rem !important;
     }
     
-    /* Buttons */
-    .btn-action-modern {
-        padding: 0.7rem 1.4rem !important;
-        font-size: 0.9rem !important;
-    }
-    
-    /* Form inputs */
+    /* Form inputs - compact */
     .form-control {
-        font-size: 0.95rem !important;
+        font-size: 0.85rem !important;
+        padding: 0.3rem 0.5rem !important;
     }
     
     .filter-input {
-        font-size: 12px !important;
-        height: 24px !important;
+        font-size: 9px !important;
+        height: 20px !important;
+        padding: 0.1rem 0.2rem !important;
     }
     
     /* Product cards */
@@ -245,102 +296,6 @@
     
     .product-card-header {
         font-size: 1.05rem !important;
-    }
-    
-    .product-card-label,
-    .product-card-value {
-        font-size: 0.9rem !important;
-    }
-}
-
-/* ========================================
-   1920x1080 (Full HD) - Generous Styles
-   ======================================== */
-@media (min-width: 1920px) {
-    :root {
-        --sidebar-width: 280px;
-    }
-    
-    /* Table improvements */
-    .table {
-        font-size: 14px !important;
-    }
-    
-    .table thead th {
-        font-size: 13px !important;
-        padding: 0.75rem 0.6rem !important;
-    }
-    
-    .table tbody td {
-        font-size: 14px !important;
-        padding: 0.6rem 0.5rem !important;
-        line-height: 1.6 !important;
-    }
-    
-    /* Sidebar adjustments */
-    .sidebar {
-        width: 280px !important;
-    }
-    
-    .main-content {
-        margin-left: 280px !important;
-        padding: 2rem !important;
-    }
-    
-    /* Dashboard cards */
-    .app-card {
-        padding: 2rem 1.25rem !important;
-    }
-    
-    .app-icon {
-        font-size: 3.25rem !important;
-    }
-    
-    .app-title {
-        font-size: 1.15rem !important;
-    }
-    
-    /* Page headers */
-    .page-title {
-        font-size: 2rem !important;
-    }
-    
-    .page-subtitle {
-        font-size: 1rem !important;
-    }
-    
-    /* Stats cards */
-    .stat-card {
-        padding: 1.5rem !important;
-    }
-    
-    .stat-value {
-        font-size: 1.75rem !important;
-    }
-    
-    .stat-label {
-        font-size: 0.875rem !important;
-    }
-    
-    /* Buttons */
-    .btn-action-modern {
-        padding: 0.75rem 1.5rem !important;
-        font-size: 0.95rem !important;
-    }
-    
-    /* Form inputs */
-    .form-control {
-        font-size: 1rem !important;
-    }
-    
-    .filter-input {
-        font-size: 13px !important;
-        height: 26px !important;
-    }
-    
-    /* Product cards */
-    .product-card {
-        padding: 1.25rem !important;
     }
     
     .product-card-header {
