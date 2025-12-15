@@ -445,7 +445,7 @@ async function loadPedidos(req, res) {
         const result = await conn.execute(
             `SELECT * FROM PEDIDO_PROCESSADO_YSC 
              WHERE NUMERO_PEDIDO = :idPedido
-             ORDER BY LINHA`,
+             ORDER BY LINHA , DESCRPROD`,
             { idPedido: id_pedido },
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );

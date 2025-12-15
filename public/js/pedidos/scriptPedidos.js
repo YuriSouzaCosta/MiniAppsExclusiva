@@ -794,6 +794,9 @@ async function carregaPedidosFeitos() {
                 if (pagamentosCarregados) {
                     initializeFormaPagDropdowns();
                 }
+
+                // Initialize search and filter listeners
+                initializeEventListeners();
             } else {
                 console.error("Nenhum container (tabela ou cards) encontrado para renderizar os pedidos.");
             }
@@ -887,163 +890,168 @@ function filtrarPedidosPorFornecedor() {
     }
 }
 
-// Initialize search functionality after page loads
-document.addEventListener('DOMContentLoaded', function () {
-    // Wait a bit for the orders to load
-    setTimeout(() => {
-        const searchInput = document.getElementById('searchSupplier');
-        const clearButton = document.getElementById('clearSearch');
-        const storeFilter = document.getElementById('storeFilter');
-        const reportButton = document.getElementById('btnGenerateReport');
+// Initialize event listeners for search and filters
+function initializeEventListeners() {
+    const searchInput = document.getElementById('searchSupplier');
+    const clearButton = document.getElementById('clearSearch');
+    const storeFilter = document.getElementById('storeFilter');
+    const reportButton = document.getElementById('btnGenerateReport');
 
-        if (searchInput) {
-            // Filter as user types
-            searchInput.addEventListener('input', filtrarPedidosPorFornecedor);
+    console.log("Initializing event listeners...");
 
-            // Filter on Enter key
-            searchInput.addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    filtrarPedidosPorFornecedor();
-                }
-            });
-        }
+    if (searchInput) {
+        // Remove existing listeners to avoid duplicates (cloning the element is a quick way)
+        const newSearchInput = searchInput.cloneNode(true);
+        searchInput.parentNode.replaceChild(newSearchInput, searchInput);
 
-        if (clearButton) {
-            clearButton.addEventListener('click', function () {
-                if (searchInput) {
-                    searchInput.value = '';
-                    if (storeFilter) storeFilter.value = '';
-                    filtrarPedidosPorFornecedor();
-                    searchInput.focus();
-                }
-            });
-        }
+        // Re-select the new element
+        const activeSearchInput = document.getElementById('searchSupplier');
 
-        if (storeFilter) {
-            storeFilter.addEventListener('change', filtrarPedidosPorFornecedor);
-        }
-
-        if (reportButton) {
-            reportButton.addEventListener('click', gerarRelatorioPedidosAbertos);
-        }
-    }, 1000);
-});
-
-
-// Function to generate open orders report
-async function gerarRelatorioPedidosAbertos() {
-    try {
-        // Show loading with SweetAlert2
-        Swal.fire({
-            title: 'Gerando Relatório...',
-            text: 'Por favor, aguarde',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
+        activeSearchInput.addEventListener('input', filtrarPedidosPorFornecedor);
+        activeSearchInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                filtrarPedidosPorFornecedor();
             }
         });
 
-        const response = await fetch(`${apiBase}/consultarPedidosFeitos`, {
-            method: "GET"
+        // Restore focus if needed, though cloning loses it. 
+        // Since this runs on load, focus usually isn't there yet.
+    }
+
+    if (clearButton) {
+        const newClearButton = clearButton.cloneNode(true);
+        clearButton.parentNode.replaceChild(newClearButton, clearButton);
+
+        document.getElementById('clearSearch').addEventListener('click', function () {
+            const input = document.getElementById('searchSupplier');
+            const store = document.getElementById('storeFilter');
+            if (input) {
+                input.value = '';
+                if (store) store.value = '';
+                filtrarPedidosPorFornecedor();
+                input.focus();
+            }
         });
+    }
 
-        if (!response.ok) {
-            throw new Error("Erro ao carregar pedidos");
-        }
+    if (storeFilter) {
+        const newStoreFilter = storeFilter.cloneNode(true);
+        storeFilter.parentNode.replaceChild(newStoreFilter, storeFilter);
 
-        let pedidos = await response.json();
+        document.getElementById('storeFilter').addEventListener('change', filtrarPedidosPorFornecedor);
+    }
 
-        // Apply filters to the report
-        const searchInput = document.getElementById('searchSupplier');
-        const storeFilter = document.getElementById('storeFilter');
+    if (reportButton) {
+        const newReportButton = reportButton.cloneNode(true);
+        reportButton.parentNode.replaceChild(newReportButton, reportButton);
 
-        if (searchInput || storeFilter) {
-            const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
-            const selectedStore = storeFilter ? storeFilter.value.toUpperCase() : '';
+        document.getElementById('btnGenerateReport').addEventListener('click', gerarRelatorioPedidosAbertos);
+    }
+}
 
-            // Filter pedidos based on active filters
-            pedidos = pedidos.filter(pedido => {
-                // Check supplier/brand match
-                let supplierMatch = true;
-                if (searchTerm) {
-                    const marcaMatch = pedido.MARCA && pedido.MARCA.toLowerCase().includes(searchTerm);
-                    // Note: We can't check supplier here as it's not in the data, only marca
-                    supplierMatch = marcaMatch;
-                }
 
-                // Check store match
-                let storeMatch = true;
-                if (selectedStore) {
-                    storeMatch = pedido.GRUPO && pedido.GRUPO.toUpperCase().includes(selectedStore);
-                }
+// Function to generate open orders report based on VISIBLE cards
+function gerarRelatorioPedidosAbertos() {
+    try {
+        // Get all visible pedido cards
+        const pedidosCards = Array.from(document.querySelectorAll('.pedido-card')).filter(card => card.style.display !== 'none');
 
-                return supplierMatch && storeMatch;
-            });
-        }
-
-        if (pedidos.length === 0) {
+        if (pedidosCards.length === 0) {
             Swal.fire({
                 title: 'Nenhum Pedido',
-                text: 'Não há pedidos que correspondam aos filtros aplicados.',
+                text: 'Não há pedidos visíveis para gerar o relatório.',
                 icon: 'info',
                 confirmButtonText: 'OK'
             });
             return;
         }
 
+        // Extract data from cards
+        const pedidos = pedidosCards.map(card => {
+            const numero = card.querySelector('.pedido-numero').textContent.replace('Pedido #', '').trim();
+            const marca = card.querySelector('.info-item:nth-child(1) .info-value').textContent.trim();
+            const dataPedido = card.querySelector('.info-item:nth-child(2) .info-value').textContent.trim();
+            const faturamento = card.querySelector('.info-item:nth-child(3) .info-value').textContent.trim();
+            const status = card.querySelector('.badge-feito').textContent.trim();
+            const loja = card.querySelector('.pedido-loja').textContent.trim();
+
+            // Try to get the selected supplier if any
+            const fornecedorInput = card.querySelector('input[id^="fornecedor_"]');
+            const fornecedor = fornecedorInput ? fornecedorInput.value : '';
+
+            return {
+                NUMERO_PEDIDO: numero,
+                MARCA: marca,
+                GRUPO: loja,
+                DATA_PEDIDO: dataPedido,
+                DATAFATURAMENTO: faturamento,
+                ANDAMENTO: status,
+                FORNECEDOR_SELECIONADO: fornecedor
+            };
+        });
+
         // Get filter description for report header
-        const searchInput2 = document.getElementById('searchSupplier');
-        const storeFilter2 = document.getElementById('storeFilter');
+        const searchInput = document.getElementById('searchSupplier');
+        const storeFilter = document.getElementById('storeFilter');
         let filterDescription = '';
 
-        if (searchInput2 && searchInput2.value) {
-            filterDescription += `Busca: "${searchInput2.value}"`;
+        if (searchInput && searchInput.value) {
+            filterDescription += `Busca: "${searchInput.value}"`;
         }
-        if (storeFilter2 && storeFilter2.value) {
+        if (storeFilter && storeFilter.value) {
             if (filterDescription) filterDescription += ' | ';
-            filterDescription += `Loja: ${storeFilter2.value}`;
+            filterDescription += `Loja: ${storeFilter.value}`;
         }
         if (!filterDescription) {
-            filterDescription = 'Todos os pedidos';
+            filterDescription = 'Todos os pedidos visíveis';
         }
 
         // Generate report HTML
         let reportHTML = `
-            <div style="font-family: Arial, sans-serif; padding: 20px;">
-                <h2 style="color: #500001; text-align: center; margin-bottom: 20px;">
-                    📋 Relatório de Pedidos em Aberto
-                </h2>
-                <p style="text-align: center; color: #666; margin-bottom: 10px;">
-                    Gerado em: ${new Date().toLocaleString('pt-BR')}
-                </p>
-                <p style="text-align: center; color: #666; margin-bottom: 30px; font-weight: 600;">
-                    Filtros: ${filterDescription}
-                </p>
-                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <div style="font-family: 'Inter', sans-serif; padding: 20px;">
+                <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #500001; padding-bottom: 20px;">
+                    <h2 style="color: #500001; margin: 0 0 10px 0; font-size: 24px;">
+                        📋 Relatório de Pedidos em Aberto
+                    </h2>
+                    <p style="color: #666; margin: 5px 0; font-size: 14px;">
+                        Gerado em: ${new Date().toLocaleString('pt-BR')}
+                    </p>
+                    <p style="color: #4a5568; margin: 5px 0; font-weight: 600; font-size: 14px;">
+                        ${filterDescription}
+                    </p>
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                     <thead>
-                        <tr style="background-color: #500001; color: white;">
-                            <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Pedido #</th>
-                            <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Marca</th>
-                            <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Loja</th>
-                            <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Data Pedido</th>
-                            <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Data Faturamento</th>
-                            <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Status</th>
+                        <tr style="background: linear-gradient(135deg, #500001 0%, #8F1111 100%); color: white;">
+                            <th style="padding: 12px; text-align: left; border-radius: 8px 0 0 8px;">Pedido</th>
+                            <th style="padding: 12px; text-align: left;">Marca</th>
+                            <th style="padding: 12px; text-align: left;">Loja</th>
+                            <th style="padding: 12px; text-align: left;">Fornecedor Definido</th>
+                            <th style="padding: 12px; text-align: left;">Data Pedido</th>
+                            <th style="padding: 12px; text-align: left;">Faturamento</th>
+                            <th style="padding: 12px; text-align: center; border-radius: 0 8px 8px 0;">Status</th>
                         </tr>
                     </thead>
                     <tbody>
         `;
 
         pedidos.forEach((pedido, index) => {
-            const bgColor = index % 2 === 0 ? '#f9f9f9' : 'white';
+            const bgColor = index % 2 === 0 ? '#f8fafc' : 'white';
             reportHTML += `
-                <tr style="background-color: ${bgColor};">
-                    <td style="padding: 10px; border: 1px solid #ddd;">${pedido.NUMERO_PEDIDO}</td>
-                    <td style="padding: 10px; border: 1px solid #ddd;">${pedido.MARCA}</td>
-                    <td style="padding: 10px; border: 1px solid #ddd;">${pedido.GRUPO}</td>
-                    <td style="padding: 10px; border: 1px solid #ddd;">${new Date(pedido.DATA_PEDIDO).toLocaleDateString('pt-BR')}</td>
-                    <td style="padding: 10px; border: 1px solid #ddd;">${new Date(pedido.DATAFATURAMENTO).toLocaleDateString('pt-BR')}</td>
-                    <td style="padding: 10px; border: 1px solid #ddd;"><span style="background: #3b82f6; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${pedido.ANDAMENTO}</span></td>
+                <tr style="background-color: ${bgColor}; border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 12px; font-weight: bold; color: #2d3748;">#${pedido.NUMERO_PEDIDO}</td>
+                    <td style="padding: 12px; color: #4a5568;">${pedido.MARCA}</td>
+                    <td style="padding: 12px; color: #4a5568;">${pedido.GRUPO}</td>
+                    <td style="padding: 12px; color: #4a5568;">${pedido.FORNECEDOR_SELECIONADO || '<span style="color: #cbd5e0;">-</span>'}</td>
+                    <td style="padding: 12px; color: #4a5568;">${pedido.DATA_PEDIDO}</td>
+                    <td style="padding: 12px; color: #4a5568;">${pedido.DATAFATURAMENTO}</td>
+                    <td style="padding: 12px; text-align: center;">
+                        <span style="background: #ebf8ff; color: #3182ce; padding: 4px 10px; border-radius: 20px; font-weight: 600; font-size: 11px; text-transform: uppercase;">
+                            ${pedido.ANDAMENTO}
+                        </span>
+                    </td>
                 </tr>
             `;
         });
@@ -1051,21 +1059,22 @@ async function gerarRelatorioPedidosAbertos() {
         reportHTML += `
                     </tbody>
                 </table>
-                <p style="margin-top: 30px; text-align: center; color: #666; font-size: 14px;">
-                    Total de pedidos: <strong>${pedidos.length}</strong>
-                </p>
+                <div style="margin-top: 30px; text-align: right; color: #4a5568; font-size: 14px; font-weight: 600;">
+                    Total de registros: ${pedidos.length}
+                </div>
             </div>
         `;
 
         // Show report in modal
         Swal.fire({
-            title: 'Relatório de Pedidos em Aberto',
+            title: '',
             html: reportHTML,
-            width: '90%',
+            width: '1000px',
             showCancelButton: true,
-            confirmButtonText: '<i class="bi bi-printer"></i> Imprimir',
+            confirmButtonText: '<i class="fa fa-print"></i> Imprimir',
             cancelButtonText: 'Fechar',
             confirmButtonColor: '#500001',
+            cancelButtonColor: '#718096',
             customClass: {
                 popup: 'swal-wide'
             }
@@ -1077,19 +1086,21 @@ async function gerarRelatorioPedidosAbertos() {
                     <!DOCTYPE html>
                     <html>
                     <head>
-                        <title>Relatório de Pedidos em Aberto</title>
+                        <title>Relatório de Pedidos</title>
+                        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
                         <style>
-                            body { font-family: Arial, sans-serif; }
+                            body { font-family: 'Inter', sans-serif; -webkit-print-color-adjust: exact; }
                             @media print {
                                 button { display: none; }
+                                body { padding: 0; margin: 0; }
                             }
                         </style>
                     </head>
                     <body>
                         ${reportHTML}
                         <div style="text-align: center; margin-top: 20px;">
-                            <button onclick="window.print()" style="padding: 10px 20px; background: #500001; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                                Imprimir
+                            <button onclick="window.print()" style="padding: 12px 24px; background: #500001; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px;">
+                                Imprimir Agora
                             </button>
                         </div>
                     </body>
@@ -1103,7 +1114,7 @@ async function gerarRelatorioPedidosAbertos() {
         console.error('Erro ao gerar relatório:', error);
         Swal.fire({
             title: 'Erro!',
-            text: 'Erro ao gerar relatório de pedidos: ' + error.message,
+            text: 'Erro ao gerar relatório: ' + error.message,
             icon: 'error',
             confirmButtonText: 'OK'
         });
@@ -1207,6 +1218,9 @@ async function exportarPDF(id_pedido) {
                 case 7: empresaNome = "Asg Distribuição LTDA"; cnpj = "49.318.824/0001-01"; break;
             }
 
+            if (!window.jspdf) {
+                throw new Error("Biblioteca jsPDF não encontrada. Verifique sua conexão com a internet ou instale a biblioteca.");
+            }
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 

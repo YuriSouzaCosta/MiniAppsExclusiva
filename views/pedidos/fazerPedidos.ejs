@@ -358,68 +358,43 @@
       }
 
       table {
-        td:nth-child(3) {
-          width: 10%;
+        /* Column Widths */
+        td:nth-child(1) { width: 3%; } /* LINHA */
+        td:nth-child(2) { width: 5%; } /* COD JIVA */
+        td:nth-child(3) { width: 8%; } /* COD BARRA */
+        td:nth-child(4) { width: 5%; } /* REF */
+        td:nth-child(5) { width: 25%; text-align: left; } /* PRODUTO */
+        td:nth-child(6) { width: 6%; } /* VLR VENDA */
+        
+        /* Compact Numerical Columns */
+        td:nth-child(7),  /* ULT CUS */
+        td:nth-child(8),  /* ULT COMPRA */
+        td:nth-child(9),  /* COMPRA TT */
+        td:nth-child(10), /* VENDA TT */
+        td:nth-child(11), /* MED VENDA */
+        td:nth-child(12)  /* EST */
+        {
+          width: 4.5%;
+          font-size: 9px;
+          padding: 2px;
         }
 
-        td:nth-child(5) {
-          width: 5%;
-        }
+        /* Specific Colors for Stats */
+        td:nth-child(9) { background-color: #ffff00; font-weight: bold; }
+        td:nth-child(10) { background-color: #008080; font-weight: bold; color: white; }
+        td:nth-child(11) { background-color: #00adad; font-weight: bold; color: white; }
+        td:nth-child(12) { background-color: #00ccff; font-weight: bold; }
 
-        td:nth-child(5) {
-          width: 40%;
-        }
+        td:nth-child(13) { width: 6%; } /* QTD PEDIDO */
+        td:nth-child(14) { width: 8%; } /* VLR PEDIDO */
 
-        td:nth-child(6) {
-          width: 5%;
-          font-size: 10px;
-        }
-
-        td:nth-child(7) {
-          width: 5%;
-          font-size: 10px;
-        }
-
-        td:nth-child(8) {
-          width: 5%;
-          font-size: 10px;
-          text-align: center;
-        }
-
-        td:nth-child(9) {
-          background-color: #ffff00;
-          font-weight: bold;
-          font-size: 10px;
-          text-align: center;
-        }
-
-        td:nth-child(10) {
-          background-color: #008080;
-          font-weight: bold;
-          font-size: 10px;
-          text-align: center;
-        }
-
-        td:nth-child(11) {
-          background-color: #00adad;
-          font-weight: bold;
-          font-size: 10px;
-          text-align: center;
-        }
-
-        td:nth-child(12) {
-          background-color: #00ccff;
-          font-weight: bold;
-          font-size: 10px;
-          text-align: center;
-        }
-
-        td:nth-child(13) {
-          width: 7%;
-        }
-
-        td:nth-child(14) {
-          width: 10%;
+        /* Header Styling for Wrapping */
+        .table thead th {
+          vertical-align: bottom;
+          white-space: normal;
+          padding: 5px 2px;
+          line-height: 1.1;
+          height: auto;
         }
       }
 
@@ -449,9 +424,11 @@
       }
 
       .filter-input {
-        font-size: 12px !important;
-        height: 24px !important;
-        padding: 0.15rem 0.3rem !important;
+        font-size: 10px !important;
+        height: 20px !important;
+        padding: 0 2px !important;
+        width: 100%;
+        min-width: 0; /* Allows shrinking below content size */
       }
 
       /* Menu de filtro suspenso */
@@ -696,35 +673,35 @@
               </div>
             </th>
             <th scope="col">
-              ULT CUS
+              ULT<br>CUS
               <div class="sort-icons">
                 <i class="bi bi-sort-alpha-up sort-asc" data-col="6"></i>
                 <i class="bi bi-sort-alpha-down sort-desc" data-col="6"></i>
               </div>
             </th>
             <th scope="col">
-              ULT COMPRA
+              ULT<br>COMPRA
               <div class="sort-icons">
                 <i class="bi bi-sort-alpha-up sort-asc" data-col="7"></i>
                 <i class="bi bi-sort-alpha-down sort-desc" data-col="7"></i>
               </div>
             </th>
             <th scope="col">
-              COMPRA TT
+              COMPRA<br>TT
               <div class="sort-icons">
                 <i class="bi bi-sort-alpha-up sort-asc" data-col="8"></i>
                 <i class="bi bi-sort-alpha-down sort-desc" data-col="8"></i>
               </div>
             </th>
             <th scope="col">
-              VENDA TT
+              VENDA<br>TT
               <div class="sort-icons">
                 <i class="bi bi-sort-alpha-up sort-asc" data-col="9"></i>
                 <i class="bi bi-sort-alpha-down sort-desc" data-col="9"></i>
               </div>
             </th>
             <th scope="col">
-              MED VENDA
+              MED<br>VENDA
               <div class="sort-icons">
                 <i class="bi bi-sort-alpha-up sort-asc" data-col="10"></i>
                 <i class="bi bi-sort-alpha-down sort-desc" data-col="10"></i>
