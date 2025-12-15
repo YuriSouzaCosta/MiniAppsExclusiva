@@ -854,6 +854,8 @@ function filtrarPedidosPorFornecedor() {
         // Check store match
         const storeMatch = selectedStore === '' || lojaValue.includes(selectedStore);
 
+        console.log(`Checking card ${index}: Group="${lojaValue}", Filter="${selectedStore}" => Match=${storeMatch}`);
+
         // Show card if both filters match
         if (supplierMatch && storeMatch) {
             card.style.display = 'block';
@@ -862,6 +864,8 @@ function filtrarPedidosPorFornecedor() {
             card.style.display = 'none';
         }
     });
+
+    console.log(`Filter complete. Visible: ${visibleCount}/${pedidosCards.length}`);
 
     // Show/hide empty state
     const emptyState = document.getElementById('emptyState');
@@ -887,128 +891,56 @@ function filtrarPedidosPorFornecedor() {
     } else {
         if (emptyState) emptyState.style.display = 'none';
         if (pedidosContainer) pedidosContainer.style.display = 'block';
-    }
-}
-
-// Initialize event listeners for search and filters
-function initializeEventListeners() {
-    const searchInput = document.getElementById('searchSupplier');
-    const clearButton = document.getElementById('clearSearch');
-    const storeFilter = document.getElementById('storeFilter');
-    const reportButton = document.getElementById('btnGenerateReport');
-
-    console.log("Initializing event listeners...");
-
-    if (searchInput) {
-        // Remove existing listeners to avoid duplicates (cloning the element is a quick way)
-        const newSearchInput = searchInput.cloneNode(true);
-        searchInput.parentNode.replaceChild(newSearchInput, searchInput);
-
-        // Re-select the new element
-        const activeSearchInput = document.getElementById('searchSupplier');
-
-        activeSearchInput.addEventListener('input', filtrarPedidosPorFornecedor);
-        activeSearchInput.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                filtrarPedidosPorFornecedor();
-            }
-        });
-
-        // Restore focus if needed, though cloning loses it. 
-        // Since this runs on load, focus usually isn't there yet.
-    }
-
-    if (clearButton) {
-        const newClearButton = clearButton.cloneNode(true);
-        clearButton.parentNode.replaceChild(newClearButton, clearButton);
-
-        document.getElementById('clearSearch').addEventListener('click', function () {
-            const input = document.getElementById('searchSupplier');
-            const store = document.getElementById('storeFilter');
-            if (input) {
-                input.value = '';
-                if (store) store.value = '';
-                filtrarPedidosPorFornecedor();
-                input.focus();
-            }
-        });
-    }
-
-    if (storeFilter) {
-        const newStoreFilter = storeFilter.cloneNode(true);
-        storeFilter.parentNode.replaceChild(newStoreFilter, storeFilter);
-
-        document.getElementById('storeFilter').addEventListener('change', filtrarPedidosPorFornecedor);
-    }
-
-    if (reportButton) {
-        const newReportButton = reportButton.cloneNode(true);
-        reportButton.parentNode.replaceChild(newReportButton, reportButton);
-
-        document.getElementById('btnGenerateReport').addEventListener('click', gerarRelatorioPedidosAbertos);
-    }
-}
-
-
-// Function to generate open orders report based on VISIBLE cards
-function gerarRelatorioPedidosAbertos() {
-    try {
-        // Get all visible pedido cards
-        const pedidosCards = Array.from(document.querySelectorAll('.pedido-card')).filter(card => card.style.display !== 'none');
-
-        if (pedidosCards.length === 0) {
-            Swal.fire({
-                title: 'Nenhum Pedido',
-                text: 'Não há pedidos visíveis para gerar o relatório.',
+        title: 'Nenhum Pedido',
+            text: 'Não há pedidos visíveis para gerar o relatório.',
                 icon: 'info',
-                confirmButtonText: 'OK'
-            });
-            return;
-        }
+                    confirmButtonText: 'OK'
+    });
+    return;
+}
 
-        // Extract data from cards
-        const pedidos = pedidosCards.map(card => {
-            const numero = card.querySelector('.pedido-numero').textContent.replace('Pedido #', '').trim();
-            const marca = card.querySelector('.info-item:nth-child(1) .info-value').textContent.trim();
-            const dataPedido = card.querySelector('.info-item:nth-child(2) .info-value').textContent.trim();
-            const faturamento = card.querySelector('.info-item:nth-child(3) .info-value').textContent.trim();
-            const status = card.querySelector('.badge-feito').textContent.trim();
-            const loja = card.querySelector('.pedido-loja').textContent.trim();
+// Extract data from cards
+const pedidos = pedidosCards.map(card => {
+    const numero = card.querySelector('.pedido-numero').textContent.replace('Pedido #', '').trim();
+    const marca = card.querySelector('.info-item:nth-child(1) .info-value').textContent.trim();
+    const dataPedido = card.querySelector('.info-item:nth-child(2) .info-value').textContent.trim();
+    const faturamento = card.querySelector('.info-item:nth-child(3) .info-value').textContent.trim();
+    const status = card.querySelector('.badge-feito').textContent.trim();
+    const loja = card.querySelector('.pedido-loja').textContent.trim();
 
-            // Try to get the selected supplier if any
-            const fornecedorInput = card.querySelector('input[id^="fornecedor_"]');
-            const fornecedor = fornecedorInput ? fornecedorInput.value : '';
+    // Try to get the selected supplier if any
+    const fornecedorInput = card.querySelector('input[id^="fornecedor_"]');
+    const fornecedor = fornecedorInput ? fornecedorInput.value : '';
 
-            return {
-                NUMERO_PEDIDO: numero,
-                MARCA: marca,
-                GRUPO: loja,
-                DATA_PEDIDO: dataPedido,
-                DATAFATURAMENTO: faturamento,
-                ANDAMENTO: status,
-                FORNECEDOR_SELECIONADO: fornecedor
-            };
-        });
+    return {
+        NUMERO_PEDIDO: numero,
+        MARCA: marca,
+        GRUPO: loja,
+        DATA_PEDIDO: dataPedido,
+        DATAFATURAMENTO: faturamento,
+        ANDAMENTO: status,
+        FORNECEDOR_SELECIONADO: fornecedor
+    };
+});
 
-        // Get filter description for report header
-        const searchInput = document.getElementById('searchSupplier');
-        const storeFilter = document.getElementById('storeFilter');
-        let filterDescription = '';
+// Get filter description for report header
+const searchInput = document.getElementById('searchSupplier');
+const storeFilter = document.getElementById('storeFilter');
+let filterDescription = '';
 
-        if (searchInput && searchInput.value) {
-            filterDescription += `Busca: "${searchInput.value}"`;
-        }
-        if (storeFilter && storeFilter.value) {
-            if (filterDescription) filterDescription += ' | ';
-            filterDescription += `Loja: ${storeFilter.value}`;
-        }
-        if (!filterDescription) {
-            filterDescription = 'Todos os pedidos visíveis';
-        }
+if (searchInput && searchInput.value) {
+    filterDescription += `Busca: "${searchInput.value}"`;
+}
+if (storeFilter && storeFilter.value) {
+    if (filterDescription) filterDescription += ' | ';
+    filterDescription += `Loja: ${storeFilter.value}`;
+}
+if (!filterDescription) {
+    filterDescription = 'Todos os pedidos visíveis';
+}
 
-        // Generate report HTML
-        let reportHTML = `
+// Generate report HTML
+let reportHTML = `
             <div style="font-family: 'Inter', sans-serif; padding: 20px;">
                 <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #500001; padding-bottom: 20px;">
                     <h2 style="color: #500001; margin: 0 0 10px 0; font-size: 24px;">
@@ -1037,9 +969,9 @@ function gerarRelatorioPedidosAbertos() {
                     <tbody>
         `;
 
-        pedidos.forEach((pedido, index) => {
-            const bgColor = index % 2 === 0 ? '#f8fafc' : 'white';
-            reportHTML += `
+pedidos.forEach((pedido, index) => {
+    const bgColor = index % 2 === 0 ? '#f8fafc' : 'white';
+    reportHTML += `
                 <tr style="background-color: ${bgColor}; border-bottom: 1px solid #e2e8f0;">
                     <td style="padding: 12px; font-weight: bold; color: #2d3748;">#${pedido.NUMERO_PEDIDO}</td>
                     <td style="padding: 12px; color: #4a5568;">${pedido.MARCA}</td>
@@ -1054,9 +986,9 @@ function gerarRelatorioPedidosAbertos() {
                     </td>
                 </tr>
             `;
-        });
+});
 
-        reportHTML += `
+reportHTML += `
                     </tbody>
                 </table>
                 <div style="margin-top: 30px; text-align: right; color: #4a5568; font-size: 14px; font-weight: 600;">
@@ -1065,24 +997,24 @@ function gerarRelatorioPedidosAbertos() {
             </div>
         `;
 
-        // Show report in modal
-        Swal.fire({
-            title: '',
-            html: reportHTML,
-            width: '1000px',
-            showCancelButton: true,
-            confirmButtonText: '<i class="fa fa-print"></i> Imprimir',
-            cancelButtonText: 'Fechar',
-            confirmButtonColor: '#500001',
-            cancelButtonColor: '#718096',
-            customClass: {
-                popup: 'swal-wide'
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Print the report
-                const printWindow = window.open('', '_blank');
-                printWindow.document.write(`
+// Show report in modal
+Swal.fire({
+    title: '',
+    html: reportHTML,
+    width: '1000px',
+    showCancelButton: true,
+    confirmButtonText: '<i class="fa fa-print"></i> Imprimir',
+    cancelButtonText: 'Fechar',
+    confirmButtonColor: '#500001',
+    cancelButtonColor: '#718096',
+    customClass: {
+        popup: 'swal-wide'
+    }
+}).then((result) => {
+    if (result.isConfirmed) {
+        // Print the report
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
                     <!DOCTYPE html>
                     <html>
                     <head>
@@ -1106,20 +1038,20 @@ function gerarRelatorioPedidosAbertos() {
                     </body>
                     </html>
                 `);
-                printWindow.document.close();
-            }
-        });
-
-    } catch (error) {
-        console.error('Erro ao gerar relatório:', error);
-        Swal.fire({
-            title: 'Erro!',
-            text: 'Erro ao gerar relatório: ' + error.message,
-            icon: 'error',
-            confirmButtonText: 'OK'
-        });
+        printWindow.document.close();
     }
+});
+
+        } catch (error) {
+    console.error('Erro ao gerar relatório:', error);
+    Swal.fire({
+        title: 'Erro!',
+        text: 'Erro ao gerar relatório: ' + error.message,
+        icon: 'error',
+        confirmButtonText: 'OK'
+    });
 }
+    }
 
 
 async function carregaPedidosFeitosFinalizados() {
