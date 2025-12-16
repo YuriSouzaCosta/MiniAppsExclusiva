@@ -1,47 +1,37 @@
-// app.js
-require('dotenv').config({ override: true });
-
 const express = require('express');
+const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const cors = require('cors');
+require('dotenv').config();
 
-const db = require('./config/db/oracle');
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-const authController = require('./controllers/authController');
-const authMiddleware = require('./middleware/authMiddleware');
-const { authenticate, generateToken, ensureAuth, requireRole, COOKIE_NAME } = require('./middleware/authMiddleware');
+// Middleware setup
+app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
+// Import Routes
+const authRoutes = require('./routes/authRoutes');
 const coletorRoutes = require('./routes/coletorRoutes');
-const homeRoutes = require('./routes/homeRoutes');
 const produtoRoutes = require('./routes/produtoRoutes');
 const contagemRoutes = require('./routes/contagemRoutes');
-const authRoutes = require('./routes/authRoutes');
 const exportacaoRoutes = require('./routes/exportacaoRoutes');
 const controleCartaoRoutes = require('./routes/controleCartaoRoutes');
 const calculadoraCustoRoutes = require('./routes/calculadoraCustoRoutes');
 const consultaProdutosRoutes = require('./routes/consultaProdutosRoutes');
 const pedidoComprasRoutes = require('./routes/pedidos/pedidoComprasRoutes');
 const transferenciasRoutes = require('./routes/transferencias/transferenciasRoutes');
+const homeRoutes = require('./routes/homeRoutes');
 
-
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
-
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-app.use(cookieParser());
-
-
-
-// inicializa pool Oracle
-db.init().catch(err => {
-  console.error('Erro Oracle:', err); process.exit(1);
-});
+// Import Middleware
+const authMiddleware = require('./middleware/authMiddleware');
 
 // proteger todas as rotas abaixo
 app.use('/', authRoutes);
@@ -89,8 +79,21 @@ app.use('/transferencias', transferenciasRoutes);
 app.use('/', homeRoutes);
 app.use('/', coletorRoutes);
 
+const db = require('./config/db/oracle');
 
+// Initialize Database and Start Server
+async function startServer() {
+  try {
+    await db.init();
+    console.log('Banco de dados Oracle conectado');
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
+    app.listen(PORT, () => {
+      console.log(`Servidor rodando na porta ${PORT}`);
+    });
+  } catch (err) {
+    console.error('Erro ao inicializar banco de dados:', err);
+    process.exit(1);
+  }
+}
+
+startServer();

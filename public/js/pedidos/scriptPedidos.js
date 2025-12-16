@@ -3,6 +3,7 @@ const apiBase = window.location.port
     : `${window.location.protocol}//${window.location.hostname}`;
 
 
+
 // Global variables
 let marcasDisponiveis = []; // Variável para armazenar todas as marcas
 let pagDisponiveis = []; // Variável para armazenar todas as formas de pagamento
@@ -528,7 +529,7 @@ async function salvarPedidoSystem(fornecedorId, formaPagId, numeroPedido) {
             }
         });
 
-        const response = await fetch('/finalizarPedidoFinal', {
+        const response = await fetch(`${apiBase}/finalizarPedidoFinal`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -626,7 +627,7 @@ async function carregaPedidosFeitos() {
                     card.innerHTML = `
                         <div class="card-header-custom">
                             <span class="pedido-numero">Pedido #${pedido.NUMERO_PEDIDO}</span>
-                            <span class="pedido-loja">${pedido.GRUPO}</span>
+                            <span class="pedido-loja">${pedido.GRUPO || ''}</span>
                             <span class="badge-feito">${pedido.ANDAMENTO}</span>
                         </div>
                         <div class="info-grid">
@@ -786,15 +787,6 @@ async function carregaPedidosFeitos() {
                     });
                 });
 
-                // Initialize dropdowns if data is already loaded
-                if (fornecedoresCarregados) {
-                    initializeFornecedorDropdowns();
-                }
-
-                if (pagamentosCarregados) {
-                    initializeFormaPagDropdowns();
-                }
-
                 // Initialize search and filter listeners
                 initializeEventListeners();
             } else {
@@ -820,7 +812,7 @@ function filtrarPedidosPorFornecedor() {
     const pedidosCards = document.querySelectorAll('.pedido-card');
     let visibleCount = 0;
 
-    pedidosCards.forEach(card => {
+    pedidosCards.forEach((card, index) => {
         // Find the supplier input field within this card
         const fornecedorInput = card.querySelector('[id^="fornecedor_"]');
 
@@ -844,7 +836,7 @@ function filtrarPedidosPorFornecedor() {
         }
 
         const fornecedorValue = fornecedorInput.value.toLowerCase();
-        const lojaValue = lojaElement ? lojaElement.textContent.toUpperCase() : '';
+        const lojaValue = lojaElement ? lojaElement.textContent.toUpperCase().trim() : '';
 
         // Check supplier match OR brand match
         const supplierMatch = searchTerm === '' ||
@@ -901,62 +893,45 @@ function initializeEventListeners() {
     const storeFilter = document.getElementById('storeFilter');
     const reportButton = document.getElementById('btnGenerateReport');
 
-    console.log("Initializing event listeners...");
+    console.log("Initializing event listeners (v3)...");
 
     if (searchInput) {
-        const newSearchInput = searchInput.cloneNode(true);
-        searchInput.parentNode.replaceChild(newSearchInput, searchInput);
-
-        const activeSearchInput = document.getElementById('searchSupplier');
-
-        activeSearchInput.addEventListener('input', () => {
+        searchInput.oninput = function () {
             console.log("Search input changed");
             filtrarPedidosPorFornecedor();
-        });
-        activeSearchInput.addEventListener('keypress', function (e) {
+        };
+        searchInput.onkeypress = function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 filtrarPedidosPorFornecedor();
             }
-        });
+        };
     }
 
     if (clearButton) {
-        const newClearButton = clearButton.cloneNode(true);
-        clearButton.parentNode.replaceChild(newClearButton, clearButton);
-
-        document.getElementById('clearSearch').addEventListener('click', function () {
+        clearButton.onclick = function () {
             console.log("Clear button clicked");
-            const input = document.getElementById('searchSupplier');
-            const store = document.getElementById('storeFilter');
-            if (input) {
-                input.value = '';
-                if (store) store.value = '';
+            if (searchInput) {
+                searchInput.value = '';
+                if (storeFilter) storeFilter.value = '';
                 filtrarPedidosPorFornecedor();
-                input.focus();
+                searchInput.focus();
             }
-        });
+        };
     }
 
     if (storeFilter) {
-        const newStoreFilter = storeFilter.cloneNode(true);
-        storeFilter.parentNode.replaceChild(newStoreFilter, storeFilter);
-
-        const activeStoreFilter = document.getElementById('storeFilter');
-        activeStoreFilter.addEventListener('change', () => {
-            console.log("Store filter changed to:", activeStoreFilter.value);
+        storeFilter.onchange = function () {
+            console.log("Store filter changed to:", storeFilter.value);
             filtrarPedidosPorFornecedor();
-        });
+        };
     }
 
     if (reportButton) {
-        const newReportButton = reportButton.cloneNode(true);
-        reportButton.parentNode.replaceChild(newReportButton, reportButton);
-
-        document.getElementById('btnGenerateReport').addEventListener('click', () => {
+        reportButton.onclick = function () {
             console.log("Generate report clicked");
             gerarRelatorioPedidosAbertos();
-        });
+        };
     }
 }
 
