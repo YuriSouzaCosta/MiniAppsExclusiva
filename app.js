@@ -28,6 +28,7 @@ const calculadoraCustoRoutes = require('./routes/calculadoraCustoRoutes');
 const consultaProdutosRoutes = require('./routes/consultaProdutosRoutes');
 const pedidoComprasRoutes = require('./routes/pedidos/pedidoComprasRoutes');
 const transferenciasRoutes = require('./routes/transferencias/transferenciasRoutes');
+const analiseTransferenciasRoutes = require('./routes/transferencias/analiseTransferenciasRoutes');
 const homeRoutes = require('./routes/homeRoutes');
 
 // Import Middleware
@@ -76,6 +77,7 @@ app.use('/calculadora-custo', calculadoraCustoRoutes);
 app.use('/consulta-produtos', consultaProdutosRoutes);
 app.use('/', pedidoComprasRoutes);
 app.use('/transferencias', transferenciasRoutes);
+app.use('/analise-transferencias', analiseTransferenciasRoutes);
 app.use('/', homeRoutes);
 app.use('/', coletorRoutes);
 

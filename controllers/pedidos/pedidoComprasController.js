@@ -474,7 +474,7 @@ async function exportarPdf(req, res) {
     try {
         conn = await db.getConnection();
         const result = await conn.execute(
-            `select CAB.NUMERO_PEDIDO, ITE.DESCRPROD, ITE.REFFORN , ITE.QTD_PEDIR, CAB.CODEMP from PEDIDO_PROCESSADO_YSC ITE 
+            `select CAB.NUMERO_PEDIDO, ITE.DESCRPROD, ITE.REFFORN , ITE.QTD_PEDIR, CAB.CODEMP, cab.marca from PEDIDO_PROCESSADO_YSC ITE 
 INNER JOIN CABECALHO_PEDIDO_YSC CAB ON CAB.NUMERO_PEDIDO = ITE.NUMERO_PEDIDO 
     WHERE CAB.NUMERO_PEDIDO = :numPedido ORDER BY CODPROD`,
             { numPedido: numero_pedido },

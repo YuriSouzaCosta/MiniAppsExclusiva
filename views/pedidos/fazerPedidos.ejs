@@ -991,6 +991,16 @@
           // Somar ao total geral
           somaTotal += vlrTotalInicial;
 
+          let marca_pedido = pedido.MARCA;
+          // Capturar a marca do primeiro item (assumindo que é a mesma para o pedido)
+          if (typeof marca_pedido === 'string' && marca_pedido.length > 0) {
+            marca_pedido =
+              marca_pedido.charAt(0).toUpperCase() +
+              marca_pedido.slice(1).toLowerCase();
+          } else {
+            marca_pedido = "";
+          }
+
           const row = document.createElement("tr");
           row.innerHTML = `
             <td>${pedido.LINHA || ""}</td>
@@ -1060,9 +1070,9 @@
     function validarEFormatarPedidos(pedidos) {
       return pedidos
         .filter((pedido) => {
-          // Filtra pedidos com quantidade válida > 0
+          // Filtra pedidos com quantidade válida >= 0
           const qtd = Number(pedido.quantidade);
-          return !isNaN(qtd) && qtd > 0;
+          return !isNaN(qtd) && qtd >= 0;
         })
         .map((pedido) => {
           // Formatação consistente dos dados
@@ -1078,9 +1088,9 @@
     function prepararPedidosParaEnvio(pedidos) {
       return pedidos
         .filter((pedido) => {
-          // Filtra pedidos com quantidade válida > 0
+          // Permite quantidades >= 0 (para zerar itens)
           const qtd = Number(pedido.quantidade);
-          return !isNaN(qtd) && qtd > 0;
+          return !isNaN(qtd) && qtd >= 0;
         })
         .map((pedido) => {
           // Conversão explícita de tipos
@@ -1117,6 +1127,11 @@
           (acc, p) => Number(acc) + Number(p.valorTotal),
           0
         );
+
+        // Atualizar o display do valor total na tela
+        if (totalPedido) {
+          totalPedido.innerHTML = `Valor Total: R$ ${somaTotal.toFixed(2)}`;
+        }
       }
     });
 
@@ -1552,11 +1567,11 @@
           switch (codEmpresa) {
             case 1: empresaNome = "Exclusiva Utilidades e Embalagens LTDA"; cnpj = "04.023.539/0001-17"; break;
             case 2: empresaNome = "SG Utilidades"; cnpj = "02.444.585/0001-64"; break;
-            case 3: empresaNome = "Exclusiva Util Equipamentos LTDA"; cnpj = "09.666.638/0001-30"; break;
-            case 4: empresaNome = "Exclusiva Prime 85 LTDA"; cnpj = "21.518.354/0001-00"; break;
-            case 5: empresaNome = "Seg Center Comercial LTDA"; cnpj = "24.486.321/0002-97"; break;
-            case 6: empresaNome = "Seg Center Comercial LTDA"; cnpj = "24.486.321/0001-06"; break;
-            case 7: empresaNome = "Asg Distribuição LTDA"; cnpj = "49.318.824/0001-01"; break;
+            case 3: empresaNome = "Util Equipamentos"; cnpj = "09.666.638/0001-30"; break;
+            case 4: empresaNome = "Prime 85"; cnpj = "21.518.354/0001-00"; break;
+            case 5: empresaNome = "Seg Center Comercial"; cnpj = "24.486.321/0002-97"; break;
+            case 6: empresaNome = "Seg Center Comercial"; cnpj = "24.486.321/0001-06"; break;
+            case 7: empresaNome = "Asg Distribuição"; cnpj = "49.318.824/0001-01"; break;
           }
 
           const { jsPDF } = window.jspdf;
@@ -1646,8 +1661,12 @@
         doc.text(`Página ${i} de ${pageCount}`, 195, 290, { align: "right" });
         doc.text(`Gerado em ${new Date().toLocaleString()}`, 14, 290, { align: "left" });
       }
-
-      doc.save(`Pedido_${id_pedido}_${empresaNome.split(' ')[0]}.pdf`);
+      const marca = String(dadosPedido[0].MARCA)
+      const nomeArquivo =  marca
+        ? `Pedido_${id_pedido}_${empresaNome.split(' ')[0]}_${marca}.pdf`
+        : `Pedido_${id_pedido}_${empresaNome.split(' ')[0]}.pdf`;
+      
+      doc.save(nomeArquivo);
       resolve();
     }
 
@@ -1665,12 +1684,12 @@
       const codEmpresa = parseInt(codemp || dadosPedido[0].CODEMP || 0);
       switch (codEmpresa) {
         case 1: empresaNome = "Exclusiva Utilidades"; break;
-        case 2: empresaNome = "SG Utilidades"; break;
-        case 3: empresaNome = "Exclusiva Util Equipamentos"; break;
-        case 4: empresaNome = "Exclusiva Prime 85"; break;
-        case 5: empresaNome = "Seg Center Comercial"; break;
-        case 6: empresaNome = "Seg Center Comercial"; break;
-        case 7: empresaNome = "Asg Distribuição"; break;
+        case 2: empresaNome = "SG_Utilidades"; break;
+        case 3: empresaNome = "Util Equipamentos"; break;
+        case 4: empresaNome = "Prime 85"; break;
+        case 5: empresaNome = "SegCenter Comercial"; break;
+        case 6: empresaNome = "SegCenter Comercial"; break;
+        case 7: empresaNome = "AsgDistribuição"; break;
       }
 
       // Criar Workbook
@@ -1746,7 +1765,11 @@
       // Gerar e Salvar
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      saveAs(blob, `Pedido_${id_pedido}_${empresaNome.split(' ')[0]}.xlsx`);
+      const nomeArquivo = marca_pedido 
+        ? `Pedido_${id_pedido}_${empresaNome.split(' ')[0]}_${marca_pedido}.xlsx`
+        : `Pedido_${id_pedido}_${empresaNome.split(' ')[0]}.xlsx`;
+
+      saveAs(blob, nomeArquivo);
     }
 
     // Logout functionality with SweetAlert2

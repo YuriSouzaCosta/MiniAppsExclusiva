@@ -10,6 +10,7 @@ router.get('/', ensureAuth, transferenciasController.index);
 router.get('/api/produto/:codigoBarras', ensureAuth, transferenciasController.buscarProduto);
 router.get('/api/estoque/:codProd', ensureAuth, transferenciasController.buscarEstoque);
 router.get('/api/locais-destino', ensureAuth, transferenciasController.buscarLocaisDestino);
-router.post('/api/criar', ensureAuth, transferenciasController.criarTransferencias);
+router.post('/api/criarTransferencias', ensureAuth, transferenciasController.criarTransferencias);
+router.get('/api/puxarTransferencias', ensureAuth, transferenciasController.puxarTransferencias);
 
 module.exports = router;

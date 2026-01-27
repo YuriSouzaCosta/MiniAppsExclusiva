@@ -786,11 +786,13 @@ async function carregaPedidosFeitos() {
                         filtrarFormaPagamento(formaPagId, pagListaId);
                     });
                 });
-
-                // Initialize search and filter listeners
-                initializeEventListeners();
             } else {
                 console.error("Nenhum container (tabela ou cards) encontrado para renderizar os pedidos.");
+            }
+
+            // Initialize search and filter listeners (ensure it's called for both cases)
+            if (pedidosContainer || tabelaBody) {
+                initializeEventListeners();
             }
 
         } catch (error) {
@@ -1188,18 +1190,17 @@ async function exportarPDF(id_pedido) {
 
             // Configurar Empresa
             let empresaNome = "Empresa Desconhecida";
-            let cnpj = "";
-            const codEmpresa = parseInt(dadosPedido[0].CODEMP || 0);
-
+            const codEmpresa = parseInt(codemp || dadosPedido[0].CODEMP || 0);
             switch (codEmpresa) {
-                case 1: empresaNome = "Exclusiva Utilidades e Embalagens LTDA"; cnpj = "04.023.539/0001-17"; break;
-                case 2: empresaNome = "SG Utilidades"; cnpj = "02.444.585/0001-64"; break;
-                case 3: empresaNome = "Exclusiva Util Equipamentos LTDA"; cnpj = "09.666.638/0001-30"; break;
-                case 4: empresaNome = "Exclusiva Prime 85 LTDA"; cnpj = "21.518.354/0001-00"; break;
-                case 5: empresaNome = "Seg Center Comercial LTDA"; cnpj = "24.486.321/0002-97"; break;
-                case 6: empresaNome = "Seg Center Comercial LTDA"; cnpj = "24.486.321/0001-06"; break;
-                case 7: empresaNome = "Asg Distribuição LTDA"; cnpj = "49.318.824/0001-01"; break;
+                case 1: empresaNome = "Exclusiva Utilidades"; break;
+                case 2: empresaNome = "SG_Utilidades"; break;
+                case 3: empresaNome = "Util Equipamentos"; break;
+                case 4: empresaNome = "Prime 85"; break;
+                case 5: empresaNome = "SegCenter Comercial"; break;
+                case 6: empresaNome = "SegCenter Comercial"; break;
+                case 7: empresaNome = "AsgDistribuição"; break;
             }
+
 
             if (!window.jspdf) {
                 throw new Error("Biblioteca jsPDF não encontrada. Verifique sua conexão com a internet ou instale a biblioteca.");
@@ -1297,8 +1298,21 @@ function gerarConteudoPDF(doc, empresaNome, cnpj, dadosPedido, id_pedido, resolv
         doc.text(`Página ${i} de ${pageCount}`, 195, 290, { align: "right" });
         doc.text(`Gerado em ${new Date().toLocaleString()}`, 14, 290, { align: "left" });
     }
+    let marca_pedido = dadosPedido[0].MARCA;
+    // Capturar a marca do primeiro item (assumindo que é a mesma para o pedido)
+    if (typeof marca_pedido === 'string' && marca_pedido.length > 0) {
+        marca_pedido =
+            marca_pedido.charAt(0).toUpperCase() +
+            marca_pedido.slice(1).toLowerCase();
+    } else {
+        marca_pedido = "";
+    }
 
-    doc.save(`Pedido_${id_pedido}_${empresaNome.split(' ')[0]}.pdf`);
+    const nomeArquivo = marca_pedido
+        ? `Pedido_${id_pedido}_${empresaNome.split(' ')[0]}_${marca_pedido}.pdf`
+        : `Pedido_${id_pedido}_${empresaNome.split(' ')[0]}.pdf`;
+
+    doc.save(nomeArquivo);
 
     // Mostrar mensagem de sucesso
     Swal.fire({
