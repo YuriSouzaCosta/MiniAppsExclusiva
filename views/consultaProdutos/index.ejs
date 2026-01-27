@@ -3,79 +3,274 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" />
-    <script src="https://kit.fontawesome.com/acad52e772.js" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="/css/consultaProdutos.css?v=2.0" />
-    <link rel="stylesheet" href="/css/responsive.css" />
     <title>Consulta de Produtos <%= isVendedor ? '(Vendedor)' : '' %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/responsive.css" />
+    <style>
+        .search-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 24px;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+            border: 1px solid #e2e8f0;
+        }
+
+        .table thead th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .table tbody tr:hover {
+            background-color: #fff7ed;
+            cursor: pointer;
+        }
+
+        .btn-exclusiva {
+            background-color: #ea580c;
+            border-color: #ea580c;
+            color: white;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-exclusiva:hover {
+            background-color: #c2410c;
+            border-color: #c2410c;
+            color: white;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #ea580c;
+            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
+        }
+
+        .stock-details-header {
+            color: #1e293b;
+            font-weight: 600;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .total-stock-badge {
+            background-color: #fff7ed;
+            color: #ea580c;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: 1px solid #ffedd5;
+            display: inline-block;
+            margin-top: 15px;
+        }
+
+        /* Mobile Card Styles */
+        .product-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        }
+
+        .product-card-header {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .product-card-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            font-size: 0.875rem;
+        }
+
+        .product-card-label {
+            color: #64748b;
+        }
+
+        .product-card-value {
+            color: #334155;
+            font-weight: 500;
+        }
+
+        .product-card-price {
+            color: #ea580c;
+            font-weight: 700;
+        }
+
+        .copy-icon {
+            cursor: pointer;
+            margin-left: 5px;
+            color: #94a3b8;
+        }
+
+        .copy-icon:hover {
+            color: #ea580c;
+        }
+
+        @media (max-width: 768px) {
+            .table-responsive {
+                display: none;
+            }
+            .product-cards-container {
+                display: block;
+            }
+            .search-card {
+                padding: 16px;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .product-cards-container {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div>
-        <%- include('layout') %>
+    <div class="layout">
+        <!-- Sidebar Partial -->
+        <%- include('../partials/sidebar', { module: 'consulta', activePage: isVendedor ? 'consulta-vendedor' : 'consulta-custo' }) %>
 
-        <div class="container mt-4">
-            <div class="card p-4 shadow-sm mb-4">
-                <h2 class="mb-3 text-center" style="color: #500001;">
-                    <i class="fas fa-search me-2"></i>Consulta de Produtos <%= isVendedor ? '(Vendedor)' : '' %>
-                </h2>
-                <div class="input-group">
-                    <input type="text" class="form-control" id="inputCodigoEan" placeholder="Busque por Nome, Referência ou Código de Barras..." />
-                    
-                    <select id="selectMarcas" class="form-select btn-exclusiva-marca" style="max-width: 200px;">
-                        <option selected disabled hidden>Selecione a Marca</option>
-                        <option value="Selecione a Marca">Todas as Marcas</option>
-                    </select>
-                    
-                    <button class="btn btn-exclusiva" type="button" id="btnSearch">
-                        <i class="fas fa-search me-1"></i> Pesquisar
-                    </button>
+        <!-- Main Content -->
+        <div class="content">
+            <div class="container-fluid">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 style="font-size: 1.5rem; color: #1e293b; margin-bottom: 0;">
+                            Consulta de Produtos <%= isVendedor ? '(Vendedor)' : '' %>
+                        </h1>
+                        <p style="color: #64748b; margin-bottom: 0;">Pesquise produtos, preços e estoque em tempo real</p>
+                    </div>
                 </div>
-            </div>
 
-            <div class="table-responsive">
-                <table class="responsive-table">
-                    <thead>
-                        <tr>
-                            <th scope="col">Produto</th>
-                            <th scope="col">Marca</th>
-                            <th scope="col">Referência</th>
-                            <th scope="col">Cód. Barras</th>
-                            <% if (!isVendedor) { %>
-                                <th scope="col">Ult. Entrada</th>
-                                <th scope="col">Vlr Custo</th>
-                            <% } %>
-                            <th scope="col">Vlr Venda</th>
-                        </tr>
-                    </thead>
-                    <tbody id="produtosAvaria">
-                        <!-- Results will be populated here -->
-                    </tbody>
-                </table>
-            </div>
+                <div class="search-card">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-7">
+                            <label class="form-label">Busca Geral</label>
+                            <input type="text" class="form-control" id="inputCodigoEan" placeholder="Nome, Referência ou Código de Barras..." />
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label class="form-label">Marca</label>
+                            <select id="selectMarcas" class="form-select">
+                                <option selected disabled hidden>Selecione a Marca</option>
+                                <option value="Selecione a Marca">Todas as Marcas</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-2 d-flex align-items-end">
+                            <button class="btn btn-exclusiva w-100" type="button" id="btnSearch">
+                                <i class="fas fa-search me-2"></i> Pesquisar
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
-            <div class="card mt-3 mb-3 p-3 text-center fw-bold shadow-sm" id="totalEstoque_F" style="display: none; background-color: #e9ecef;">
-                Estoque Total: 0
-            </div>
+                <div class="table-container">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Produto</th>
+                                    <th>Marca</th>
+                                    <th>Referência</th>
+                                    <th>Cód. Barras</th>
+                                    <% if (!isVendedor) { %>
+                                        <th>Ult. Entrada</th>
+                                        <th>Vlr Custo</th>
+                                    <% } %>
+                                    <th>Vlr Venda</th>
+                                </tr>
+                            </thead>
+                            <tbody id="produtosAvaria">
+                                <!-- Results will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
 
-            <div id="estoqueContainer" style="display: none;">
-                <h4 class="mb-2" style="color: #500001;">Detalhes do Estoque</h4>
-                <div class="table-responsive">
-                    <table class="responsive-table">
-                        <thead>
-                            <tr>
-                                <th scope="col" class="text-center">Local e Quantidade</th>
-                            </tr>
-                        </thead>
-                        <tbody id="estoqueProdutos">
-                            <!-- Stock details will be populated here -->
-                        </tbody>
-                    </table>
+                    <!-- Mobile Cards Container -->
+                    <div id="productCardsContainer" class="product-cards-container"></div>
+
+                    <div id="totalEstoque_F" class="total-stock-badge" style="display: none;">
+                        Estoque Total: 0
+                    </div>
+
+                    <div id="estoqueContainer" style="display: none;">
+                        <h4 class="stock-details-header">
+                            <i class="fas fa-boxes"></i> Detalhes do Estoque
+                        </h4>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-center">Empresa</th>
+                                        <th class="text-center">Quantidade em Estoque</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="estoqueProdutos">
+                                    <!-- Stock details will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="stockCardsContainer" class="product-cards-container mt-2"></div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Stock Modal for Mobile -->
+    <div class="modal fade" id="stockModal" tabindex="-1" aria-labelledby="stockModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="stockModalLabel">
+                        <i class="fas fa-boxes me-2"></i>Detalhes do Estoque
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="modalTotalEstoque" class="total-stock-badge mb-3 w-100 text-center">
+                        Estoque Total: 0
+                    </div>
+                    <div id="modalStockCards">
+                        <!-- Stock cards will be populated here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     
     <script>
@@ -110,9 +305,17 @@
             const marca = document.getElementById('selectMarcas').value;
             
             if (!term && (!marca || marca === 'Selecione a Marca')) {
-                alert('Por favor, digite um termo de busca ou selecione uma marca.');
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Atenção',
+                    text: 'Por favor, digite um termo de busca ou selecione uma marca.'
+                });
                 return;
             }
+
+            // Show loading
+            const tbody = document.getElementById('produtosAvaria');
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center"><div class="spinner-border text-primary" role="status"></div></td></tr>';
 
             try {
                 const response = await axios.get('/consulta-produtos/api/produtos', {
@@ -123,7 +326,11 @@
                 document.getElementById('totalEstoque_F').style.display = 'none';
             } catch (error) {
                 console.error('Erro ao buscar produtos:', error);
-                alert('Erro ao buscar produtos. Tente novamente.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao buscar produtos. Tente novamente.'
+                });
             }
         }
 
@@ -133,15 +340,15 @@
 
             if (products.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum produto encontrado.</td></tr>';
+                document.getElementById('productCardsContainer').innerHTML = '<div class="text-center p-4">Nenhum produto encontrado.</div>';
                 return;
             }
 
-            // Renderizar tabela (desktop)
             products.forEach(product => {
                 const tr = document.createElement('tr');
                 
                 let html = `
-                    <th scope="row">${product.DESCRPROD}</th>
+                    <td><strong>${product.DESCRPROD}</strong></td>
                     <td>${product.MARCA}</td>
                     <td>${product.REFFORN || '-'}</td>
                     <td>${product.REFERENCIA}</td>
@@ -154,32 +361,18 @@
                     `;
                 }
 
-                html += `<td>R$ ${parseFloat(product.PRECO).toFixed(2)}</td>`;
+                html += `<td class="fw-bold text-primary">R$ ${parseFloat(product.PRECO).toFixed(2)}</td>`;
                 
                 tr.innerHTML = html;
-                tr.style.cursor = 'pointer';
-                tr.title = 'Clique para ver o estoque';
                 tr.addEventListener('click', () => loadStock(product.CODPROD));
-                
                 tbody.appendChild(tr);
             });
 
-            // Renderizar cards (mobile)
             renderMobileCards(products);
         }
 
         function renderMobileCards(products) {
-            let cardsContainer = document.getElementById('productCardsContainer');
-            if (!cardsContainer) {
-                cardsContainer = document.createElement('div');
-                cardsContainer.id = 'productCardsContainer';
-                cardsContainer.className = 'product-cards-container';
-                document.querySelector('.table-responsive').parentNode.insertBefore(
-                    cardsContainer,
-                    document.querySelector('.table-responsive').nextSibling
-                );
-            }
-
+            const cardsContainer = document.getElementById('productCardsContainer');
             cardsContainer.innerHTML = '';
 
             products.forEach(product => {
@@ -231,42 +424,20 @@
             });
         }
 
-        // Função para copiar para clipboard
         function copyToClipboard(text) {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(() => {
-                    // Feedback visual
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 1500,
-                        timerProgressBar: true
-                    });
-                    Toast.fire({
-                        icon: 'success',
-                        title: 'Código copiado!'
-                    });
-                }).catch(err => {
-                    console.error('Erro ao copiar:', err);
-                    alert('Código: ' + text);
+            navigator.clipboard.writeText(text).then(() => {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 1500,
+                    timerProgressBar: true
                 });
-            } else {
-                // Fallback para navegadores antigos
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                textArea.style.position = 'fixed';
-                textArea.style.left = '-999999px';
-                document.body.appendChild(textArea);
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                    alert('Código copiado: ' + text);
-                } catch (err) {
-                    alert('Código: ' + text);
-                }
-                document.body.removeChild(textArea);
-            }
+                Toast.fire({
+                    icon: 'success',
+                    title: 'Código copiado!'
+                });
+            });
         }
 
         async function loadStock(codProd) {
@@ -281,57 +452,81 @@
         }
 
         function displayStock(stockData) {
+            const isMobile = window.innerWidth <= 768;
             const tbody = document.getElementById('estoqueProdutos');
+            const stockCardsContainer = document.getElementById('stockCardsContainer');
+            const modalStockCards = document.getElementById('modalStockCards');
+            const modalTotalEstoque = document.getElementById('modalTotalEstoque');
+            
             tbody.innerHTML = '';
+            stockCardsContainer.innerHTML = '';
+            modalStockCards.innerHTML = '';
+            
             let totalEstoque = 0;
 
-            // Renderizar tabela (desktop)
             stockData.forEach(item => {
-                if (parseFloat(item.ESTOQUE) > 0) {
+                const qtd = parseFloat(item.ESTOQUE);
+                if (qtd > 0) {
+                    // Table row (for desktop)
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td>
-                            <emp>Empresa: ${item.CODEMP}</emp>&emsp;
-                            <estoque>Estoque: ${item.ESTOQUE}</estoque>
-                        </td>
+                        <td class="text-center">${item.CODEMP}</td>
+                        <td class="text-center fw-bold">${qtd}</td>
                     `;
                     tbody.appendChild(tr);
-                    totalEstoque += parseFloat(item.ESTOQUE);
+
+                    // Mobile card (reusable for both desktop view and modal)
+                    const createCard = () => {
+                        const card = document.createElement('div');
+                        card.className = 'product-card';
+                        card.style.borderLeft = '4px solid #ea580c';
+                        card.innerHTML = `
+                            <div class="product-card-row">
+                                <span class="product-card-label">Empresa:</span>
+                                <span class="product-card-value">${item.CODEMP}</span>
+                            </div>
+                            <div class="product-card-row">
+                                <span class="product-card-label">Estoque:</span>
+                                <span class="product-card-value fw-bold">${qtd}</span>
+                            </div>
+                        `;
+                        return card;
+                    };
+
+                    stockCardsContainer.appendChild(createCard());
+                    modalStockCards.appendChild(createCard());
+
+                    totalEstoque += qtd;
                 }
             });
 
-            // Renderizar cards mobile
-            let stockCardsContainer = document.getElementById('stockCardsContainer');
-            if (!stockCardsContainer) {
-                stockCardsContainer = document.createElement('div');
-                stockCardsContainer.id = 'stockCardsContainer';
-                stockCardsContainer.className = 'product-cards-container';
-                document.getElementById('estoqueContainer').appendChild(stockCardsContainer);
+            if (totalEstoque === 0) {
+                const noStockMsg = 'Sem estoque disponível em nenhuma empresa.';
+                tbody.innerHTML = `<tr><td colspan="2" class="text-center text-muted">${noStockMsg}</td></tr>`;
+                stockCardsContainer.innerHTML = `<div class="text-center p-3 text-muted">${noStockMsg}</div>`;
+                modalStockCards.innerHTML = `<div class="text-center p-3 text-muted">${noStockMsg}</div>`;
             }
 
-            stockCardsContainer.innerHTML = '';
-            
-            // Mostrar cada estoque individualmente
-            stockData.forEach(item => {
-                if (parseFloat(item.ESTOQUE) > 0) {
-                    const card = document.createElement('div');
-                    card.className = 'stock-card';
-                    card.innerHTML = `
-                        <span class="stock-card-empresa">Empresa: ${item.CODEMP}</span>
-                        <span class="stock-card-qtd">Estoque: ${item.ESTOQUE}</span>
-                    `;
-                    stockCardsContainer.appendChild(card);
-                }
-            });
-
+            // Update total stock displays
             const totalDiv = document.getElementById('totalEstoque_F');
             totalDiv.textContent = `Estoque Total: ${totalEstoque}`;
-            totalDiv.style.display = 'block';
-            
-            document.getElementById('estoqueContainer').style.display = 'block';
-            
-            // REMOVIDO: Scroll automático
-            // totalDiv.scrollIntoView({ behavior: 'smooth' });
+            modalTotalEstoque.textContent = `Estoque Total: ${totalEstoque}`;
+
+            if (isMobile) {
+                // Hide desktop container and show modal
+                document.getElementById('estoqueContainer').style.display = 'none';
+                totalDiv.style.display = 'none';
+                
+                const stockModal = new bootstrap.Modal(document.getElementById('stockModal'));
+                stockModal.show();
+            } else {
+                // Show desktop container
+                totalDiv.style.display = 'inline-block';
+                document.getElementById('estoqueContainer').style.display = 'block';
+                
+                // Scroll to stock details
+                document.getElementById('estoqueContainer').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         }
     </script>
 </body>

@@ -1,0 +1,197 @@
+<%- include('partials/header', { pageTitle: 'Novo Pedido' }) %>
+
+<div class="space-y-6 pb-20" id="posApp">
+    <!-- Progress Bar -->
+    <div class="relative">
+        <div class="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -z-10 rounded-full"></div>
+        <div class="absolute top-1/2 left-0 h-1 bg-green-600 -z-10 rounded-full transition-all duration-300" id="progressBar" style="width: 0%"></div>
+        <div class="flex justify-between">
+            <div class="flex flex-col items-center bg-gray-50 px-2 cursor-pointer" onclick="goToStep(1)">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 border-green-600 bg-white text-green-600 transition-colors" id="step1Indicator">
+                    <span class="font-bold">1</span>
+                </div>
+                <span class="text-xs font-medium mt-2 text-green-700">Identificação</span>
+            </div>
+            <div class="flex flex-col items-center bg-gray-50 px-2 cursor-pointer" onclick="goToStep(2)">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 border-gray-300 bg-white text-gray-400 transition-colors" id="step2Indicator">
+                    <span class="font-bold">2</span>
+                </div>
+                <span class="text-xs font-medium mt-2 text-gray-500">Produtos</span>
+            </div>
+            <div class="flex flex-col items-center bg-gray-50 px-2 cursor-pointer" onclick="goToStep(3)">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 border-gray-300 bg-white text-gray-400 transition-colors" id="step3Indicator">
+                    <span class="font-bold">3</span>
+                </div>
+                <span class="text-xs font-medium mt-2 text-gray-500">Pagamento</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 1: Identification -->
+    <div id="step1" class="step-content">
+        <div class="space-y-6">
+            <div class="rounded-xl border border-gray-200 bg-white text-gray-950 shadow-sm">
+                <div class="p-6 pt-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-blue-100 p-2 rounded-full">
+                            <i data-lucide="user" class="w-5 h-5 text-blue-600"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-900">Identificação do Cliente</h3>
+                    </div>
+                    <div class="w-full relative">
+                        <input type="text" id="clientName" class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-lg placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Nome ou CNPJ do Cliente" autocomplete="off">
+                        <input type="hidden" id="selectedCodparc" value="">
+                        <div id="partnerSearchResults" class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg hidden max-h-60 overflow-y-auto">
+                            <!-- Results will be injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-gray-200 bg-white text-gray-950 shadow-sm">
+                <div class="p-6 pt-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-green-100 p-2 rounded-full">
+                            <i data-lucide="credit-card" class="w-5 h-5 text-green-600"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-900">Forma de Pagamento</h3>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button onclick="selectPayment('pix')" class="payment-btn flex flex-col items-center justify-center p-4 rounded-xl border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-600 transition-all" data-method="pix">
+                            <i data-lucide="wallet" class="w-6 h-6 mb-2"></i>
+                            <span class="font-medium">PIX</span>
+                        </button>
+                        <button onclick="selectPayment('cash')" class="payment-btn flex flex-col items-center justify-center p-4 rounded-xl border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-600 transition-all" data-method="cash">
+                            <i data-lucide="banknote" class="w-6 h-6 mb-2"></i>
+                            <span class="font-medium">Dinheiro</span>
+                        </button>
+                        <button onclick="selectPayment('card')" class="payment-btn flex flex-col items-center justify-center p-4 rounded-xl border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-600 transition-all" data-method="card">
+                            <i data-lucide="credit-card" class="w-6 h-6 mb-2"></i>
+                            <span class="font-medium">Cartão</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Products -->
+    <div id="step2" class="step-content hidden">
+        <div class="space-y-4">
+            <div class="relative">
+                <i data-lucide="search" class="absolute left-3 top-3 h-5 w-5 text-gray-400"></i>
+                <input type="text" id="productSearch" class="flex h-12 w-full rounded-md border border-gray-300 bg-white px-3 py-2 pl-10 text-lg placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Buscar produto por nome ou código...">
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="productGrid">
+                <!-- Products will be injected here via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3: Summary -->
+    <div id="step3" class="step-content hidden">
+        <div class="space-y-6">
+            <div class="rounded-xl border border-gray-200 bg-white text-gray-950 shadow-sm">
+                <div class="p-0">
+                    <ul class="divide-y divide-gray-100" id="cartItemsList">
+                        <!-- Cart items will be injected here -->
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-4">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">Subtotal</span>
+                    <span id="summarySubtotal">R$ 0,00</span>
+                </div>
+                
+                <div class="flex justify-between text-sm text-red-600">
+                    <span>Descontos Itens</span>
+                    <span id="summaryItemDiscounts">- R$ 0,00</span>
+                </div>
+
+                <div class="flex items-center justify-between gap-4 py-2">
+                    <span class="text-sm font-medium text-gray-700">Desconto Adicional</span>
+                    <div class="w-32">
+                        <input type="number" id="additionalDiscount" class="flex h-8 w-full rounded-md border border-gray-300 bg-white px-3 py-1 text-right text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" value="0">
+                    </div>
+                </div>
+
+                <div class="border-t pt-4 flex justify-between items-center">
+                    <span class="text-lg font-bold text-gray-900">Total a Pagar</span>
+                    <span class="text-3xl font-bold text-blue-600" id="summaryTotal">R$ 0,00</span>
+                </div>
+
+                <button onclick="finalizeOrder()" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-green-600 text-white hover:bg-green-700 h-14 w-full text-lg font-bold">
+                    Finalizar Pedido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Footer -->
+    <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 md:static md:bg-transparent md:border-0 md:p-0 flex justify-between gap-4 z-10">
+        <button onclick="prevStep()" id="prevBtn" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 flex-1 md:flex-none" disabled>
+            <i data-lucide="chevron-left" class="w-4 h-4 mr-2"></i>
+            Voltar
+        </button>
+
+        <button onclick="nextStep()" id="nextBtn" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-green-600 text-white hover:bg-green-700 h-10 px-4 py-2 flex-1 md:flex-none">
+            Próximo
+            <i data-lucide="chevron-right" class="w-4 h-4 ml-2"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Item Modal -->
+<div id="itemModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 hidden">
+    <div class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-medium leading-6 text-gray-900" id="modalProductName">Nome do Produto</h3>
+            <button onclick="closeModal()" class="rounded-full p-1 hover:bg-gray-100 transition-colors">
+                <i data-lucide="x" class="h-5 w-5 text-gray-500"></i>
+            </button>
+        </div>
+        <div class="mt-2 space-y-4">
+            <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                <span class="text-sm text-gray-500">Preço Unitário</span>
+                <span class="font-bold text-lg" id="modalProductPrice">R$ 0,00</span>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Quantidade</label>
+                <div class="flex items-center gap-3">
+                    <button onclick="updateQuantity(-1)" class="w-10 h-10 flex items-center justify-center rounded-md border border-gray-300 hover:bg-gray-50">-</button>
+                    <input type="number" id="modalQuantity" class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-center focus:outline-none focus:ring-2 focus:ring-blue-500" value="1">
+                    <button onclick="updateQuantity(1)" class="w-10 h-10 flex items-center justify-center rounded-md border border-gray-300 hover:bg-gray-50">+</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Desconto (R$)</label>
+                    <input type="number" id="modalDiscountValue" class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" value="0">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Desconto (%)</label>
+                    <input type="number" id="modalDiscountPercent" class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" value="0">
+                </div>
+            </div>
+
+            <div class="border-t pt-4 mt-4">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="font-medium">Total Final</span>
+                    <span class="text-2xl font-bold text-green-600" id="modalFinalTotal">R$ 0,00</span>
+                </div>
+                
+                <button onclick="confirmAddItem()" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700 h-12 w-full text-lg">
+                    Adicionar ao Pedido
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/pdv/pos.js"></script>
+<%- include('partials/footer') %>

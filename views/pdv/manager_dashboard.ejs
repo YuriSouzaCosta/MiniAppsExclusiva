@@ -1,0 +1,183 @@
+<%- include('partials/header', { pageTitle: 'Dashboard Gerencial' }) %>
+
+<div class="space-y-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <h2 class="text-3xl font-bold text-gray-900">Dashboard Gerencial</h2>
+        
+        <form action="/pdv/manager" method="GET" class="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+            <div class="flex items-center gap-2">
+                <div class="relative">
+                    <label for="startDate" class="block text-xs font-medium text-gray-500 mb-1">Data Inicial</label>
+                    <input type="date" 
+                           id="startDate"
+                           name="startDate" 
+                           value="<%= typeof startDate !== 'undefined' ? startDate : '' %>"
+                           class="pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm"
+                           required>
+                </div>
+                <div class="relative">
+                    <label for="endDate" class="block text-xs font-medium text-gray-500 mb-1">Data Final</label>
+                    <input type="date" 
+                           id="endDate"
+                           name="endDate" 
+                           value="<%= typeof endDate !== 'undefined' ? endDate : '' %>"
+                           class="pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm"
+                           required>
+                </div>
+            </div>
+            <button type="submit" class="mb-[1px] inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i data-lucide="filter" class="w-4 h-4 mr-2"></i>
+                Filtrar
+            </button>
+            <% if ((typeof startDate !== 'undefined' && startDate) || (typeof endDate !== 'undefined' && endDate)) { %>
+                <a href="/pdv/manager" class="mb-[1px] inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Limpar
+                </a>
+            <% } %>
+        </form>
+    </div>
+    
+    <!-- Metrics Cards -->
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-xl border border-gray-200 bg-white text-gray-950 shadow-sm">
+            <div class="flex flex-row items-center justify-between space-y-0 pb-2 p-6">
+                <h3 class="tracking-tight text-sm font-medium">Vendas Hoje</h3>
+                <i data-lucide="dollar-sign" class="h-4 w-4 text-gray-500"></i>
+            </div>
+            <div class="p-6 pt-0">
+                <div class="text-2xl font-bold">R$ <%= metrics.dailySales.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></div>
+                <p class="text-xs text-gray-500">+20.1% em relação a ontem</p>
+            </div>
+        </div>
+
+        <div class="rounded-xl border border-gray-200 bg-white text-gray-950 shadow-sm">
+            <div class="flex flex-row items-center justify-between space-y-0 pb-2 p-6">
+                <h3 class="tracking-tight text-sm font-medium">Pedidos</h3>
+                <i data-lucide="shopping-bag" class="h-4 w-4 text-gray-500"></i>
+            </div>
+            <div class="p-6 pt-0">
+                <div class="text-2xl font-bold">+<%= metrics.orderCount %></div>
+                <p class="text-xs text-gray-500">+180 novos pedidos</p>
+            </div>
+        </div>
+
+        <div class="rounded-xl border border-gray-200 bg-white text-gray-950 shadow-sm">
+            <div class="flex flex-row items-center justify-between space-y-0 pb-2 p-6">
+                <h3 class="tracking-tight text-sm font-medium">Ticket Médio</h3>
+                <i data-lucide="trending-up" class="h-4 w-4 text-gray-500"></i>
+            </div>
+            <div class="p-6 pt-0">
+                <div class="text-2xl font-bold">R$ <%= metrics.avgTicket.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></div>
+                <p class="text-xs text-gray-500">+19% este mês</p>
+            </div>
+        </div>
+
+        <div class="rounded-xl border border-gray-200 bg-white text-gray-950 shadow-sm">
+            <div class="flex flex-row items-center justify-between space-y-0 pb-2 p-6">
+                <h3 class="tracking-tight text-sm font-medium">Vendedores Ativos</h3>
+                <i data-lucide="users" class="h-4 w-4 text-gray-500"></i>
+            </div>
+            <div class="p-6 pt-0">
+                <div class="text-2xl font-bold"><%= metrics.activeSellers %></div>
+                <p class="text-xs text-gray-500">2 online agora</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <!-- Chart -->
+        <div class="col-span-4 rounded-xl border border-gray-200 bg-white text-gray-950 shadow-sm">
+            <div class="flex flex-col space-y-1.5 p-6">
+                <h3 class="font-semibold leading-none tracking-tight">Performance de Vendas (Semana)</h3>
+            </div>
+            <div class="p-6 pt-0 pl-2">
+                <div class="h-[300px] w-full">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Sellers -->
+        <div class="col-span-3 rounded-xl border border-gray-200 bg-white text-gray-950 shadow-sm">
+            <div class="flex flex-col space-y-1.5 p-6">
+                <h3 class="font-semibold leading-none tracking-tight">Top Vendedores</h3>
+            </div>
+            <div class="p-6 pt-0">
+                <div class="space-y-8">
+                    <a href="/pdv/sales?sellerId=Joao" class="flex items-center hover:bg-gray-50 p-2 rounded-lg transition-colors cursor-pointer group">
+                        <div class="space-y-1">
+                            <p class="text-sm font-medium leading-none group-hover:text-blue-600">Vendedor João</p>
+                            <p class="text-xs text-gray-500">45 vendas</p>
+                        </div>
+                        <div class="ml-auto font-medium">R$ 12.000,00</div>
+                    </a>
+                    <a href="/pdv/sales?sellerId=Maria" class="flex items-center hover:bg-gray-50 p-2 rounded-lg transition-colors cursor-pointer group">
+                        <div class="space-y-1">
+                            <p class="text-sm font-medium leading-none group-hover:text-blue-600">Vendedora Maria</p>
+                            <p class="text-xs text-gray-500">38 vendas</p>
+                        </div>
+                        <div class="ml-auto font-medium">R$ 10.500,00</div>
+                    </a>
+                    <a href="/pdv/sales?sellerId=Pedro" class="flex items-center hover:bg-gray-50 p-2 rounded-lg transition-colors cursor-pointer group">
+                        <div class="space-y-1">
+                            <p class="text-sm font-medium leading-none group-hover:text-blue-600">Vendedor Pedro</p>
+                            <p class="text-xs text-gray-500">29 vendas</p>
+                        </div>
+                        <div class="ml-auto font-medium">R$ 8.200,00</div>
+                    </a>
+                    <a href="/pdv/sales?sellerId=Ana" class="flex items-center hover:bg-gray-50 p-2 rounded-lg transition-colors cursor-pointer group">
+                        <div class="space-y-1">
+                            <p class="text-sm font-medium leading-none group-hover:text-blue-600">Vendedora Ana</p>
+                            <p class="text-xs text-gray-500">22 vendas</p>
+                        </div>
+                        <div class="ml-auto font-medium">R$ 6.100,00</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('salesChart');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'],
+            datasets: [{
+                label: 'Vendas',
+                data: [4000, 3000, 2000, 2780, 1890, 2390, 3490],
+                backgroundColor: '#2563eb',
+                borderRadius: 4,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    }
+                },
+                y: {
+                    border: {
+                        display: false
+                    },
+                    grid: {
+                        color: '#f3f4f6'
+                    }
+                }
+            }
+        }
+    });
+</script>
+<%- include('partials/footer') %>

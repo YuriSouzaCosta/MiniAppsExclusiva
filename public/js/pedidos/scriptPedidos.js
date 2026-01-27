@@ -113,6 +113,7 @@ function filtrarMarcas() {
 
     if (valorDigitado.length === 0) {
         dropdown.classList.remove("show");
+        dropdown.style.display = "none";
         return;
     }
 
@@ -123,6 +124,7 @@ function filtrarMarcas() {
         loadingItem.textContent = "Carregando marcas...";
         dropdown.appendChild(loadingItem);
         dropdown.classList.add("show");
+        dropdown.style.display = "block";
         return;
     }
 
@@ -133,6 +135,7 @@ function filtrarMarcas() {
 
     if (filtradas.length === 0) {
         dropdown.classList.remove("show");
+        dropdown.style.display = "none";
         return;
     }
 
@@ -145,11 +148,13 @@ function filtrarMarcas() {
             event.preventDefault();
             input.value = marca;
             dropdown.classList.remove("show");
+            dropdown.style.display = "none";
         };
         dropdown.appendChild(item);
     });
 
     dropdown.classList.add("show");
+    dropdown.style.display = "block";
 }
 
 

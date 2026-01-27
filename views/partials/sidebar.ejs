@@ -1,0 +1,148 @@
+<!-- Mobile Toggle Button -->
+<button class="btn mobile-toggle d-md-none" id="sidebarToggle">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header justify-content-center">
+        <img src="/images/logo.png" alt="Logo" style="width: 60px; margin-right: 0;">
+        <button class="btn-close d-md-none ms-auto" id="sidebarClose" aria-label="Close"></button>
+    </div>
+    <ul class="sidebar-links">
+        <li>
+            <a href="/" class="nav-link <%= activePage === 'home' ? 'active' : '' %>">
+                <i class="fas fa-home"></i>
+                Menu Principal
+            </a>
+        </li>
+
+        <% if (module === 'pedidos') { %>
+            <li class="menu-header">PEDIDO DE COMPRAS</li>
+            <li>
+                <a href="/pedidosCompras" class="nav-link <%= activePage === 'criar' ? 'active' : '' %>">
+                    <i class="bi bi-plus-circle"></i>
+                    Criar Pedidos
+                </a>
+            </li>
+            <li>
+                <a href="/listaPedidos" class="nav-link <%= activePage === 'lista' ? 'active' : '' %>">
+                    <i class="bi bi-list-ul"></i>
+                    Lista de Pedidos
+                </a>
+            </li>
+            <li>
+                <a href="/fazerPedidos" class="nav-link <%= activePage === 'fazer' ? 'active' : '' %>">
+                    <i class="bi bi-clipboard-check"></i>
+                    Fazer Pedidos
+                </a>
+            </li>
+            <li>
+                <a href="/finalizarPedidos" class="nav-link <%= activePage === 'finalizar' ? 'active' : '' %>">
+                    <i class="bi bi-check-circle"></i>
+                    Finalizar Pedidos
+                </a>
+            </li>
+            <li>
+                <a href="/pedidosFinalizados" class="nav-link <%= activePage === 'finalizados' ? 'active' : '' %>">
+                    <i class="bi bi-archive"></i>
+                    Pedidos Finalizados
+                </a>
+            </li>
+        <% } %>
+
+        <% if (module === 'consulta') { %>
+            <li class="menu-header">CONSULTA DE PRODUTOS</li>
+            <% if (user.role === 'ADMIN') { %>
+            <li>
+                <a href="/consulta-produtos" class="nav-link <%= activePage === 'consulta-custo' ? 'active' : '' %>">
+                    <i class="fas fa-tags"></i>
+                    Consulta C/ Custo
+                </a>
+            </li>
+            <% } %>
+            <li>
+                <a href="/consulta-produtos/vendedor" class="nav-link <%= activePage === 'consulta-vendedor' ? 'active' : '' %>">
+                    <i class="fas fa-search-dollar"></i>
+                    Consulta Vendedor
+                </a>
+            </li>
+        <% } %>
+
+        <% if (module === 'cartao') { %>
+            <li class="menu-header">CONTROLE DE CARTÃO</li>
+            <li>
+                <a href="/controle-cartao" class="nav-link <%= activePage === 'cartao-index' ? 'active' : '' %>">
+                    <i class="fas fa-credit-card"></i>
+                    Lançamentos
+                </a>
+            </li>
+        <% } %>
+
+        <li class="menu-separator"></li>
+        <li>
+            <a href="#" class="nav-link" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i>
+                Sair
+            </a>
+        </li>
+    </ul>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sidebar = document.getElementById('sidebar');
+        const toggle = document.getElementById('sidebarToggle');
+        const close = document.getElementById('sidebarClose');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        if (toggle) {
+            toggle.addEventListener('click', () => {
+                sidebar.classList.add('active');
+                overlay.classList.add('active');
+            });
+        }
+
+        if (close) {
+            close.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            });
+        }
+
+        if (overlay) {
+            overlay.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            });
+        }
+
+        // Logout functionality
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Tem certeza?',
+                    text: "Você será desconectado do sistema.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ea580c',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Sim, sair!',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '/logout';
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
+            });
+        }
+    });
+</script>

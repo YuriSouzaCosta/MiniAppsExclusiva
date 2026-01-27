@@ -30,7 +30,7 @@
    ======================================== */
 @media (min-width: 1280px) and (max-width: 1365px) {
     :root {
-        --sidebar-width: 180px;
+        --sidebar-width: 280px;
     }
     
     /* Table improvements - REDUCED SIZES TO PREVENT WRAPPING */
@@ -64,13 +64,13 @@
     
     /* Sidebar adjustments - SMALLER */
     .sidebar {
-        width: 180px !important;
+        width: 280px !important;
     }
     
     .main-content {
-        margin-left: 180px !important;
+        margin-left: 280px !important;
         padding: 0.75rem !important;
-        max-width: calc(100% - 180px) !important;
+        max-width: calc(100% - 280px) !important;
     }
     
     /* Make container use more space */
@@ -169,18 +169,18 @@
    ======================================== */
 @media (min-width: 1366px) and (max-width: 1919px) {
     :root {
-        --sidebar-width: 160px;
+        --sidebar-width: 260px;
     }
     
     /* MAXIMIZE TABLE SPACE */
     .sidebar {
-        width: 160px !important;
+        width: 260px !important;
     }
     
     .main-content {
-        margin-left: 160px !important;
+        margin-left: 260px !important;
         padding: 0.5rem !important;
-        max-width: calc(100% - 160px) !important;
+        max-width: calc(100% - 260px) !important;
     }
     
     .container-fluid {

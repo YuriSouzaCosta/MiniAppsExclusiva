@@ -80,6 +80,7 @@ app.use('/transferencias', transferenciasRoutes);
 app.use('/analise-transferencias', analiseTransferenciasRoutes);
 app.use('/', homeRoutes);
 app.use('/', coletorRoutes);
+app.use('/pdv', require('./routes/pdvRoutes'));
 
 const db = require('./config/db/oracle');
 
