@@ -2,3 +2,12 @@ node_modules/
 .env
 dist/
 certs/
+
+# Cache do Python (OCR de orcamento)
+__pycache__/
+*.pyc
+
+# Arquivos enviados/gerados em runtime - versiona apenas a estrutura de pastas
+uploads/**
+!uploads/**/
+!uploads/**/.gitkeep
