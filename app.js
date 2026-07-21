@@ -30,6 +30,8 @@ const pedidoComprasRoutes = require('./routes/pedidos/pedidoComprasRoutes');
 const transferenciasRoutes = require('./routes/transferencias/transferenciasRoutes');
 const analiseTransferenciasRoutes = require('./routes/transferencias/analiseTransferenciasRoutes');
 const homeRoutes = require('./routes/homeRoutes');
+const orcamentoOCRRoutes = require('./routes/orcamentoOCR');
+const consultaProduto = require('./controllers/consultaController');
 
 // Import Middleware
 const authMiddleware = require('./middleware/authMiddleware');
@@ -40,7 +42,7 @@ app.use('/', authRoutes);
 
 // middleware para proteger rotas depois do login
 app.use((req, res, next) => {
-  const publicPaths = ['/login', '/css', '/js', '/public', '/auth', '/coletor'];
+  const publicPaths = ['/login', '/css', '/js', '/public', '/auth', '/coletor', '/gertec', '/favicon.ico', '/consulta-ean'];
   if (publicPaths.some(p => req.path.startsWith(p))) {
     return next();
   }
@@ -78,9 +80,18 @@ app.use('/consulta-produtos', consultaProdutosRoutes);
 app.use('/', pedidoComprasRoutes);
 app.use('/transferencias', transferenciasRoutes);
 app.use('/analise-transferencias', analiseTransferenciasRoutes);
+app.use('/orcamento-ocr', orcamentoOCRRoutes);
 app.use('/', homeRoutes);
 app.use('/', coletorRoutes);
 app.use('/pdv', require('./routes/pdvRoutes'));
+app.get("/gertec/:codbarra", consultaProduto.consultaGertec);
+
+if (consultaProduto.consultaEanPhp) {
+  app.get("/consulta-ean", consultaProduto.consultaEanPhp);
+} else {
+  console.warn("AVISO: consultaEanPhp não foi encontrada em consultaController.js");
+}
+
 
 const db = require('./config/db/oracle');
 

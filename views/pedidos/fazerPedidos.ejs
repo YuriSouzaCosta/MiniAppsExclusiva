@@ -113,28 +113,22 @@
         td:nth-child(2) { width: 5%; } /* COD JIVA */
         td:nth-child(3) { width: 8%; } /* COD BARRA */
         td:nth-child(4) { width: 5%; } /* REF */
-        td:nth-child(5) { width: 25%; text-align: left; } /* PRODUTO */
+        td:nth-child(5) { width: 25%; text-align: left; font-weight: 500; } /* PRODUTO */
         td:nth-child(6) { width: 6%; } /* VLR VENDA */
         
         /* Compact Numerical Columns */
-        td:nth-child(7),  /* ULT CUS */
-        td:nth-child(8),  /* ULT COMPRA */
-        td:nth-child(9),  /* COMPRA TT */
-        td:nth-child(10), /* VENDA TT */
-        td:nth-child(11), /* MED VENDA */
-        td:nth-child(12)  /* EST */
-        {
-          width: 4.5%;
-          font-size: 10px;
-          padding: 2px;
-          text-align: center !important;
-        }
-
+        td:nth-child(7) { width: 6%; }  /* ULT CUS */
+        td:nth-child(8) { width: 6%; }  /* ULT COMPRA */
+        td:nth-child(9){text-align: center; font-size: 12px  !important}  /* COMPRA TT */
+        td:nth-child(10){text-align: center; font-size: 12px !important} /* VENDA TT */
+        td:nth-child(11){text-align: center; font-size: 10px !important} /* MED VENDA */
+        td:nth-child(12){text-align: center; font-size: 12px !important}  /* EST */
+      
         /* Specific Colors for Stats - Keeping functionality but softening colors */
-        td:nth-child(9) { background-color: #fef9c3; font-weight: 600; color: #854d0e; }
-        td:nth-child(10) { background-color: #ccfbf1; font-weight: 600; color: #115e59; }
-        td:nth-child(11) { background-color: #d1fae5; font-weight: 600; color: #065f46; }
-        td:nth-child(12) { background-color: #e0f2fe; font-weight: 600; color: #0369a1; }
+        td:nth-child(9) { background-color: #fef9c3; font-weight: 500; color: #000000;  }
+        td:nth-child(10) { background-color: #ccfbf1; font-weight: 500; color: #000000;}
+        td:nth-child(11) { background-color: #d1fae5; font-weight: 500; color: #000000;}
+        td:nth-child(12) { background-color: #e0f2fe; font-weight: 500; color: #000000;}
 
         td:nth-child(13) { width: 6%; } /* QTD PEDIDO */
         td:nth-child(14) { width: 8%; } /* VLR PEDIDO */
@@ -1285,10 +1279,11 @@
       doc.setTextColor(100);
       doc.text(`CNPJ: ${cnpj}`, 14, 40);
 
-      // Tabela
+      // Tabela (itens em ordem alfabética pela descrição do produto)
       const colunas = ["REF", "PRODUTO", "QTD"];
       const linhas = dadosPedido
         .filter(item => parseFloat(item.QTD_PEDIR) > 0)
+        .sort((a, b) => String(a.DESCRPROD || '').localeCompare(String(b.DESCRPROD || ''), 'pt-BR'))
         .map(item => [
           item.REFFORN || item.REFERENCIA,
           item.DESCRPROD,

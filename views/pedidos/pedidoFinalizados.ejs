@@ -306,6 +306,10 @@
                                 <i class="bi bi-eye"></i>
                                 Visualizar
                             </button>
+                            <button type="button" class="btn btn-action text-white" style="background-color:#eab308; border:none;" onclick="reprocessarPedido(${pedido.NUMERO_PEDIDO})">
+                                <i class="bi bi-arrow-repeat"></i>
+                                Reprocessar
+                            </button>
                             <button type="button" class="btn btn-action btn-danger-custom" onclick="apagarPedido(${pedido.NUMERO_PEDIDO})">
                                 <i class="bi bi-trash"></i>
                                 Excluir
@@ -350,6 +354,46 @@
                 }
             });
         });
+
+        // Add the reprocess button functionality
+        async function reprocessarPedido(id) {
+            Swal.fire({
+                title: 'Reprocessar Pedido?',
+                text: "Uma nova cópia será gerada e enviada para o Sankhya.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#eab308',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Sim, reprocessar!',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Reprocessando...',
+                        html: 'Clonando o pedido e gerando envio no Sankhya',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+
+                    try {
+                        // Assuming apiBase is a global set somewhere else, keeping it relative is safe
+                        const response = await fetch(`/reprocessar-pedido/${id}`, { method: 'POST' });
+                        const data = await response.json();
+                        
+                        if (response.ok && data.success) {
+                            Swal.fire('Sucesso!', 'Pedido reprocessado. (Novo Nro Único: ' + (data.nunotaGerado || 'Aberto') + ')', 'success');
+                            carregaPedidosFeitosFinalizados(); // Recarrega a tabela visualizada no DOM
+                        } else {
+                            const errorMsg = data.error ? data.error + (data.details ? ' - Detalhes: ' + data.details : '') : (data.details || 'Erro desconhecido ao reprocessar');
+                            throw new Error(errorMsg);
+                        }
+                    } catch (error) {
+                        Swal.fire('Erro!', error.message, 'error');
+                    }
+                }
+            });
+        }
+
     </script>
   </body>
 </html>

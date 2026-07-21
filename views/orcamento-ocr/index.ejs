@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orçamento OCR — Sistema Exclusiva</title>
+  <meta name="description" content="Módulo de extração de orçamentos via OCR com PaddleOCR" />
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" />
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --primary-color: #ea580c;
+      --primary-hover: #c2410c;
+      --primary-light: #fed7aa;
+      --primary-bg: rgba(234, 88, 12, 0.08);
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --text-muted: #94a3b8;
+      --border-color: #e2e8f0;
+      --success-color: #16a34a;
+      --danger-color: #dc2626;
+      --warning-color: #d97706;
+      --info-color: #2563eb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      background-color: var(--bg-color);
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    /* ===== NAVBAR ===== */
+    .navbar-ocr {
+      background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+      box-shadow: 0 4px 15px rgba(234, 88, 12, 0.25);
+      padding: 0.75rem 0;
+    }
+    .navbar-ocr .navbar-brand {
+      font-weight: 700;
+      font-size: 1.2rem;
+      letter-spacing: -0.02em;
+    }
+    .navbar-ocr .nav-link {
+      font-weight: 500;
+      font-size: 0.9rem;
+      padding: 0.5rem 1rem !important;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .navbar-ocr .nav-link:hover {
+      background: rgba(255,255,255,0.15);
+    }
+
+    /* ===== CARDS ===== */
+    .card-custom {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+    .card-custom:hover {
+      box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    }
+    .card-header-custom {
+      background: var(--primary-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .card-header-custom i {
+      font-size: 1.25rem;
+      color: var(--primary-color);
+    }
+    .card-header-custom h5 {
+      margin: 0;
+      font-weight: 600;
+      font-size: 1.05rem;
+      color: var(--text-primary);
+    }
+    .card-body-custom {
+      padding: 1.5rem;
+    }
+
+    /* ===== FORM ELEMENTS ===== */
+    .form-label-custom {
+      font-weight: 500;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.375rem;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.15);
+    }
+    .form-control, .form-select {
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      padding: 0.625rem 0.875rem;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn-primary-custom {
+      background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 0.65rem 1.5rem;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+    }
+    .btn-primary-custom:hover {
+      background: linear-gradient(135deg, #c2410c 0%, #9a3412 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(234, 88, 12, 0.35);
+      color: white;
+    }
+    .btn-primary-custom:disabled {
+      opacity: 0.6;
+      transform: none;
+      box-shadow: none;
+    }
+    .btn-outline-custom {
+      border: 1.5px solid var(--primary-color);
+      color: var(--primary-color);
+      font-weight: 600;
+      padding: 0.55rem 1.25rem;
+      border-radius: 10px;
+      transition: all 0.2s;
+      background: transparent;
+    }
+    .btn-outline-custom:hover {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    /* ===== TABLE ===== */
+    .table-custom {
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    .table-custom thead th {
+      background: #f1f5f9;
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      border: none;
+      padding: 0.75rem 1rem;
+    }
+    .table-custom tbody td {
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+    }
+    .table-custom tbody tr:hover {
+      background: var(--primary-bg);
+    }
+
+    /* ===== IMAGE PREVIEW ===== */
+    .preview-container {
+      border: 2px dashed var(--border-color);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      background: #fafbfc;
+      transition: all 0.3s;
+      cursor: pointer;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .preview-container:hover {
+      border-color: var(--primary-color);
+      background: var(--primary-bg);
+    }
+    .preview-container.has-image {
+      padding: 0.5rem;
+      border-style: solid;
+      border-color: var(--primary-color);
+    }
+    .preview-container img {
+      max-width: 100%;
+      max-height: 350px;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+    .preview-icon {
+      font-size: 3rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+    .preview-text {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* ===== LOADING OVERLAY ===== */
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .loading-overlay.active {
+      display: flex;
+    }
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255,255,255,0.2);
+      border-top-color: var(--primary-color);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .loading-text {
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+    .loading-sub {
+      color: rgba(255,255,255,0.6);
+      font-size: 0.85rem;
+    }
+
+    /* ===== LOG AREA ===== */
+    .log-area {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 10px;
+      padding: 1rem;
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.8rem;
+      max-height: 200px;
+      overflow-y: auto;
+      line-height: 1.6;
+    }
+    .log-area .log-success { color: #4ade80; }
+    .log-area .log-error { color: #f87171; }
+    .log-area .log-info { color: #60a5fa; }
+    .log-area .log-warn { color: #fbbf24; }
+
+    /* ===== RESULT TABLE ===== */
+    .result-section {
+      display: none;
+    }
+    .result-section.active {
+      display: block;
+      animation: fadeIn 0.4s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== BADGES ===== */
+    .badge-config {
+      background: var(--primary-bg);
+      color: var(--primary-color);
+      font-weight: 600;
+      padding: 0.35rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+    }
+
+    /* ===== FLOATING BUTTONS ===== */
+    .floating-buttons-container {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      z-index: 100;
+    }
+    .btn-floating {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: all 0.3s;
+      cursor: pointer;
+      text-decoration: none;
+      color: white;
+      background: var(--primary-color);
+    }
+    .btn-floating:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      color: white;
+    }
+    .btn-floating.btn-logout {
+      background: var(--text-secondary);
+    }
+
+    /* ===== STEP INDICATOR ===== */
+    .steps-container {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 30px;
+      background: #f1f5f9;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: all 0.3s;
+    }
+    .step-item.active {
+      background: var(--primary-color);
+      color: white;
+    }
+    .step-item.done {
+      background: #dcfce7;
+      color: var(--success-color);
+    }
+    .step-number {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: rgba(0,0,0,0.1);
+    }
+    .step-item.active .step-number {
+      background: rgba(255,255,255,0.25);
+    }
+    .step-item.done .step-number {
+      background: var(--success-color);
+      color: white;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .card-body-custom { padding: 1rem; }
+      .steps-container { gap: 0.35rem; }
+      .step-item { font-size: 0.75rem; padding: 0.4rem 0.75rem; }
+    }
+
+    /* ===== SECTION SEPARATOR ===== */
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-ocr mb-4">
+    <div class="container">
+      <a class="navbar-brand" href="/orcamento-ocr">
+        <i class="fas fa-file-invoice me-2"></i>Orçamento OCR
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+        data-bs-target="#navbarOCR" aria-controls="navbarOCR"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarOCR">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/">
+              <i class="fas fa-home me-1"></i>Menu
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="navLogoutBtn">
+              <i class="fas fa-sign-out-alt me-1"></i>Sair
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== LOADING OVERLAY ===== -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">Processando imagem com OCR...</div>
+    <div class="loading-sub">Isso pode levar alguns segundos</div>
+  </div>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <div class="container pb-5">
+
+    <!-- Steps Indicator -->
+    <div class="steps-container" id="stepsContainer">
+      <div class="step-item active" id="step1">
+        <span class="step-number">1</span>
+        Cadastrar Modelo
+      </div>
+      <div class="step-item" id="step2">
+        <span class="step-number">2</span>
+        Upload da Imagem
+      </div>
+      <div class="step-item" id="step3">
+        <span class="step-number">3</span>
+        Processar OCR
+      </div>
+      <div class="step-item" id="step4">
+        <span class="step-number">4</span>
+        Download Excel
+      </div>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- ===== COLUNA ESQUERDA ===== -->
+      <div class="col-lg-5">
+
+        <!-- CARD: Upload de Modelo Excel -->
+        <div class="card-custom mb-4" id="cardModelo">
+          <div class="card-header-custom">
+            <i class="fas fa-file-excel"></i>
+            <h5>Cadastrar Modelo Excel</h5>
+          </div>
+          <div class="card-body-custom">
+            <form id="formModelo" enctype="multipart/form-data">
+              <div class="mb-3">
+                <label for="nomeModelo" class="form-label-custom">Nome do Modelo *</label>
+                <input type="text" class="form-control" id="nomeModelo" name="nome"
+                  placeholder="Ex: Orçamento Padrão Loja" required />
+              </div>
+
+              <div class="mb-3">
+                <label for="arquivoModelo" class="form-label-custom">Arquivo Excel (.xlsx) *</label>
+                <input type="file" class="form-control" id="arquivoModelo" name="arquivo"
+                  accept=".xlsx" required />
+                <div class="form-text">Máximo 5MB</div>
+              </div>
+
+              <div class="section-title mt-4">Mapeamento de Colunas</div>
+
+              <div class="row g-3">
+                <div class="col-6">
+                  <label for="colDescricao" class="form-label-custom">Coluna Descrição</label>
+                  <input type="text" class="form-control" id="colDescricao" name="col_descricao"
+                    value="A" maxlength="2" placeholder="A" />
+                </div>
+                <div class="col-6">
+                  <label for="colQuantidade" class="form-label-custom">Coluna Quantidade</label>
+                  <input type="text" class="form-control" id="colQuantidade" name="col_quantidade"
+                    value="B" maxlength="2" placeholder="B" />
+                </div>
+                <div class="col-6">
+                  <label for="linhaInicio" class="form-label-custom">Linha Inicial</label>
+                  <input type="number" class="form-control" id="linhaInicio" name="linha_inicio"
+                    value="2" min="1" max="1000" />
+                </div>
+                <div class="col-6">
+                  <label for="nomeSheet" class="form-label-custom">Nome da Sheet</label>
+                  <input type="text" class="form-control" id="nomeSheet" name="nome_sheet"
+                    value="Sheet1" placeholder="Sheet1" />
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary-custom w-100 mt-4" id="btnCadastrarModelo">
+                <i class="fas fa-upload me-2"></i>Cadastrar Modelo
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- CARD: Modelos Cadastrados -->
+        <div class="card-custom" id="cardModelos">
+          <div class="card-header-custom">
+            <i class="fas fa-list-ul"></i>
+            <h5>Modelos Cadastrados</h5>
+          </div>
+          <div class="card-body-custom p-0">
+            <div class="table-responsive">
+              <table class="table table-custom mb-0" id="tabelaModelos">
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Config</th>
+                    <th class="text-center">Ação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (modelos && modelos.length > 0) { %>
+                    <% modelos.forEach(m => { %>
+                      <tr data-id="<%= m.ID %>">
+                        <td>
+                          <div class="fw-semibold"><%= m.NOME %></div>
+                          <div class="text-muted" style="font-size: 0.75rem;"><%= m.NOME_ARQUIVO %></div>
+                        </td>
+                        <td>
+                          <span class="badge-config">
+                            <%= m.COL_DESCRICAO %>/<%= m.COL_QUANTIDADE %> L<%= m.LINHA_INICIO %>
+                          </span>
+                        </td>
+                        <td class="text-center">
+                          <button class="btn btn-sm btn-outline-danger btn-delete-modelo"
+                            data-id="<%= m.ID %>" data-nome="<%= m.NOME %>" title="Excluir">
+                            <i class="fas fa-trash-alt"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    <% }); %>
+                  <% } else { %>
+                    <tr id="rowSemModelos">
+                      <td colspan="3" class="text-center text-muted py-4">
+                        <i class="fas fa-inbox d-block mb-2" style="font-size: 1.5rem;"></i>
+                        Nenhum modelo cadastrado
+                      </td>
+                    </tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===== COLUNA DIREITA ===== -->
+      <div class="col-lg-7">
+
+        <!-- CARD: Processar Imagem -->
+        <div class="card-custom mb-4" id="cardProcessar">
+          <div class="card-header-custom">
+            <i class="fas fa-camera"></i>
+            <h5>Processar Imagem</h5>
+          </div>
+          <div class="card-body-custom">
+            <form id="formProcessar" enctype="multipart/form-data">
+              <div class="mb-3">
+                <label for="selectModelo" class="form-label-custom">Modelo Excel *</label>
+                <select class="form-select" id="selectModelo" name="modelo_id" required>
+                  <option value="">Selecione um modelo...</option>
+                  <% if (modelos && modelos.length > 0) { %>
+                    <% modelos.forEach(m => { %>
+                      <option value="<%= m.ID %>"
+                        data-desc="<%= m.COL_DESCRICAO %>"
+                        data-qtd="<%= m.COL_QUANTIDADE %>"
+                        data-linha="<%= m.LINHA_INICIO %>">
+                        <%= m.NOME %> (Col: <%= m.COL_DESCRICAO %>/<%= m.COL_QUANTIDADE %>, Linha: <%= m.LINHA_INICIO %>)
+                      </option>
+                    <% }); %>
+                  <% } %>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label-custom">Imagem da Lista de Produtos *</label>
+                <div class="preview-container" id="previewContainer" onclick="document.getElementById('inputImagem').click()">
+                  <i class="fas fa-cloud-upload-alt preview-icon" id="previewIcon"></i>
+                  <span class="preview-text" id="previewText">Clique para selecionar ou arraste uma imagem</span>
+                  <span class="preview-text mt-1" style="font-size: 0.75rem;" id="previewSubtext">JPG, PNG, BMP, TIFF — máximo 10MB</span>
+                  <img id="previewImg" style="display:none;" alt="Preview" />
+                </div>
+                <input type="file" class="d-none" id="inputImagem" name="imagem"
+                  accept="image/jpeg,image/png,image/bmp,image/tiff,image/webp" required />
+              </div>
+
+              <button type="submit" class="btn btn-primary-custom w-100" id="btnProcessar" disabled>
+                <i class="fas fa-magic me-2"></i>Processar com OCR
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- CARD: Log de Processamento -->
+        <div class="card-custom mb-4 result-section" id="cardLog">
+          <div class="card-header-custom">
+            <i class="fas fa-terminal"></i>
+            <h5>Log de Processamento</h5>
+          </div>
+          <div class="card-body-custom">
+            <div class="log-area" id="logArea"></div>
+          </div>
+        </div>
+
+        <!-- CARD: Resultado -->
+        <div class="card-custom mb-4 result-section" id="cardResultado">
+          <div class="card-header-custom">
+            <i class="fas fa-check-circle"></i>
+            <h5>Itens Extraídos</h5>
+            <span class="ms-auto badge bg-success" id="badgeItens">0 itens</span>
+          </div>
+          <div class="card-body-custom">
+            <div class="table-responsive">
+              <table class="table table-custom mb-3" id="tabelaResultado">
+                <thead>
+                  <tr>
+                    <th style="width: 50px;">#</th>
+                    <th>Descrição</th>
+                    <th style="width: 120px;" class="text-center">Quantidade</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyResultado">
+                  <!-- Preenchido via JS -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Botão Download -->
+            <div class="d-none gap-3 mt-3" id="downloadArea">
+              <a href="#" class="btn btn-primary-custom flex-grow-1" id="btnDownload" target="_blank">
+                <i class="fas fa-download me-2"></i>Baixar Excel Preenchido
+              </a>
+              <button class="btn btn-outline-custom" id="btnNovoProcessamento" title="Novo processamento">
+                <i class="fas fa-redo me-1"></i>Novo
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD: Histórico -->
+        <div class="card-custom" id="cardHistorico">
+          <div class="card-header-custom" style="cursor: pointer;" onclick="toggleHistorico()">
+            <i class="fas fa-history"></i>
+            <h5>Histórico de Processamentos</h5>
+            <i class="fas fa-chevron-down ms-auto" id="historicoChevron"></i>
+          </div>
+          <div class="card-body-custom p-0" id="historicoBody" style="display: none;">
+            <div class="table-responsive">
+              <table class="table table-custom mb-0" id="tabelaHistorico">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Imagem</th>
+                    <th>Modelo</th>
+                    <th class="text-center">Itens</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Ação</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyHistorico">
+                  <tr>
+                    <td colspan="6" class="text-center text-muted py-3">
+                      <i class="fas fa-spinner fa-spin me-2"></i>Carregando...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== FLOATING BUTTONS ===== -->
+  <div class="floating-buttons-container">
+    <a href="/" class="btn-floating" title="Voltar ao Menu">
+      <i class="fas fa-home"></i>
+    </a>
+    <button id="floatLogoutBtn" class="btn-floating btn-logout" title="Sair">
+      <i class="fas fa-sign-out-alt"></i>
+    </button>
+  </div>
+
+  <form id="logoutForm" action="/logout" method="POST" style="display: none;"></form>
+
+  <!-- ===== SCRIPTS ===== -->
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+    integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"
+    integrity="sha384-fbbOQedDUMZZ5KreZpsbe1LCZPVmfTnH7ois6mU1QK+m14rQ1l2bGBq41eYeM/fS" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    // =============================================================
+    // VARIÁVEIS GLOBAIS
+    // =============================================================
+    let arquivoGerado = null;
+
+    // =============================================================
+    // LOGOUT (todos os botões de logout)
+    // =============================================================
+    function handleLogout(e) {
+      e.preventDefault();
+      Swal.fire({
+        title: 'Tem certeza?',
+        text: 'Você será desconectado do sistema.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ea580c',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sim, sair!',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          document.getElementById('logoutForm').submit();
+        }
+      });
+    }
+    document.getElementById('navLogoutBtn').addEventListener('click', handleLogout);
+    document.getElementById('floatLogoutBtn').addEventListener('click', handleLogout);
+
+
+    // =============================================================
+    // PREVIEW DA IMAGEM
+    // =============================================================
+    const inputImagem = document.getElementById('inputImagem');
+    const previewContainer = document.getElementById('previewContainer');
+    const previewImg = document.getElementById('previewImg');
+    const previewIcon = document.getElementById('previewIcon');
+    const previewText = document.getElementById('previewText');
+    const previewSubtext = document.getElementById('previewSubtext');
+    const btnProcessar = document.getElementById('btnProcessar');
+
+    inputImagem.addEventListener('change', function() {
+      if (this.files && this.files[0]) {
+        const file = this.files[0];
+
+        // Valida tamanho
+        if (file.size > 10 * 1024 * 1024) {
+          showToast('Imagem muito grande. Máximo 10MB.', 'error');
+          this.value = '';
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          previewImg.src = e.target.result;
+          previewImg.style.display = 'block';
+          previewIcon.style.display = 'none';
+          previewText.textContent = file.name;
+          previewSubtext.textContent = formatFileSize(file.size);
+          previewContainer.classList.add('has-image');
+          updateBtnProcessar();
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Drag and drop
+    previewContainer.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      previewContainer.style.borderColor = 'var(--primary-color)';
+      previewContainer.style.background = 'var(--primary-bg)';
+    });
+
+    previewContainer.addEventListener('dragleave', () => {
+      if (!previewContainer.classList.contains('has-image')) {
+        previewContainer.style.borderColor = '';
+        previewContainer.style.background = '';
+      }
+    });
+
+    previewContainer.addEventListener('drop', (e) => {
+      e.preventDefault();
+      previewContainer.style.borderColor = '';
+      previewContainer.style.background = '';
+
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        inputImagem.files = e.dataTransfer.files;
+        inputImagem.dispatchEvent(new Event('change'));
+      }
+    });
+
+    // Atualiza estado do botão Processar
+    function updateBtnProcessar() {
+      const temModelo = document.getElementById('selectModelo').value !== '';
+      const temImagem = inputImagem.files && inputImagem.files.length > 0;
+      btnProcessar.disabled = !(temModelo && temImagem);
+    }
+
+    document.getElementById('selectModelo').addEventListener('change', updateBtnProcessar);
+
+
+    // =============================================================
+    // CADASTRAR MODELO
+    // =============================================================
+    document.getElementById('formModelo').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const btn = document.getElementById('btnCadastrarModelo');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Cadastrando...';
+
+      try {
+        const formData = new FormData(this);
+
+        const response = await fetch('/orcamento-ocr/upload-modelo', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showToast(data.message, 'success');
+          // Recarrega a página para atualizar lista de modelos
+          setTimeout(() => location.reload(), 800);
+        } else {
+          showToast(data.error || 'Erro ao cadastrar modelo', 'error');
+        }
+      } catch (err) {
+        console.error('Erro:', err);
+        showToast('Erro de comunicação com o servidor', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    });
+
+
+    // =============================================================
+    // DELETAR MODELO
+    // =============================================================
+    document.querySelectorAll('.btn-delete-modelo').forEach(btn => {
+      btn.addEventListener('click', async function() {
+        const id = this.dataset.id;
+        const nome = this.dataset.nome;
+
+        const result = await Swal.fire({
+          title: 'Excluir modelo?',
+          html: `O modelo <strong>"${nome}"</strong> será removido permanentemente.`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#dc2626',
+          cancelButtonColor: '#64748b',
+          confirmButtonText: 'Sim, excluir!',
+          cancelButtonText: 'Cancelar'
+        });
+
+        if (!result.isConfirmed) return;
+
+        try {
+          const response = await fetch(`/orcamento-ocr/modelo/${id}`, {
+            method: 'DELETE'
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            showToast('Modelo removido com sucesso', 'success');
+            // Remove da tabela
+            const row = document.querySelector(`tr[data-id="${id}"]`);
+            if (row) {
+              row.style.transition = 'opacity 0.3s';
+              row.style.opacity = '0';
+              setTimeout(() => row.remove(), 300);
+            }
+            // Remove do select
+            const option = document.querySelector(`#selectModelo option[value="${id}"]`);
+            if (option) option.remove();
+          } else {
+            showToast(data.error || 'Erro ao excluir', 'error');
+          }
+        } catch (err) {
+          showToast('Erro de comunicação', 'error');
+        }
+      });
+    });
+
+
+    // =============================================================
+    // PROCESSAR IMAGEM (OCR)
+    // =============================================================
+    document.getElementById('formProcessar').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const btn = document.getElementById('btnProcessar');
+      btn.disabled = true;
+
+      // Mostra loading
+      showLoading('Processando imagem com OCR...');
+
+      // Mostra log
+      const cardLog = document.getElementById('cardLog');
+      cardLog.classList.add('active');
+      clearLog();
+      addLog('info', 'Iniciando processamento OCR...');
+      addLog('info', 'Enviando imagem para o servidor...');
+
+      // Atualiza steps
+      setStep(3);
+
+      try {
+        const formData = new FormData(this);
+
+        addLog('info', 'Executando PaddleOCR na imagem...');
+
+        const response = await fetch('/orcamento-ocr/processar', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+
+        hideLoading();
+
+        if (data.success) {
+          addLog('success', data.message);
+
+          if (data.itens && data.itens.length > 0) {
+            addLog('success', `${data.itens.length} item(ns) encontrado(s)`);
+
+            // Mostra resultado
+            renderResultado(data.itens);
+
+            if (data.arquivo) {
+              arquivoGerado = data.arquivo;
+              const btnDownload = document.getElementById('btnDownload');
+              btnDownload.href = `/orcamento-ocr/download/${data.arquivo}`;
+              const dlArea = document.getElementById('downloadArea');
+              dlArea.classList.remove('d-none');
+              dlArea.classList.add('d-flex');
+              addLog('success', `Excel gerado: ${data.arquivo}`);
+              setStep(4);
+            }
+          } else {
+            addLog('warn', 'Nenhum item identificado na imagem');
+            addLog('warn', 'Tente com uma imagem mais nítida ou com melhor iluminação');
+          }
+
+          // Recarrega histórico
+          carregarHistorico();
+        } else {
+          addLog('error', data.error || 'Erro desconhecido');
+          showToast(data.error || 'Erro ao processar imagem', 'error');
+        }
+      } catch (err) {
+        hideLoading();
+        addLog('error', `Erro de comunicação: ${err.message}`);
+        showToast('Erro de comunicação com o servidor', 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+
+    // =============================================================
+    // RENDERIZAR RESULTADO
+    // =============================================================
+    function renderResultado(itens) {
+      const cardResultado = document.getElementById('cardResultado');
+      const tbody = document.getElementById('tbodyResultado');
+      const badge = document.getElementById('badgeItens');
+
+      tbody.innerHTML = '';
+      badge.textContent = `${itens.length} ite${itens.length === 1 ? 'm' : 'ns'}`;
+
+      itens.forEach((item, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="text-muted">${idx + 1}</td>
+          <td class="fw-semibold">${escapeHtml(item.descricao || '-')}</td>
+          <td class="text-center">
+            <span class="badge ${item.quantidade > 0 ? 'bg-success' : 'bg-warning text-dark'}">
+              ${item.quantidade}
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      cardResultado.classList.add('active');
+    }
+
+
+    // =============================================================
+    // LOG DE PROCESSAMENTO
+    // =============================================================
+    function addLog(type, message) {
+      const logArea = document.getElementById('logArea');
+      const time = new Date().toLocaleTimeString('pt-BR');
+      const prefix = {
+        'info': '<span class="log-info">[INFO]</span>',
+        'success': '<span class="log-success">[OK]</span>',
+        'error': '<span class="log-error">[ERRO]</span>',
+        'warn': '<span class="log-warn">[AVISO]</span>'
+      };
+
+      logArea.innerHTML += `<div>${prefix[type] || ''} <span class="text-muted">${time}</span> ${escapeHtml(message)}</div>`;
+      logArea.scrollTop = logArea.scrollHeight;
+    }
+
+    function clearLog() {
+      document.getElementById('logArea').innerHTML = '';
+    }
+
+
+    // =============================================================
+    // HISTÓRICO
+    // =============================================================
+    let historicoCarregado = false;
+
+    function toggleHistorico() {
+      const body = document.getElementById('historicoBody');
+      const chevron = document.getElementById('historicoChevron');
+      const isOpen = body.style.display !== 'none';
+
+      body.style.display = isOpen ? 'none' : 'block';
+      chevron.className = isOpen ? 'fas fa-chevron-down ms-auto' : 'fas fa-chevron-up ms-auto';
+
+      if (!isOpen && !historicoCarregado) {
+        carregarHistorico();
+      }
+    }
+
+    async function carregarHistorico() {
+      try {
+        const response = await fetch('/orcamento-ocr/historico');
+        const data = await response.json();
+
+        if (data.success) {
+          const tbody = document.getElementById('tbodyHistorico');
+          tbody.innerHTML = '';
+
+          if (data.historico.length === 0) {
+            tbody.innerHTML = `
+              <tr>
+                <td colspan="6" class="text-center text-muted py-3">
+                  Nenhum processamento realizado ainda
+                </td>
+              </tr>`;
+            return;
+          }
+
+          data.historico.forEach(h => {
+            const statusBadge = h.STATUS === 'SUCESSO'
+              ? '<span class="badge bg-success">Sucesso</span>'
+              : h.STATUS === 'SEM_ITENS'
+                ? '<span class="badge bg-warning text-dark">Sem itens</span>'
+                : '<span class="badge bg-danger">Erro</span>';
+
+            const downloadBtn = h.ARQUIVO_GERADO
+              ? `<a href="/orcamento-ocr/download/${h.ARQUIVO_GERADO}" class="btn btn-sm btn-outline-custom" title="Download">
+                   <i class="fas fa-download"></i>
+                 </a>`
+              : '<span class="text-muted">—</span>';
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td class="text-muted" style="font-size: 0.8rem;">${h.PROCESSADO_EM || '-'}</td>
+              <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                title="${escapeHtml(h.IMAGEM_ORIGINAL || '')}">${escapeHtml(h.IMAGEM_ORIGINAL || '-')}</td>
+              <td>${escapeHtml(h.MODELO_NOME || '-')}</td>
+              <td class="text-center"><span class="badge bg-secondary">${h.ITENS_EXTRAIDOS || 0}</span></td>
+              <td class="text-center">${statusBadge}</td>
+              <td class="text-center">${downloadBtn}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+
+          historicoCarregado = true;
+        }
+      } catch (err) {
+        console.error('Erro ao carregar histórico:', err);
+      }
+    }
+
+
+    // =============================================================
+    // STEP INDICATOR
+    // =============================================================
+    function setStep(stepNum) {
+      for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById(`step${i}`);
+        el.classList.remove('active', 'done');
+        if (i < stepNum) {
+          el.classList.add('done');
+          const numEl = el.querySelector('.step-number');
+          numEl.innerHTML = '<i class="fas fa-check" style="font-size: 0.6rem;"></i>';
+        } else if (i === stepNum) {
+          el.classList.add('active');
+        }
+      }
+    }
+
+
+    // =============================================================
+    // NOVO PROCESSAMENTO
+    // =============================================================
+    document.getElementById('btnNovoProcessamento').addEventListener('click', function() {
+      // Reseta form
+      document.getElementById('formProcessar').reset();
+      // Reseta preview
+      previewImg.style.display = 'none';
+      previewImg.src = '';
+      previewIcon.style.display = 'block';
+      previewText.textContent = 'Clique para selecionar ou arraste uma imagem';
+      previewSubtext.textContent = 'JPG, PNG, BMP, TIFF — máximo 10MB';
+      previewContainer.classList.remove('has-image');
+      // Reseta resultado
+      document.getElementById('cardResultado').classList.remove('active');
+      const dlArea2 = document.getElementById('downloadArea');
+      dlArea2.classList.remove('d-flex');
+      dlArea2.classList.add('d-none');
+      // Reseta steps
+      setStep(2);
+      // Desabilita botão
+      btnProcessar.disabled = true;
+      // Scroll para cima
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+
+    // =============================================================
+    // LOADING
+    // =============================================================
+    function showLoading(text) {
+      document.getElementById('loadingText').textContent = text || 'Processando...';
+      document.getElementById('loadingOverlay').classList.add('active');
+    }
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('active');
+    }
+
+
+    // =============================================================
+    // UTILITÁRIOS
+    // =============================================================
+    function showToast(message, type) {
+      const iconMap = {
+        'success': 'success',
+        'error': 'error',
+        'warning': 'warning',
+        'info': 'info'
+      };
+
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: iconMap[type] || 'info',
+        title: message,
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true
+      });
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+
+    // =============================================================
+    // INICIALIZAÇÃO
+    // =============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+      // Se já tem modelos, avança para step 2
+      const selectModelo = document.getElementById('selectModelo');
+      if (selectModelo.options.length > 1) {
+        setStep(2);
+      }
+    });
+  </script>
+
+</body>
+</html>

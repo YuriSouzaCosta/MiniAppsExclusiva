@@ -213,6 +213,60 @@
           color: #cbd5e1;
           margin-bottom: 1rem;
       }
+
+      .input-group-custom {
+          position: relative;
+      }
+
+      .dropdown-menu-custom {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          z-index: 1050;
+          background: white;
+          border: 1px solid #cbd5e1;
+          border-top: none;
+          border-radius: 0 0 8px 8px;
+          max-height: 220px;
+          overflow-y: auto;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      }
+
+      .dropdown-menu-custom .dropdown-item {
+          display: block;
+          padding: 0.5rem 1rem;
+          color: #334155;
+          text-decoration: none;
+          font-size: 0.85rem;
+          cursor: pointer;
+          border-bottom: 1px solid #f1f5f9;
+          transition: background-color 0.15s ease;
+      }
+
+      .dropdown-menu-custom .dropdown-item:last-child {
+          border-bottom: none;
+      }
+
+      .dropdown-menu-custom .dropdown-item:hover {
+          background-color: #fff7ed;
+          color: #ea580c;
+      }
+
+      .dropdown-menu-custom .dropdown-item.disabled {
+          color: #94a3b8;
+          cursor: default;
+          font-style: italic;
+      }
+
+      .pedido-loja {
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: #64748b;
+          background: #f1f5f9;
+          padding: 0.25rem 0.75rem;
+          border-radius: 6px;
+      }
     </style>
   </head>
 
@@ -280,10 +334,52 @@
 
     <form id="logoutForm" action="/logout" method="POST" style="display: none;"></form>
 
+    <!-- Modal Pre Lancamento -->
+    <div class="modal fade" id="modalPreLancamento" tabindex="-1" aria-labelledby="modalPreLancamentoLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header bg-light">
+            <h5 class="modal-title" id="modalPreLancamentoLabel" style="color: #1e293b;">
+                <i class="bi bi-box-seam me-2"></i> Ajustar Valores e Lançar Pedido #<span id="spanNumPedidoPre"></span>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-0">
+             <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0 text-center align-middle" style="font-size: 0.95rem;">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Cód. Produto</th>
+                            <th>Descrição</th>
+                            <th style="min-width: 100px;">Quantidade</th>
+                            <th style="min-width: 130px;">Valor Un. (R$)</th>
+                            <th>Valor Total (R$)</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyItensPre">
+                    </tbody>
+                </table>
+             </div>
+          </div>
+          <div class="modal-footer bg-light d-flex justify-content-between align-items-center">
+            <div class="fw-bold fs-5 text-primary">
+                Total do Pedido: R$ <span id="totalPedidoPre">0.00</span>
+            </div>
+            <div>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success px-4" id="btnConfirmarLancamentoPre">
+                    <i class="bi bi-check-circle me-1"></i> Confirmar Lançamento
+                </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
-    <script src="/js/pedidos/scriptPedidos.js"></script>
+    <script src="/js/pedidos/scriptPedidos.js?v=2"></script>
     <script>
         // Logout functionality with SweetAlert2
         document.getElementById('logoutBtn').addEventListener('click', function(e) {
@@ -302,6 +398,207 @@
                     document.getElementById('logoutForm').submit();
                 }
             });
+        });
+
+        let currentPreNumPedido = null;
+        let currentPreFornId = null;
+        let currentPrePagId = null;
+        let itnDataPre = [];
+
+        async function abrirModalPreLancamento(fornId, pagId, numPedido) {
+            currentPreNumPedido = numPedido;
+            currentPreFornId = fornId;
+            currentPrePagId = pagId;
+            
+            document.getElementById('spanNumPedidoPre').innerText = numPedido;
+            document.getElementById('tbodyItensPre').innerHTML = '<tr><td colspan="5" class="py-4">Carregando itens do pedido...</td></tr>';
+            document.getElementById('totalPedidoPre').innerText = '0.00';
+            
+            const modal = new bootstrap.Modal(document.getElementById('modalPreLancamento'));
+            modal.show();
+
+            try {
+                // Fetch from PEDIDO_PROCESSADO_YSC
+                const response = await fetch(`${apiBase}/loadPedidos?id_pedido=${numPedido}`);
+                if (!response.ok) throw new Error('Erro ao buscar itens');
+                
+                const rawItems = await response.json();
+                
+                // Set default vlrunit and total correctly (ignoring items with 0 quantity)
+                itnDataPre = rawItems
+                    .filter(item => (parseFloat(item.QTD_PEDIR) || 0) > 0)
+                    .map(item => {
+                        const qtd = parseFloat(item.QTD_PEDIR) || 0;
+                        const vlrtotal = parseFloat(item.VLR_TOTAL) || 0;
+                        const preco = item.PRECO ? parseFloat(item.PRECO) : (qtd > 0 ? (vlrtotal / qtd) : 0);
+                        return {
+                            CODPROD: item.CODPROD,
+                            DESCRPROD: item.DESCRPROD,
+                            QTD_PEDIR: qtd,
+                            VLRUNIT: preco
+                        };
+                    });
+
+                renderTablePre();
+            } catch (err) {
+                console.error(err);
+                document.getElementById('tbodyItensPre').innerHTML = `<tr><td colspan="5" class="text-danger font-weight-bold">Erro ao carregar itens: ${err.message}</td></tr>`;
+            }
+        }
+
+        function renderTablePre() {
+            const tbody = document.getElementById('tbodyItensPre');
+            tbody.innerHTML = '';
+            let totalPedido = 0;
+
+            if (itnDataPre.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="py-4 text-muted">Ainda não existem itens neste pedido.</td></tr>';
+                document.getElementById('totalPedidoPre').innerText = '0.00';
+                return;
+            }
+
+            itnDataPre.forEach((item, index) => {
+                const totalItem = (item.QTD_PEDIR * item.VLRUNIT);
+                totalPedido += totalItem;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.CODPROD}</td>
+                    <td class="text-start">${item.DESCRPROD}</td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm text-center input-qtd-pre" step="1" min="1" data-index="${index}" value="${item.QTD_PEDIR}">
+                    </td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm text-center input-vlrunit-pre" step="0.01" min="0" data-index="${index}" value="${item.VLRUNIT.toFixed(2)}">
+                    </td>
+                    <td class="fw-bold txt-total-item-pre" style="color: #334155;">R$ ${totalItem.toFixed(2)}</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline-danger btn-excluir-item" data-index="${index}" title="Remover Item">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('totalPedidoPre').innerText = totalPedido.toFixed(2);
+
+            function recalcRowAndTotal(tr, idx) {
+                const newTotalItem = itnDataPre[idx].QTD_PEDIR * itnDataPre[idx].VLRUNIT;
+                tr.querySelector('.txt-total-item-pre').innerText = `R$ ${newTotalItem.toFixed(2)}`;
+                
+                let newGlobal = 0;
+                itnDataPre.forEach(i => newGlobal += (parseFloat(i.QTD_PEDIR) * parseFloat(i.VLRUNIT)));
+                document.getElementById('totalPedidoPre').innerText = newGlobal.toFixed(2);
+            }
+
+            document.querySelectorAll('.input-qtd-pre').forEach(inp => {
+                inp.addEventListener('input', (e) => {
+                    const idx = e.target.getAttribute('data-index');
+                    itnDataPre[idx].QTD_PEDIR = parseFloat(e.target.value) || 0;
+                    recalcRowAndTotal(e.target.closest('tr'), idx);
+                });
+            });
+
+            document.querySelectorAll('.input-vlrunit-pre').forEach(inp => {
+                inp.addEventListener('input', (e) => {
+                    const idx = e.target.getAttribute('data-index');
+                    itnDataPre[idx].VLRUNIT = parseFloat(e.target.value) || 0;
+                    recalcRowAndTotal(e.target.closest('tr'), idx);
+                });
+            });
+
+            document.querySelectorAll('.btn-excluir-item').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = e.currentTarget.getAttribute('data-index');
+                    itnDataPre.splice(idx, 1);
+                    renderTablePre();
+                });
+            });
+        }
+
+        document.getElementById('btnConfirmarLancamentoPre').addEventListener('click', async () => {
+            if (!currentPreNumPedido) return;
+
+            const formaPagElement = document.getElementById(currentPrePagId);
+            const fornecedorElement = document.getElementById(currentPreFornId);
+            
+            if (!formaPagElement || !fornecedorElement || !formaPagElement.value || !fornecedorElement.value || !formaPagElement.dataset.codtipvenda || !fornecedorElement.dataset.codparc) {
+                Swal.fire('Atenção!', 'Feche o modal e preencha o Fornecedor e Forma de Pagamento no card antes de confirmar.', 'warning');
+                return;
+            }
+
+            const payload = {
+                numero_pedido: currentPreNumPedido,
+                idPagamento: formaPagElement.value,
+                idFornecedor: fornecedorElement.value,
+                cod_pagamento: formaPagElement.dataset.codtipvenda,
+                cod_fornecedor: fornecedorElement.dataset.codparc,
+                items: itnDataPre.map(i => ({ codprod: i.CODPROD, vlrunit: i.VLRUNIT, qtdPedir: i.QTD_PEDIR }))
+            };
+
+            Swal.fire({
+                title: 'Lançando Pedido no Sankhya...',
+                text: 'Gerando a Nota e processando valores finais...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+                const response = await fetch(`${apiBase}/finalizarPedidoComValores`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                console.log('Resposta do servidor:', result);
+                if (!response.ok) {
+                    let errorMsg = result.error || 'Erro ao lançar pedido';
+                    if (result.details) {
+                        console.error('Detalhes do erro:', result.details);
+                        // Formatar erros Oracle para exibição amigável
+                        if (result.details.includes('ORA-01422')) {
+                            errorMsg = 'Erro de concorrência no Sankhya (ORA-01422). Tente novamente em alguns segundos.';
+                        } else if (result.details.includes('ORA-')) {
+                            errorMsg += `<br><br><small style="color:#dc2626;font-weight:600;">Erro Oracle: ${result.details}</small>`;
+                        } else {
+                            errorMsg += `<br><br><small style="color:#6b7280;">${result.details}</small>`;
+                        }
+                    }
+                    if (result.errorCode) {
+                        errorMsg += `<br><small style="color:#94a3b8;">Código: ${result.errorCode}</small>`;
+                    }
+                    throw new Error(errorMsg);
+                }
+
+                let mensagemSucesso = '✅ Pedido gerado e itens atualizados com sucesso!';
+                if (result.nunota) {
+                    mensagemSucesso += `<br><small>NUNOTA: ${result.nunota}</small>`;
+                }
+                if (result.mensagemProcedure) {
+                    mensagemSucesso += `<br><br><small>Sankhya: ${result.mensagemProcedure}</small>`;
+                }
+
+                Swal.fire({
+                    title: 'Sucesso!',
+                    html: mensagemSucesso,
+                    icon: 'success',
+                    confirmButtonColor: '#28a745'
+                }).then(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('modalPreLancamento'));
+                    if (modal) modal.hide();
+                    carregaPedidosFeitos(); // recarrega dashboard
+                });
+            } catch (err) {
+                console.error('Erro ao finalizar pedido:', err);
+                Swal.fire({
+                    title: 'Erro!',
+                    html: err.message,
+                    icon: 'error',
+                    confirmButtonColor: '#dc3545'
+                });
+            }
         });
     </script>
   </body>

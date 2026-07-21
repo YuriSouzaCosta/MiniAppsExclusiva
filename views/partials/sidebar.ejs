@@ -20,6 +20,12 @@
         <% if (module === 'pedidos') { %>
             <li class="menu-header">PEDIDO DE COMPRAS</li>
             <li>
+                <a href="/painel" class="nav-link <%= activePage === 'painel' ? 'active' : '' %>">
+                    <i class="bi bi-kanban"></i>
+                    Painel de Pedidos
+                </a>
+            </li>
+            <li>
                 <a href="/pedidosCompras" class="nav-link <%= activePage === 'criar' ? 'active' : '' %>">
                     <i class="bi bi-plus-circle"></i>
                     Criar Pedidos

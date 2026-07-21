@@ -86,7 +86,7 @@ async function authenticatePdv(username, password) {
     console.log('authenticatePdv(): solicitando usuário', usuario_uc);
 
     const result = await db.simpleExecute(
-      `SELECT APELIDO, AD_SENHA, TIPVEND, CODVEND
+      `SELECT APELIDO, AD_SENHA, TIPVEND, CODVEND, CODEMP
            FROM VW_LISTFUNCIONARIOS_VENDAS_YSC
           WHERE UPPER(APELIDO) = :usuario_uc`,
       { usuario_uc }
@@ -102,6 +102,7 @@ async function authenticatePdv(username, password) {
     const senhaBanco = row.AD_SENHA;
     const tipvend = row.TIPVEND; // V, G, C
     const codvend = row.CODVEND;
+    const codemp = row.CODEMP;
     const nomevend = row.APELIDO;
 
     if (!password) {
@@ -136,6 +137,7 @@ async function authenticatePdv(username, password) {
       role: role,
       roleName: roleName,
       codvend: codvend,
+      codemp: codemp,
       nome: nomevend
     };
 
@@ -153,6 +155,7 @@ function generateToken(payload) {
 function ensureAuth(req, res, next) {
   const token = req.cookies[COOKIE_NAME];
   if (!token) {
+    console.log('ensureAuth(): executado para URL:', req.originalUrl);
     console.log('ensureAuth(): cookie não encontrado, redirecionando para login');
     if (req.originalUrl.startsWith('/pdv')) {
       return res.redirect('/pdv/login?next=' + encodeURIComponent(req.originalUrl));

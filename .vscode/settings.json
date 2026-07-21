@@ -1,0 +1,22 @@
+{
+    "sqltools.connections": [
+        {
+            "oracleOptions": {
+                "privilege": "Normal",
+                "thickMode": false,
+                "autoCommit": false,
+                "lowerCase": false,
+                "limitPrefetchRows": false
+            },
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 1521,
+            "driver": "Oracle",
+            "name": "Exclusiva",
+            "group": "Exclusiva",
+            "connectString": "exclusiva.duckdns.org:18012/orcl",
+            "username": "jiva",
+            "password": "tecsis"
+        }
+    ]
+}

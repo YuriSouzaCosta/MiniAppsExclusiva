@@ -1,0 +1,12 @@
+# =============================================================
+# Dependências Python para o módulo OCR
+# =============================================================
+# Instalar com: pip install -r requirements.txt
+#
+# NOTA: paddlepaddle é pesado (~1.5GB). Para GPU, use:
+# pip install paddlepaddle-gpu
+# =============================================================
+
+paddlepaddle
+paddleocr
+Pillow

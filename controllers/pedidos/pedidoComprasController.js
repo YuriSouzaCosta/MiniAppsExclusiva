@@ -94,7 +94,7 @@ async function carregarFormaPagamentos(req, res) {
     try {
         conn = await db.getConnection();
         const result = await conn.execute(
-            `SELECT CODTIPVENDA, DESCRTIPVENDA 
+            `SELECT distinct CODTIPVENDA, DESCRTIPVENDA 
              FROM TGFTPV 
              ORDER BY DESCRTIPVENDA ASC`,
             [],
@@ -141,7 +141,7 @@ async function criarPedido(req, res) {
         const result = await conn.execute(
             `INSERT INTO CABECALHO_PEDIDO_YSC 
              (MARCA, DATA_INICIAL, DATA_FINAL, GRUPO, DATA_PEDIDO, ANDAMENTO, EMPRESA) 
-             VALUES (:marca, TO_DATE(:dtInit, 'YYYY-MM-DD'), TO_DATE(:dtEnd, 'YYYY-MM-DD'), :gp, SYSDATE, 'ABERTO', :emp) 
+             VALUES (:marca, TO_DATE(:dtInit, 'YYYY-MM-DD'), TO_DATE(:dtEnd, 'YYYY-MM-DD'), :gp, TRUNC(SYSDATE), 'ABERTO', :emp) 
              RETURNING NUMERO_PEDIDO INTO :id`,
             {
                 marca,
@@ -210,7 +210,7 @@ async function consultarPedidosFeitos(req, res) {
         conn = await db.getConnection();
         const result = await conn.execute(
             `SELECT NUMERO_PEDIDO, MARCA, DATA_PEDIDO, DATAFATURAMENTO, DATAENTREGA, 
-                    GRUPO, ANDAMENTO, VLRTOTAL , CODEMP
+                    GRUPO, ANDAMENTO, VLRTOTAL, CODEMP
              FROM CABECALHO_PEDIDO_YSC 
              WHERE ANDAMENTO = 'FEITO'
              ORDER BY DATA_PEDIDO DESC`,
@@ -352,6 +352,12 @@ async function finalizarPedidoFinal(req, res) {
     console.log('Body:', req.body);
 
     const { idPagamento, idFornecedor, cod_pagamento, cod_fornecedor, numero_pedido } = req.body;
+    
+    // Converter para Number para evitar erro de tipo no Oracle
+    const numPedidoInt = Number(numero_pedido);
+    const codPagInt = Number(cod_pagamento);
+    const codFornInt = Number(cod_fornecedor);
+    
     let conn;
 
     try {
@@ -364,39 +370,70 @@ async function finalizarPedidoFinal(req, res) {
                  PARCEIRO = :fornecedor,
                  COD_FORMA_PAGTO = :codPag,
                  COD_PARCEIRO = :codForn,
+                 DATA_PEDIDO = TRUNC(DATA_PEDIDO),
                  ANDAMENTO = 'FINALIZADO'
              WHERE NUMERO_PEDIDO = :numPedido`,
             {
                 formaPag: idPagamento,
                 fornecedor: idFornecedor,
-                codPag: cod_pagamento,
-                codForn: cod_fornecedor,
-                numPedido: numero_pedido
+                codPag: codPagInt,
+                codForn: codFornInt,
+                numPedido: numPedidoInt
             },
             { autoCommit: false } // Não commitar ainda
         );
 
-        // 2. Chamar a procedure
-        const result = await conn.execute(
-            `BEGIN
-                JIVA.STP_GERARPEDCOMPRA_IMPORT_YSC(
-                    :P_NUM_PEDIDO,
-                    :P_MENSAGEM
-                );
-            END;`,
-            {
-                P_NUM_PEDIDO: numero_pedido,
-                P_MENSAGEM: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 4000 }
-            }
-        );
+        // 2. Savepoint antes de chamar a procedure
+        await conn.execute(`SAVEPOINT antes_procedure`);
 
-        const mensagemProcedure = result.outBinds.P_MENSAGEM;
+        // 3. Chamar a procedure
+        let mensagemProcedure = null;
+        let tentativas = 0;
+        const maxTentativas = 3;
+        
+        while (tentativas < maxTentativas) {
+            tentativas++;
+            try {
+                console.log(`Tentativa ${tentativas}/${maxTentativas} para pedido ${numPedidoInt}`);
+                
+                const result = await conn.execute(
+                    `BEGIN
+                        JIVA.STP_GERARPEDCOMPRA_IMPORT_YSC(:P_NUM_PEDIDO, :P_MENSAGEM);
+                    END;`,
+                    {
+                        P_NUM_PEDIDO: numPedidoInt,
+                        P_MENSAGEM: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 4000 }
+                    },
+                    { autoCommit: false }
+                );
+                mensagemProcedure = result.outBinds.P_MENSAGEM;
+                console.log('Procedure executada com sucesso na tentativa', tentativas, '- Mensagem:', mensagemProcedure);
+                break;
+            } catch (procErr) {
+                console.error(`Erro na tentativa ${tentativas}:`, procErr.message);
+                if (procErr.message.includes('ORA-01422') && tentativas < maxTentativas) {
+                    console.log(`ORA-01422 persistente. Rollback ao savepoint e aguardando...`);
+                    try {
+                        await conn.execute(`ROLLBACK TO SAVEPOINT antes_procedure`);
+                    } catch (rbErr) {
+                        console.error('Erro no rollback to savepoint:', rbErr.message);
+                    }
+                    const waitMs = Math.pow(2, tentativas) * 1000;
+                    console.log(`Aguardando ${waitMs}ms antes da tentativa ${tentativas + 1}...`);
+                    await new Promise(resolve => setTimeout(resolve, waitMs));
+                    await conn.execute(`SAVEPOINT antes_procedure`);
+                    continue;
+                }
+                throw procErr;
+            }
+        }
+
         console.log('Mensagem da procedure:', mensagemProcedure);
 
         // Se chegou até aqui, commit das alterações
         await conn.commit();
 
-        console.log('Pedido finalizado:', numero_pedido);
+        console.log('Pedido finalizado:', numPedidoInt);
         res.json({
             success: true,
             result: "Pedido Finalizado com Sucesso",
@@ -563,6 +600,512 @@ async function salvarPedidos(req, res) {
     }
 }
 
+// Load items directly from Sankhya (TGFITE)
+async function carregarItensSankhya(req, res) {
+    console.log('=== CARREGAR ITENS SANKHYA - API chamada ===');
+    const { nunota } = req.query;
+    let conn;
+
+    if (!nunota) {
+        return res.status(400).json({ error: 'NUNOTA é obrigatório' });
+    }
+
+    try {
+        conn = await db.getConnection();
+        const result = await conn.execute(
+            `SELECT I.CODPROD, I.QTDNEG, I.VLRUNIT, I.VLRTOT, 
+                    (SELECT DESCRPROD FROM TGFPRO WHERE CODPROD = I.CODPROD) AS DESCRPROD,
+                    (SELECT REFERENCIA FROM TGFPRO WHERE CODPROD = I.CODPROD) AS REFERENCIA
+             FROM TGFITE I
+             WHERE I.NUNOTA = :nunota
+             ORDER BY I.SEQUENCIA`,
+            { nunota: Number(nunota) },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+        console.log('Itens Sankhya encontrados:', result.rows.length);
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Erro ao carregar itens sankhya:', err);
+        res.status(500).json({ error: 'Erro ao carregar itens sankhya' });
+    } finally {
+        if (conn) {
+            try { await conn.close(); } catch (e) { console.error(e); }
+        }
+    }
+}
+
+// Save edited items back to Sankhya and finalize order (PENDENTE = 'N')
+async function salvarItensSankhya(req, res) {
+    console.log('=== SALVAR ITENS SANKHYA E LANÇAR - API chamada ===');
+    const { nunota, items } = req.body;
+    let conn;
+
+    if (!nunota || !items || !Array.isArray(items)) {
+        return res.status(400).json({ error: 'NUNOTA e items são obrigatórios' });
+    }
+
+    try {
+        conn = await db.getConnection();
+
+        // Update each item in TGFITE
+        for (const item of items) {
+            const vlrUnit = Number(item.vlrunit);
+            if (!isNaN(vlrUnit)) {
+                await conn.execute(
+                    `UPDATE TGFITE 
+                     SET VLRUNIT = :vlrUnit, 
+                         VLRTOT = (:vlrUnit * QTDNEG) 
+                     WHERE NUNOTA = :nunota AND CODPROD = :codprod`,
+                    {
+                        vlrUnit: vlrUnit,
+                        nunota: Number(nunota),
+                        codprod: Number(item.codprod)
+                    },
+                    { autoCommit: false }
+                );
+            }
+        }
+
+        // Update TGFCAB to set new total and mark PENDENTE = 'N'
+        await conn.execute(
+            `UPDATE TGFCAB 
+             SET VLRNOTA = (SELECT SUM(VLRTOT) FROM TGFITE WHERE NUNOTA = :nunota),
+                 PENDENTE = 'N'
+             WHERE NUNOTA = :nunota`,
+            { nunota: Number(nunota) },
+            { autoCommit: true } // Commit everything together
+        );
+
+        console.log('Sankhya itens foram atualizados e pedido lançado para NUNOTA:', nunota);
+        res.json({ success: true, message: 'Pedido lançado com sucesso!' });
+
+    } catch (err) {
+        console.error('Erro ao salvar itens sankhya:', err);
+        res.status(500).json({ error: 'Erro ao salvar e lançar itens no Sankhya' });
+    } finally {
+        if (conn) {
+            try { await conn.close(); } catch (e) { console.error(e); }
+        }
+    }
+}
+
+// Finalize order with edited item prices
+async function finalizarPedidoComValores(req, res) {
+    console.log('=== FINALIZAR PEDIDO COM VALORES E LANCAR - API chamada ===');
+    const { idPagamento, idFornecedor, cod_pagamento, cod_fornecedor, numero_pedido, items } = req.body;
+    
+    // Converter numero_pedido para Number para evitar erro de tipo no Oracle
+    const numPedidoInt = Number(numero_pedido);
+    const codPagInt = Number(cod_pagamento);
+    const codFornInt = Number(cod_fornecedor);
+    
+    console.log('Dados recebidos:', { 
+        idPagamento, idFornecedor, cod_pagamento, cod_fornecedor, numero_pedido, numPedidoInt,
+        totalItens: items ? items.length : 0 
+    });
+    
+    if (!numPedidoInt || isNaN(numPedidoInt)) {
+        return res.status(400).json({ success: false, error: 'numero_pedido inválido', details: `Valor recebido: ${numero_pedido}` });
+    }
+    if (!codPagInt || isNaN(codPagInt)) {
+        return res.status(400).json({ success: false, error: 'cod_pagamento inválido', details: `Valor recebido: ${cod_pagamento}` });
+    }
+    if (!codFornInt || isNaN(codFornInt)) {
+        return res.status(400).json({ success: false, error: 'cod_fornecedor inválido', details: `Valor recebido: ${cod_fornecedor}` });
+    }
+    
+    let conn;
+
+    try {
+        conn = await db.getConnection();
+
+        // 1. Atualizar o CABECALHO_PEDIDO_YSC antes da procedure
+        console.log('Passo 1: Atualizando CABECALHO_PEDIDO_YSC...');
+        await conn.execute(
+            `UPDATE CABECALHO_PEDIDO_YSC 
+             SET FORMA_PAGTO = :formaPag,
+                 PARCEIRO = :fornecedor,
+                 COD_FORMA_PAGTO = :codPag,
+                 COD_PARCEIRO = :codForn,
+                 DATA_PEDIDO = TRUNC(DATA_PEDIDO),
+                 ANDAMENTO = 'FINALIZADO'
+             WHERE NUMERO_PEDIDO = :numPedido`,
+            {
+                formaPag: idPagamento,
+                fornecedor: idFornecedor,
+                codPag: codPagInt,
+                codForn: codFornInt,
+                numPedido: numPedidoInt
+            },
+            { autoCommit: false }
+        );
+        console.log('Passo 1: CABECALHO atualizado com sucesso');
+
+        // Processar os itens em PEDIDO_PROCESSADO_YSC recebidos do Frontend
+        if (items && Array.isArray(items)) {
+            const codprods = items.map(it => Number(it.codprod)).filter(c => !isNaN(c));
+
+            // 1. Apagar os que foram excluídos (usando bind variables para segurança)
+            if (codprods.length > 0) {
+                // Construir placeholders dinâmicos para evitar SQL injection
+                const binds = { numPedido: numPedidoInt };
+                const placeholders = codprods.map((cod, i) => {
+                    const key = `cod${i}`;
+                    binds[key] = cod;
+                    return `:${key}`;
+                });
+                await conn.execute(
+                    `DELETE FROM PEDIDO_PROCESSADO_YSC 
+                     WHERE NUMERO_PEDIDO = :numPedido 
+                     AND CODPROD NOT IN (${placeholders.join(',')})`,
+                    binds,
+                    { autoCommit: false }
+                );
+            } else {
+                await conn.execute(
+                    `DELETE FROM PEDIDO_PROCESSADO_YSC 
+                     WHERE NUMERO_PEDIDO = :numPedido`,
+                    { numPedido: numPedidoInt },
+                    { autoCommit: false }
+                );
+            }
+
+            // 2. Atualizar a QTD_PEDIR e VLR_TOTAL
+            for (const it of items) {
+                await conn.execute(
+                    `UPDATE PEDIDO_PROCESSADO_YSC 
+                     SET VLR_TOTAL = (:qtdPedir * :vlrUnit),
+                         QTD_PEDIR = :qtdPedir
+                     WHERE NUMERO_PEDIDO = :numPedido AND CODPROD = :codprod`,
+                    {
+                        qtdPedir: Number(it.qtdPedir || 0),
+                        vlrUnit: Number(it.vlrunit || 0),
+                        numPedido: numPedidoInt,
+                        codprod: Number(it.codprod)
+                    },
+                    { autoCommit: false }
+                );
+            }
+        }
+
+        // 2. Chamar a procedure
+        console.log('Passo 2: Chamando procedure...');
+        
+        await conn.execute(`SAVEPOINT antes_procedure`);
+        
+        let mensagemProcedure = null;
+        let tentativas = 0;
+        const maxTentativas = 3;
+        
+        while (tentativas < maxTentativas) {
+            tentativas++;
+            try {
+                console.log(`Tentativa ${tentativas}/${maxTentativas} para pedido ${numPedidoInt}`);
+                
+                const result = await conn.execute(
+                    `BEGIN
+                        JIVA.STP_GERARPEDCOMPRA_IMPORT_YSC(:P_NUM_PEDIDO, :P_MENSAGEM);
+                    END;`,
+                    {
+                        P_NUM_PEDIDO: numPedidoInt,
+                        P_MENSAGEM: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 4000 }
+                    },
+                    { autoCommit: false }
+                );
+                mensagemProcedure = result.outBinds.P_MENSAGEM;
+                console.log('Procedure executada com sucesso na tentativa', tentativas, '- Mensagem:', mensagemProcedure);
+                break;
+            } catch (procErr) {
+                console.error(`Erro na tentativa ${tentativas}:`, procErr.message);
+                if (procErr.message.includes('ORA-01422') && tentativas < maxTentativas) {
+                    console.log(`ORA-01422 persistente. Rollback ao savepoint e aguardando...`);
+                    try {
+                        await conn.execute(`ROLLBACK TO SAVEPOINT antes_procedure`);
+                    } catch (rbErr) {
+                        console.error('Erro no rollback to savepoint:', rbErr.message);
+                    }
+                    const waitMs = Math.pow(2, tentativas) * 1000;
+                    console.log(`Aguardando ${waitMs}ms antes da tentativa ${tentativas + 1}...`);
+                    await new Promise(resolve => setTimeout(resolve, waitMs));
+                    await conn.execute(`SAVEPOINT antes_procedure`);
+                    continue;
+                }
+                throw procErr;
+            }
+        }
+
+        // 3. Pegar NUNOTA gerada
+        console.log('Passo 3: Buscando NUNOTA gerada...');
+        const cabResult = await conn.execute(
+            `SELECT NUNOTA FROM CABECALHO_PEDIDO_YSC WHERE NUMERO_PEDIDO = :numPedido`,
+            { numPedido: numPedidoInt },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+        const nunotaGerado = cabResult.rows && cabResult.rows.length > 0 ? cabResult.rows[0].NUNOTA : null;
+        console.log('NUNOTA gerada:', nunotaGerado);
+
+        // 4. Update TGFITE and TGFCAB with specific prices and PENDENTE = 'N'
+        if (nunotaGerado && items && Array.isArray(items)) {
+            for (const item of items) {
+                const vlrUnit = Number(item.vlrunit);
+                if (!isNaN(vlrUnit)) {
+                    await conn.execute(
+                        `UPDATE TGFITE 
+                         SET VLRUNIT = :vlrUnit, 
+                             VLRTOT = (:vlrUnit * QTDNEG) 
+                         WHERE NUNOTA = :nunota AND CODPROD = :codprod`,
+                        {
+                            vlrUnit: vlrUnit,
+                            nunota: Number(nunotaGerado),
+                            codprod: Number(item.codprod)
+                        },
+                        { autoCommit: false }
+                    );
+                }
+            }
+
+            await conn.execute(
+                `UPDATE TGFCAB 
+                 SET VLRNOTA = (SELECT SUM(VLRTOT) FROM TGFITE WHERE NUNOTA = :nunota),
+                     PENDENTE = 'S',
+                     STATUSNOTA = 'A',
+                     DTNEG = (SELECT TRUNC(DATA_PEDIDO) FROM CABECALHO_PEDIDO_YSC WHERE NUMERO_PEDIDO = :numPedido)
+                 WHERE NUNOTA = :nunota`,
+                {
+                    nunota: Number(nunotaGerado),
+                    numPedido: Number(numero_pedido)
+                },
+                { autoCommit: false }
+            );
+        }
+
+        await conn.commit();
+
+        res.json({
+            success: true,
+            result: "Pedido Finalizado com Sucesso e VLRUNIT ajustado",
+            mensagemProcedure: mensagemProcedure,
+            nunota: nunotaGerado
+        });
+
+    } catch (err) {
+        console.error('Erro ao finalizar pedido com valores:', err.message);
+        console.error('Stack:', err.stack);
+        if (conn) {
+            try { await conn.rollback(); } catch (rErr) { console.error('Erro no rollback:', rErr); }
+        }
+        res.status(500).json({ 
+            success: false, 
+            error: 'Erro ao finalizar pedido', 
+            details: err.message,
+            errorCode: err.errorNum || null
+        });
+    } finally {
+        if (conn) {
+            try { await conn.close(); } catch (e) { console.error(e); }
+        }
+    }
+}
+
+// Renderizar a View do Painel de Pedidos
+async function painelPedidos(req, res) {
+    res.render('pedidos/painelPedidos', { user: req.user });
+}
+
+// Retornar os dados classificados para o Painel
+async function getPainelDados(req, res) {
+    let conn;
+    try {
+        conn = await db.getConnection();
+
+        const query = `
+            SELECT 
+                C.NUNOTA,
+                C.NUMNOTA,
+                C.DTPREVENT as DTPREVENT,
+                C.DTNEG,
+                C.VLRNOTA,
+                E.NOMEFANTASIA AS EMPRESA,
+                P.RAZAOSOCIAL AS PARCEIRO,
+                CASE 
+                    WHEN TRUNC(C.DTPREVENT) >= TRUNC(SYSDATE) THEN 'PRAZO'
+                    WHEN TRUNC(C.DTPREVENT) < TRUNC(SYSDATE) AND TRUNC(C.DTPREVENT) >= TRUNC(SYSDATE) - 7 THEN 'ATRASADO'
+                    ELSE 'CRITICO'
+                END AS CLASSIFICACAO,
+                TRUNC(SYSDATE) - TRUNC(C.DTPREVENT) AS DIAS_ATRASO
+            FROM TGFCAB C
+            INNER JOIN TSIEMP E ON C.CODEMP = E.CODEMP
+            INNER JOIN TGFPAR P ON C.CODPARC = P.CODPARC
+            WHERE C.TIPMOV = 'O' 
+              AND C.PENDENTE = 'S'
+            ORDER BY C.DTPREVENT ASC
+        `;
+
+        const result = await conn.execute(query, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
+
+        res.json({
+            success: true,
+            pedidos: result.rows
+        });
+    } catch (err) {
+        console.error('Erro ao buscar dados do painel:', err);
+        res.status(500).json({ error: 'Erro ao buscar painel de pedidos' });
+    } finally {
+        if (conn) {
+            try { await conn.close(); } catch (e) { console.error(e); }
+        }
+    }
+}
+
+// Reprocessar Pedido Finalizado
+async function reprocessarPedido(req, res) {
+    console.log('=== REPROCESSAR PEDIDO - API chamada ===');
+    const { id } = req.params; // oldId
+    let conn;
+
+    try {
+        conn = await db.getConnection();
+
+        // 1. Criar novo cabeçalho usando PL/SQL para retornar o ID e copiar os dados com segurança
+        const cabResult = await conn.execute(
+            `DECLARE
+                v_MARCA CABECALHO_PEDIDO_YSC.MARCA%TYPE;
+                v_DATA_INICIAL CABECALHO_PEDIDO_YSC.DATA_INICIAL%TYPE;
+                v_DATA_FINAL CABECALHO_PEDIDO_YSC.DATA_FINAL%TYPE;
+                v_GRUPO CABECALHO_PEDIDO_YSC.GRUPO%TYPE;
+                v_EMPRESA CABECALHO_PEDIDO_YSC.EMPRESA%TYPE;
+                v_FORMA_PAGTO CABECALHO_PEDIDO_YSC.FORMA_PAGTO%TYPE;
+                v_PARCEIRO CABECALHO_PEDIDO_YSC.PARCEIRO%TYPE;
+                v_COD_FORMA_PAGTO CABECALHO_PEDIDO_YSC.COD_FORMA_PAGTO%TYPE;
+                v_COD_PARCEIRO CABECALHO_PEDIDO_YSC.COD_PARCEIRO%TYPE;
+                v_CODEMP CABECALHO_PEDIDO_YSC.CODEMP%TYPE;
+                v_VLRTOTAL CABECALHO_PEDIDO_YSC.VLRTOTAL%TYPE;
+                v_new_id NUMBER;
+             BEGIN
+                 SELECT MARCA, DATA_INICIAL, DATA_FINAL, GRUPO, EMPRESA, FORMA_PAGTO, PARCEIRO, COD_FORMA_PAGTO, COD_PARCEIRO, CODEMP, VLRTOTAL
+                 INTO v_MARCA, v_DATA_INICIAL, v_DATA_FINAL, v_GRUPO, v_EMPRESA, v_FORMA_PAGTO, v_PARCEIRO, v_COD_FORMA_PAGTO, v_COD_PARCEIRO, v_CODEMP, v_VLRTOTAL
+                 FROM CABECALHO_PEDIDO_YSC 
+                 WHERE NUMERO_PEDIDO = :oldId;
+
+                 INSERT INTO CABECALHO_PEDIDO_YSC 
+                 (MARCA, DATA_INICIAL, DATA_FINAL, GRUPO, DATA_PEDIDO, ANDAMENTO, EMPRESA, FORMA_PAGTO, PARCEIRO, COD_FORMA_PAGTO, COD_PARCEIRO, CODEMP, DATAENTREGA, DATAFATURAMENTO, VLRTOTAL) 
+                 VALUES (v_MARCA, v_DATA_INICIAL, v_DATA_FINAL, v_GRUPO, TRUNC(SYSDATE), 'FINALIZADO', v_EMPRESA, v_FORMA_PAGTO, v_PARCEIRO, v_COD_FORMA_PAGTO, v_COD_PARCEIRO, v_CODEMP, TRUNC(SYSDATE), TRUNC(SYSDATE), v_VLRTOTAL)
+                 RETURNING NUMERO_PEDIDO INTO v_new_id;
+
+                 :newId := v_new_id;
+             END;`,
+            {
+                oldId: id,
+                newId: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT }
+            },
+            { autoCommit: false }
+        );
+        const novoPedidoId = cabResult.outBinds.newId;
+
+        // 2. Copiar itens descobrindo as colunas dinamicamente
+        const colResult = await conn.execute(
+            `SELECT COLUMN_NAME
+             FROM user_tab_columns
+             WHERE table_name = 'PEDIDO_PROCESSADO_YSC' AND column_name != 'NUMERO_PEDIDO'`,
+            [],
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+        if (colResult.rows.length === 0) {
+            throw new Error("Colunas da tabela PEDIDO_PROCESSADO_YSC não encontradas. Verifique permissões.");
+        }
+
+        const colSet = new Set(colResult.rows.map(r => r.COLUMN_NAME));
+        const colStr = Array.from(colSet).join(', ');
+
+        await conn.execute(
+            `INSERT INTO PEDIDO_PROCESSADO_YSC (NUMERO_PEDIDO, ${colStr})
+             SELECT :newId, ${colStr} FROM PEDIDO_PROCESSADO_YSC WHERE NUMERO_PEDIDO = :oldId`,
+            { newId: novoPedidoId, oldId: id },
+            { autoCommit: false }
+        );
+
+        // 3. Chamar a procedure
+        const procResult = await conn.execute(
+            `BEGIN
+                JIVA.STP_GERARPEDCOMPRA_IMPORT_YSC(
+                    :P_NUM_PEDIDO,
+                    :P_MENSAGEM
+                );
+            END;`,
+            {
+                P_NUM_PEDIDO: novoPedidoId,
+                P_MENSAGEM: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 4000 }
+            },
+            { autoCommit: false }
+        );
+        const mensagemProcedure = procResult.outBinds.P_MENSAGEM;
+
+        // 4. Pegar NUNOTA gerada
+        const nunotaResult = await conn.execute(
+            `SELECT NUNOTA FROM CABECALHO_PEDIDO_YSC WHERE NUMERO_PEDIDO = :numPedido`,
+            { numPedido: novoPedidoId },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+        const nunotaGerado = nunotaResult.rows[0]?.NUNOTA;
+
+        // 5. Ajustar TGFITE e TGFCAB
+        if (nunotaGerado) {
+            await conn.execute(
+                `UPDATE TGFITE I
+                 SET (VLRUNIT, VLRTOT) = (
+                     SELECT (VLR_TOTAL / NULLIF(QTD_PEDIR, 0)), VLR_TOTAL
+                     FROM PEDIDO_PROCESSADO_YSC 
+                     WHERE NUMERO_PEDIDO = :numPedido AND CODPROD = I.CODPROD
+                 )
+                 WHERE NUNOTA = :nunota
+                   AND EXISTS (
+                       SELECT 1 FROM PEDIDO_PROCESSADO_YSC 
+                       WHERE NUMERO_PEDIDO = :numPedido AND CODPROD = I.CODPROD
+                   )`,
+                {
+                    nunota: Number(nunotaGerado),
+                    numPedido: Number(novoPedidoId)
+                },
+                { autoCommit: false }
+            );
+
+            await conn.execute(
+                `UPDATE TGFCAB 
+                 SET VLRNOTA = (SELECT SUM(VLRTOT) FROM TGFITE WHERE NUNOTA = :nunota),
+                     PENDENTE = 'S',
+                     STATUSNOTA = 'A',
+                     DTNEG = (SELECT TRUNC(DATA_PEDIDO) FROM CABECALHO_PEDIDO_YSC WHERE NUMERO_PEDIDO = :numPedido)
+                 WHERE NUNOTA = :nunota`,
+                {
+                    nunota: Number(nunotaGerado),
+                    numPedido: Number(novoPedidoId)
+                },
+                { autoCommit: false }
+            );
+        }
+
+        await conn.commit();
+
+        res.json({
+            success: true,
+            result: "Pedido Reprocessado com Sucesso",
+            novoPedidoId,
+            nunotaGerado,
+            mensagemProcedure
+        });
+
+    } catch (err) {
+        if (conn) {
+            try { await conn.rollback(); } catch (rErr) { console.error(rErr); }
+        }
+        res.status(500).json({ error: 'Erro ao reprocessar pedido', details: err.message });
+    } finally {
+        if (conn) {
+            try { await conn.close(); } catch (e) { console.error(e); }
+        }
+    }
+}
+
 module.exports = {
     // View routes
     index,
@@ -584,5 +1127,11 @@ module.exports = {
     finalizarPedidoFinal,
     exportarPdf,
     salvarPedidos,
-    atualizarPedidoFeito
+    atualizarPedidoFeito,
+    carregarItensSankhya,
+    salvarItensSankhya,
+    finalizarPedidoComValores,
+    painelPedidos,
+    getPainelDados,
+    reprocessarPedido
 };

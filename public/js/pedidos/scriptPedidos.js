@@ -213,6 +213,7 @@ function filtrarFornecedor(inputId, dropdownId) {
         item.textContent = `${dado.NOME || ''} (${dado.CNPJ || ''})`;
         item.onclick = function (event) {
             event.preventDefault();
+            event.stopPropagation();
             input.value = dado.NOME || '';
             input.dataset.codparc = dado.CODPARC; // Store the supplier code as data attribute
             dropdown.classList.remove("show");
@@ -275,6 +276,7 @@ function filtrarFormaPagamento(inputId, dropdownId) {
         item.textContent = dado.DESCRTIPVENDA || '';
         item.onclick = function (event) {
             event.preventDefault();
+            event.stopPropagation();
             input.value = dado.DESCRTIPVENDA || '';
             input.dataset.codtipvenda = dado.CODTIPVENDA;
             dropdown.classList.remove("show");
@@ -288,17 +290,21 @@ function filtrarFormaPagamento(inputId, dropdownId) {
 }
 
 document.addEventListener("click", function (event) {
-    // Get all dropdown elements on the page
-    const dropdowns = document.querySelectorAll(".dropdown-menu.show");
+    // Close all open dropdowns (both .dropdown-menu.show and .dropdown-menu-custom visible)
+    const dropdowns = document.querySelectorAll(".dropdown-menu.show, .dropdown-menu-custom");
 
     dropdowns.forEach(dropdown => {
-        // Find the corresponding input (remove 'Lista' from the ID)
-        const inputId = dropdown.id.replace('Lista', '');
-        const input = document.getElementById(inputId);
+        // Check if dropdown is actually visible
+        if (dropdown.style.display === 'none' || dropdown.style.display === '') return;
+
+        // Find the corresponding input (the previous sibling or nearby input)
+        const parent = dropdown.parentElement;
+        const input = parent ? parent.querySelector('input') : null;
 
         if (input && dropdown) {
             if (!input.contains(event.target) && !dropdown.contains(event.target)) {
                 dropdown.classList.remove("show");
+                dropdown.style.display = 'none';
             }
         }
     });
@@ -654,7 +660,7 @@ async function carregaPedidosFeitos() {
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Valor Total</span>
-                                <span class="info-value">R$ ${(pedido.VLRTOTAL || 0).toFixed(2)}</span>
+                                <span class="info-value">R$ ${parseFloat(pedido.VLRTOTAL || 0).toFixed(2)}</span>
                             </div>
                         </div>
 
@@ -677,8 +683,8 @@ async function carregaPedidosFeitos() {
                         </div>
 
                         <div class="actions-section">
-                            <button type="button" class="btn-action btn-success-custom" onClick="salvarPedidoSystem('${fornecedorId}', '${formaPagId}', '${pedido.NUMERO_PEDIDO}')">
-                                <i class="bi bi-check-lg"></i> Finalizar
+                            <button type="button" class="btn-action btn-success-custom" onClick="abrirModalPreLancamento('${fornecedorId}', '${formaPagId}', '${pedido.NUMERO_PEDIDO}')">
+                                <i class="bi bi-check-lg"></i> Revisar & Lançar
                             </button>
                             <button type="button" class="btn-action btn-primary-custom" onClick="carregarDadosPedido(${pedido.NUMERO_PEDIDO})">
                                 <i class="bi bi-pencil"></i> Editar
@@ -757,7 +763,7 @@ async function carregaPedidosFeitos() {
                         </td>
                         <td>${(pedido.VLRTOTAL || 0).toFixed(2)}</td>
                         <td>
-                            <button type="button" class="btn btn-success" onClick="salvarPedidoSystem('${fornecedorId}', '${formaPagId}', '${pedido.NUMERO_PEDIDO}')">    
+                            <button type="button" class="btn btn-success" onClick="abrirModalPreLancamento('${fornecedorId}', '${formaPagId}', '${pedido.NUMERO_PEDIDO}')">    
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right-square-fill" viewBox="0 0 16 16">
                                     <path d="M0 14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2a2 2 0 0 0-2 2zm4.5-6.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5a.5.5 0 0 1 0-1"></path>
                                 </svg>
@@ -1193,17 +1199,19 @@ async function exportarPDF(id_pedido) {
             const dadosPedido = await response.json();
             if (!dadosPedido || dadosPedido.length === 0) throw new Error("Nenhum item encontrado");
 
-            // Configurar Empresa
+            // Configurar Empresa (codemp/cnpj só existem como globais na tela
+            // Fazer Pedidos; nas demais telas usa o CODEMP vindo do pedido)
             let empresaNome = "Empresa Desconhecida";
-            const codEmpresa = parseInt(codemp || dadosPedido[0].CODEMP || 0);
+            let cnpj = "";
+            const codEmpresa = parseInt((typeof codemp !== 'undefined' && codemp) || dadosPedido[0].CODEMP || 0);
             switch (codEmpresa) {
-                case 1: empresaNome = "Exclusiva Utilidades"; break;
-                case 2: empresaNome = "SG_Utilidades"; break;
-                case 3: empresaNome = "Util Equipamentos"; break;
-                case 4: empresaNome = "Prime 85"; break;
-                case 5: empresaNome = "SegCenter Comercial"; break;
-                case 6: empresaNome = "SegCenter Comercial"; break;
-                case 7: empresaNome = "AsgDistribuição"; break;
+                case 1: empresaNome = "Exclusiva Utilidades"; cnpj = "04.023.539/0001-17"; break;
+                case 2: empresaNome = "SG_Utilidades"; cnpj = "02.444.585/0001-64"; break;
+                case 3: empresaNome = "Util Equipamentos"; cnpj = "09.666.638/0001-30"; break;
+                case 4: empresaNome = "Prime 85"; cnpj = "21.518.354/0001-00"; break;
+                case 5: empresaNome = "SegCenter Comercial"; cnpj = "24.486.321/0002-97"; break;
+                case 6: empresaNome = "SegCenter Comercial"; cnpj = "24.486.321/0001-06"; break;
+                case 7: empresaNome = "AsgDistribuição"; cnpj = "49.318.824/0001-01"; break;
             }
 
 
@@ -1258,10 +1266,11 @@ function gerarConteudoPDF(doc, empresaNome, cnpj, dadosPedido, id_pedido, resolv
     doc.setTextColor(100);
     doc.text(`CNPJ: ${cnpj}`, 14, 40);
 
-    // Tabela
+    // Tabela (itens em ordem alfabética pela descrição do produto)
     const colunas = ["REF", "PRODUTO", "QTD"];
     const linhas = dadosPedido
         .filter(item => parseFloat(item.QTD_PEDIR) > 0)
+        .sort((a, b) => String(a.DESCRPROD || '').localeCompare(String(b.DESCRPROD || ''), 'pt-BR'))
         .map(item => [
             item.REFFORN || item.REFERENCIA,
             item.DESCRPROD,
