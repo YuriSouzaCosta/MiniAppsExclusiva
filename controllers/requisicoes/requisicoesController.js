@@ -750,18 +750,34 @@ async function excluirRequisicao(req, res) {
         }
 
         const { REQUISITANTE, STATUS, COM_NOTA } = cab.rows[0];
+        const ehAdmin = req.user.role === 'ADMIN';
+        const forcar = req.query.forcar === '1';
 
-        if (REQUISITANTE !== req.user.username && req.user.role !== 'ADMIN') {
+        if (REQUISITANTE !== req.user.username && !ehAdmin) {
             return res.status(403).json({ error: 'Só o requisitante ou um admin pode excluir' });
         }
-        if (COM_NOTA > 0) {
+
+        // Requisicao que ja virou transferencia so sai com confirmacao extra de
+        // um admin: as notas no Sankhya continuam existindo e perdem a origem.
+        if (COM_NOTA > 0 && !(ehAdmin && forcar)) {
+            const notas = await conn.execute(
+                `SELECT DISTINCT NUNOTA FROM JIVA.AD_REQ_ITE_YSC
+                  WHERE NUM_REQ = :numReq AND NUNOTA IS NOT NULL ORDER BY NUNOTA`,
+                { numReq },
+                { outFormat: oracledb.OUT_FORMAT_OBJECT }
+            );
             return res.status(409).json({
-                error: 'Esta requisição já gerou transferência no Sankhya e não pode ser excluída'
+                error: 'Esta requisição já gerou transferência no Sankhya. '
+                    + 'As notas continuam lá e ficam sem origem se a requisição for apagada.',
+                notas: notas.rows.map(n => n.NUNOTA),
+                podeForcar: ehAdmin
             });
         }
-        if (!['ABERTA', 'EM_SEPARACAO', 'CANCELADA'].includes(STATUS)) {
+
+        if (!['ABERTA', 'EM_SEPARACAO', 'CANCELADA'].includes(STATUS) && !(ehAdmin && forcar)) {
             return res.status(409).json({
-                error: `Requisição está ${STATUS} — não pode mais ser excluída`
+                error: `Requisição está ${STATUS} e já faz parte do histórico.`,
+                podeForcar: ehAdmin
             });
         }
 
@@ -807,26 +823,31 @@ async function excluirItem(req, res) {
         }
 
         const { REQUISITANTE, STATUS, SEPARADOR, NUNOTA, TOTAL_ITENS } = dados.rows[0];
+        const ehAdmin = req.user.role === 'ADMIN';
+        const forcar = req.query.forcar === '1';
         const autorizado = REQUISITANTE === req.user.username
-            || req.user.role === 'ADMIN'
+            || ehAdmin
             || (STATUS === 'EM_SEPARACAO' && SEPARADOR === req.user.username);
 
         if (!autorizado) {
             return res.status(403).json({ error: 'Sem permissão para excluir este item' });
         }
-        if (NUNOTA) {
+        if (NUNOTA && !(ehAdmin && forcar)) {
             return res.status(409).json({
-                error: `Item já saiu na transferência ${NUNOTA} e não pode ser excluído`
+                error: `Este item já saiu na transferência ${NUNOTA}. `
+                    + 'Apagá-lo aqui não desfaz a movimentação de estoque no Sankhya.',
+                podeForcar: ehAdmin
             });
         }
-        if (!['ABERTA', 'EM_SEPARACAO'].includes(STATUS)) {
+        if (!['ABERTA', 'EM_SEPARACAO'].includes(STATUS) && !(ehAdmin && forcar)) {
             return res.status(409).json({
-                error: `Requisição está ${STATUS} — não é possível alterar os itens`
+                error: `Requisição está ${STATUS} e já faz parte do histórico.`,
+                podeForcar: ehAdmin
             });
         }
         if (TOTAL_ITENS <= 1) {
             return res.status(409).json({
-                error: 'Este é o último item — exclua a requisição inteira'
+                error: 'Este é o único item da requisição. Para removê-lo, exclua a requisição inteira.'
             });
         }
 

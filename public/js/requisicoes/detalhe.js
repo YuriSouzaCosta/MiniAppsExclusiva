@@ -68,18 +68,16 @@ function desenharCabecalho() {
         </div>`).join('');
 }
 
-// A requisição só pode ser excluída enquanto nada foi gerado no Sankhya.
-// O servidor valida de novo; aqui é só para não mostrar botão inútil.
+// Os botões de excluir aparecem para quem tem autorização, em qualquer
+// situação. Quando a exclusão não é segura — requisição que já virou
+// transferência, por exemplo — quem explica é o servidor, que responde
+// dizendo o motivo e se dá para forçar. Esconder o botão deixava a
+// impressão de que a função não existia.
 function podeExcluirRequisicao() {
-    const dono = cabecalho.REQUISITANTE === USUARIO || PODE_SEPARAR;
-    const semNota = itens.every(item => !item.NUNOTA);
-    return dono && semNota && ['ABERTA', 'EM_SEPARACAO', 'CANCELADA'].includes(cabecalho.STATUS);
+    return cabecalho.REQUISITANTE === USUARIO || PODE_SEPARAR;
 }
 
-function podeExcluirItem(item) {
-    if (item.NUNOTA) return false;
-    if (!['ABERTA', 'EM_SEPARACAO'].includes(cabecalho.STATUS)) return false;
-    if (itens.length <= 1) return false;
+function podeExcluirItem() {
     return cabecalho.REQUISITANTE === USUARIO
         || PODE_SEPARAR
         || cabecalho.SEPARADOR === USUARIO;
@@ -142,7 +140,7 @@ function desenharItens() {
                     </div>
                     <div class="sep-lado">
                         <div class="sep-qtd-pedida">${formatarQtd(item.QTD)} un</div>
-                        ${podeExcluirItem(item) ? `
+                        ${podeExcluirItem() ? `
                             <button class="sep-btn-excluir" title="Excluir item"
                                     aria-label="Excluir item ${item.COD_SNK}"
                                     onclick="excluirItem(${item.SEQUENCIA})">
@@ -405,16 +403,37 @@ async function excluirItem(sequencia) {
     });
 
     if (!confirmacao.isConfirmed) return;
+    await enviarExclusaoItem(sequencia, false);
+}
 
-    try {
-        const resposta = await fetch(`/requisicoes/api/requisicoes/${NUM_REQ}/itens/${sequencia}`,
-            { method: 'DELETE' });
-        const dados = await resposta.json();
-        if (!resposta.ok) throw new Error(dados.error || 'Falha ao excluir');
+async function enviarExclusaoItem(sequencia, forcar) {
+    const url = `/requisicoes/api/requisicoes/${NUM_REQ}/itens/${sequencia}`
+        + (forcar ? '?forcar=1' : '');
+
+    const resposta = await fetch(url, { method: 'DELETE' });
+    const dados = await resposta.json();
+
+    if (resposta.ok) {
         carregar();
-    } catch (err) {
-        Swal.fire('Não foi possível excluir', err.message, 'warning');
+        return;
     }
+
+    // Bloqueado, mas um admin pode assumir a responsabilidade.
+    if (dados.podeForcar) {
+        const forcado = await Swal.fire({
+            title: 'Excluir mesmo assim?',
+            html: `<div class="text-start">${dados.error}</div>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Excluir assim mesmo',
+            cancelButtonText: 'Não excluir',
+            confirmButtonColor: '#dc2626'
+        });
+        if (forcado.isConfirmed) await enviarExclusaoItem(sequencia, true);
+        return;
+    }
+
+    Swal.fire('Não foi possível excluir', dados.error || 'Falha ao excluir', 'info');
 }
 
 async function excluirRequisicao() {
@@ -429,23 +448,43 @@ async function excluirRequisicao() {
     });
 
     if (!confirmacao.isConfirmed) return;
+    await enviarExclusaoRequisicao(false);
+}
 
-    try {
-        const resposta = await fetch(`/requisicoes/api/requisicoes/${NUM_REQ}`, { method: 'DELETE' });
-        const dados = await resposta.json();
-        if (!resposta.ok) throw new Error(dados.error || 'Falha ao excluir');
+async function enviarExclusaoRequisicao(forcar) {
+    const resposta = await fetch(`/requisicoes/api/requisicoes/${NUM_REQ}` + (forcar ? '?forcar=1' : ''),
+        { method: 'DELETE' });
+    const dados = await resposta.json();
 
+    if (resposta.ok) {
         await Swal.fire({
             icon: 'success',
             title: 'Requisição excluída',
             timer: 1300,
             showConfirmButton: false
         });
-
         window.location.href = '/requisicoes';
-    } catch (err) {
-        Swal.fire('Não foi possível excluir', err.message, 'warning');
+        return;
     }
+
+    if (dados.podeForcar) {
+        const notas = (dados.notas || []).length
+            ? `<div class="mt-2"><strong>Transferências geradas:</strong> ${dados.notas.join(', ')}</div>`
+            : '';
+        const forcado = await Swal.fire({
+            title: 'Excluir mesmo assim?',
+            html: `<div class="text-start">${dados.error}${notas}</div>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Excluir assim mesmo',
+            cancelButtonText: 'Não excluir',
+            confirmButtonColor: '#dc2626'
+        });
+        if (forcado.isConfirmed) await enviarExclusaoRequisicao(true);
+        return;
+    }
+
+    Swal.fire('Não foi possível excluir', dados.error || 'Falha ao excluir', 'info');
 }
 
 async function cancelar() {
