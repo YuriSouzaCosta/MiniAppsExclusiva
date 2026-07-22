@@ -1,6 +1,7 @@
 /* Central de requisições entre lojas
-   Layout pensado para uso em estoque: alvos grandes, contraste alto e
-   nada que exija precisão de mouse. */
+   Mobile-first: o estoque usa celular no corredor e desktop na mesa.
+   Alvos de toque grandes, inputs em 16px (abaixo disso o iOS dá zoom
+   sozinho ao focar) e nada que dependa de precisão de mouse. */
 
 :root {
     --req-bg: #f8fafc;
@@ -12,21 +13,24 @@
     --req-tem: #16a34a;
     --req-nao: #dc2626;
     --req-parcial: #d97706;
+    --req-toque: 46px;
 }
 
 body.req-body {
     font-family: 'Poppins', sans-serif;
     background: var(--req-bg);
     color: var(--req-texto);
+    -webkit-text-size-adjust: 100%;
 }
 
+/* ----- cabeçalho ----- */
 .req-header {
     background: var(--req-card);
     border-bottom: 1px solid var(--req-borda);
-    padding: 1rem 1.5rem;
+    padding: .75rem 1rem;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: .6rem;
     flex-wrap: wrap;
     position: sticky;
     top: 0;
@@ -34,43 +38,64 @@ body.req-body {
 }
 
 .req-header h1 {
-    font-size: 1.25rem;
+    font-size: 1.05rem;
     font-weight: 700;
     margin: 0;
+    line-height: 1.2;
 }
 
 .req-header .req-sub {
-    font-size: .85rem;
+    font-size: .78rem;
     color: var(--req-suave);
     margin: 0;
 }
 
-.req-conteudo {
-    padding: 1.5rem;
-    max-width: 1400px;
-    margin: 0 auto;
+.req-header .btn {
+    min-height: var(--req-toque);
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
 }
 
-/* ----- abas da fila ----- */
+.req-titulo { min-width: 0; flex: 1 1 auto; }
+.req-titulo h1,
+.req-titulo .req-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.req-conteudo {
+    padding: 1rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    /* espaço para a barra fixa não cobrir o conteúdo */
+    padding-bottom: 6rem;
+}
+
+/* ----- abas ----- */
 .req-abas {
     display: flex;
     gap: .5rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    overflow-x: auto;
+    padding-bottom: .25rem;
+    scrollbar-width: none;
 }
+
+.req-abas::-webkit-scrollbar { display: none; }
 
 .req-aba {
     border: 1px solid var(--req-borda);
     background: var(--req-card);
     border-radius: 10px;
-    padding: .65rem 1.1rem;
+    padding: .6rem 1rem;
     font-weight: 600;
-    font-size: .9rem;
+    font-size: .85rem;
     color: var(--req-suave);
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: .5rem;
+    gap: .45rem;
+    white-space: nowrap;
+    min-height: var(--req-toque);
+    flex: 0 0 auto;
 }
 
 .req-aba.ativa {
@@ -83,18 +108,16 @@ body.req-body {
     background: rgba(15, 23, 42, .08);
     border-radius: 20px;
     padding: .05rem .5rem;
-    font-size: .8rem;
+    font-size: .78rem;
 }
 
-.req-aba.ativa .contador {
-    background: rgba(255, 255, 255, .25);
-}
+.req-aba.ativa .contador { background: rgba(255, 255, 255, .25); }
 
 /* ----- cards de requisição ----- */
 .req-grade {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
+    grid-template-columns: 1fr;
+    gap: .85rem;
 }
 
 .req-card {
@@ -102,15 +125,12 @@ body.req-body {
     border: 1px solid var(--req-borda);
     border-left: 5px solid var(--req-suave);
     border-radius: 12px;
-    padding: 1.1rem;
+    padding: 1rem;
     cursor: pointer;
     transition: transform .15s, box-shadow .15s;
 }
 
-.req-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 14px rgba(15, 23, 42, .09);
-}
+.req-card:active { transform: scale(.995); }
 
 .req-card.urgente { border-left-color: var(--req-nao); }
 .req-card.aberta { border-left-color: #0ea5e9; }
@@ -123,21 +143,20 @@ body.req-body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: .5rem;
     margin-bottom: .6rem;
 }
 
-.req-numero {
-    font-size: 1.05rem;
-    font-weight: 700;
-}
+.req-numero { font-size: 1.05rem; font-weight: 700; }
 
 .req-etiqueta {
-    font-size: .7rem;
+    font-size: .68rem;
     font-weight: 700;
-    padding: .2rem .55rem;
+    padding: .22rem .55rem;
     border-radius: 6px;
     text-transform: uppercase;
     letter-spacing: .03em;
+    white-space: nowrap;
 }
 
 .et-urgente { background: #fee2e2; color: #991b1b; }
@@ -153,34 +172,32 @@ body.req-body {
     color: var(--req-suave);
     display: flex;
     justify-content: space-between;
-    gap: .5rem;
+    gap: .75rem;
     margin-bottom: .2rem;
 }
+
+.req-linha strong { color: var(--req-texto); text-align: right; }
 
 .req-progresso {
     height: 6px;
     background: #f1f5f9;
     border-radius: 4px;
     overflow: hidden;
-    margin-top: .8rem;
+    margin-top: .75rem;
 }
 
-.req-progresso div {
-    height: 100%;
-    background: var(--req-tem);
-}
+.req-progresso div { height: 100%; background: var(--req-tem); }
 
 /* ----- busca de produto ----- */
-.req-busca {
-    position: relative;
-}
+.req-busca { position: relative; }
 
 .req-busca input {
-    font-size: 1.05rem;
-    padding: .9rem 1rem;
+    font-size: 16px;
+    padding: .85rem 1rem;
     border-radius: 12px;
     border: 2px solid var(--req-borda);
     width: 100%;
+    min-height: 52px;
 }
 
 .req-busca input:focus {
@@ -198,42 +215,46 @@ body.req-body {
     border: 1px solid var(--req-borda);
     border-radius: 12px;
     box-shadow: 0 12px 28px rgba(15, 23, 42, .14);
-    max-height: 420px;
+    max-height: 60vh;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     z-index: 40;
 }
 
 .req-resultado {
-    padding: .75rem 1rem;
+    padding: .8rem 1rem;
     border-bottom: 1px solid #f1f5f9;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
-    gap: 1rem;
+    gap: .75rem;
+    align-items: center;
+    min-height: var(--req-toque);
 }
 
 .req-resultado:last-child { border-bottom: none; }
 .req-resultado:hover,
 .req-resultado.marcado { background: #fff7ed; }
 
-.req-resultado .desc { font-weight: 600; font-size: .92rem; }
-.req-resultado .meta { font-size: .78rem; color: var(--req-suave); }
-.req-resultado .saldo { font-size: .8rem; font-weight: 700; white-space: nowrap; }
+.req-resultado .desc { font-weight: 600; font-size: .9rem; line-height: 1.25; }
+.req-resultado .meta { font-size: .75rem; color: var(--req-suave); margin-top: .15rem; }
+.req-resultado .saldo { font-size: .8rem; font-weight: 700; white-space: nowrap; text-align: right; }
 .saldo-ok { color: var(--req-tem); }
 .saldo-zero { color: var(--req-nao); }
 
-/* ----- lista em montagem ----- */
+/* ----- lista em montagem (tabela no desktop, cards no celular) ----- */
 .req-tabela {
     width: 100%;
     background: var(--req-card);
     border: 1px solid var(--req-borda);
     border-radius: 12px;
     overflow: hidden;
+    border-collapse: collapse;
 }
 
 .req-tabela th {
     background: #f8fafc;
-    font-size: .78rem;
+    font-size: .75rem;
     text-transform: uppercase;
     letter-spacing: .03em;
     color: var(--req-suave);
@@ -249,20 +270,27 @@ body.req-body {
 }
 
 .req-qtd-input {
-    width: 92px;
-    padding: .45rem .6rem;
+    width: 96px;
+    padding: .5rem .6rem;
     border: 1px solid var(--req-borda);
     border-radius: 8px;
     text-align: center;
     font-weight: 600;
+    font-size: 16px;
+    min-height: var(--req-toque);
 }
 
-/* ----- separação: item com os três botões ----- */
+.req-btn-remover {
+    min-height: var(--req-toque);
+    min-width: var(--req-toque);
+}
+
+/* ----- separação ----- */
 .sep-item {
     background: var(--req-card);
     border: 1px solid var(--req-borda);
     border-radius: 12px;
-    padding: 1rem 1.1rem;
+    padding: 1rem;
     margin-bottom: .85rem;
 }
 
@@ -273,82 +301,97 @@ body.req-body {
 .sep-topo {
     display: flex;
     justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
-    margin-bottom: .8rem;
+    gap: .75rem;
+    margin-bottom: .85rem;
 }
 
-.sep-desc { font-weight: 600; font-size: 1rem; }
-.sep-meta { font-size: .8rem; color: var(--req-suave); }
+.sep-topo > div:first-child { min-width: 0; }
+
+.sep-desc { font-weight: 600; font-size: .98rem; line-height: 1.3; }
+.sep-meta { font-size: .78rem; color: var(--req-suave); margin-top: .15rem; }
 
 .sep-qtd-pedida {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     font-weight: 700;
     color: var(--req-acento);
     white-space: nowrap;
+    text-align: right;
+    line-height: 1.1;
 }
 
 .sep-acoes {
     display: flex;
-    gap: .6rem;
-    flex-wrap: wrap;
+    gap: .5rem;
 }
 
 .sep-btn {
-    flex: 1;
-    min-width: 110px;
+    flex: 1 1 0;
+    min-width: 0;
     border: 2px solid var(--req-borda);
     background: var(--req-card);
     border-radius: 10px;
-    padding: .7rem .5rem;
+    padding: .7rem .35rem;
     font-weight: 600;
-    font-size: .9rem;
+    font-size: .85rem;
     color: var(--req-suave);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: .4rem;
+    gap: .35rem;
+    min-height: 52px;
 }
 
-.sep-btn:hover { border-color: #cbd5e1; }
 .sep-btn.ativo-TEM { background: var(--req-tem); border-color: var(--req-tem); color: #fff; }
 .sep-btn.ativo-NAO_TEM { background: var(--req-nao); border-color: var(--req-nao); color: #fff; }
 .sep-btn.ativo-PARCIAL { background: var(--req-parcial); border-color: var(--req-parcial); color: #fff; }
 
 .sep-parcial {
-    margin-top: .8rem;
+    margin-top: .85rem;
     display: none;
     align-items: center;
     gap: .6rem;
+    flex-wrap: wrap;
 }
 
 .sep-parcial.visivel { display: flex; }
 
 .sep-parcial input {
-    width: 130px;
+    width: 120px;
     padding: .6rem;
     border: 2px solid var(--req-parcial);
     border-radius: 10px;
-    font-size: 1.05rem;
+    font-size: 18px;
     font-weight: 700;
     text-align: center;
+    min-height: 52px;
 }
 
 /* ----- barra fixa de ação ----- */
 .req-barra {
-    position: sticky;
+    position: fixed;
+    left: 0;
+    right: 0;
     bottom: 0;
     background: var(--req-card);
     border-top: 1px solid var(--req-borda);
-    padding: 1rem 1.5rem;
+    padding: .75rem 1rem calc(.75rem + env(safe-area-inset-bottom));
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
-    box-shadow: 0 -4px 14px rgba(15, 23, 42, .06);
+    gap: .75rem;
+    box-shadow: 0 -4px 14px rgba(15, 23, 42, .08);
     z-index: 30;
+    flex-wrap: wrap;
+}
+
+.req-barra-info { font-size: .85rem; }
+
+.req-barra-botoes {
+    display: flex;
+    gap: .5rem;
+    flex: 1 1 auto;
+    justify-content: flex-end;
 }
 
 .req-btn-principal {
@@ -356,31 +399,120 @@ body.req-body {
     border: none;
     color: #fff;
     font-weight: 700;
-    padding: .8rem 1.6rem;
+    padding: .75rem 1.4rem;
     border-radius: 10px;
-    font-size: 1rem;
+    font-size: .95rem;
+    min-height: var(--req-toque);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
 }
 
-.req-btn-principal:disabled {
-    background: #cbd5e1;
-    cursor: not-allowed;
-}
+.req-btn-principal:disabled { background: #cbd5e1; cursor: not-allowed; }
 
 .req-vazio {
     text-align: center;
-    padding: 3rem 1rem;
+    padding: 2.5rem 1rem;
     color: var(--req-suave);
 }
 
-.req-vazio i {
-    font-size: 2.5rem;
-    display: block;
-    margin-bottom: .75rem;
-    opacity: .5;
+.req-vazio i { font-size: 2.5rem; display: block; margin-bottom: .75rem; opacity: .5; }
+
+/* =========================================================
+   CELULAR — a tabela da montagem vira lista de cards e os
+   botões da barra ocupam a largura toda.
+   ========================================================= */
+@media (max-width: 700px) {
+    .req-tabela,
+    .req-tabela tbody,
+    .req-tabela tr,
+    .req-tabela td {
+        display: block;
+        width: 100%;
+    }
+
+    .req-tabela {
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        overflow: visible;
+    }
+
+    .req-tabela thead { display: none; }
+
+    .req-tabela tr {
+        background: var(--req-card);
+        border: 1px solid var(--req-borda);
+        border-radius: 12px;
+        margin-bottom: .75rem;
+        padding: .4rem .25rem;
+    }
+
+    .req-tabela td {
+        border: none;
+        padding: .4rem .75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: .75rem;
+        text-align: right;
+    }
+
+    .req-tabela td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--req-suave);
+        font-size: .72rem;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        text-align: left;
+        flex: 0 0 auto;
+    }
+
+    /* a descrição do produto ocupa a linha inteira */
+    .req-tabela td[data-label="Produto"] {
+        display: block;
+        text-align: left;
+        font-weight: 600;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: .6rem;
+        margin-bottom: .2rem;
+    }
+
+    .req-tabela td[data-label="Produto"]::before {
+        display: block;
+        margin-bottom: .2rem;
+    }
+
+    .req-tabela td[data-label=""]::before { content: none; }
+    .req-tabela td[data-label=""] { justify-content: flex-end; }
+
+    .req-tabela td.req-td-vazio { display: block; text-align: center; }
+    .req-tabela td.req-td-vazio::before { content: none; }
+
+    .req-barra { flex-direction: column; align-items: stretch; gap: .6rem; }
+    .req-barra-info { text-align: center; }
+    .req-barra-botoes { justify-content: stretch; }
+    .req-barra-botoes > * { flex: 1 1 0; }
+
+    .sep-btn { flex-direction: column; gap: .15rem; font-size: .78rem; padding: .6rem .25rem; }
+    .sep-btn i { font-size: 1.1rem; }
+
+    .sep-qtd-pedida { font-size: 1.2rem; }
+
+    .req-conteudo { padding-bottom: 8.5rem; }
 }
 
-@media (max-width: 640px) {
-    .req-conteudo { padding: 1rem; }
-    .sep-btn { min-width: 0; font-size: .82rem; padding: .8rem .3rem; }
-    .req-header { padding: .8rem 1rem; }
+/* =========================================================
+   DESKTOP — grade de cards em colunas e tabela normal.
+   ========================================================= */
+@media (min-width: 701px) {
+    .req-grade { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+    .req-card:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(15, 23, 42, .09); }
+    .req-header { padding: 1rem 1.5rem; gap: 1rem; }
+    .req-header h1 { font-size: 1.25rem; }
+    .req-conteudo { padding: 1.5rem 1.5rem 6rem; }
+    .req-abas { margin-bottom: 1.5rem; }
+    .sep-item { padding: 1rem 1.1rem; }
 }

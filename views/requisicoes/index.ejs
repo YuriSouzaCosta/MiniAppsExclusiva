@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Requisições entre Lojas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -14,17 +14,20 @@
 <body class="req-body">
     <div class="req-header">
         <a href="/" class="btn btn-light border"><i class="bi bi-arrow-left"></i></a>
-        <div class="me-auto">
+        <div class="req-titulo">
             <h1>Requisições entre Lojas</h1>
             <p class="req-sub">Todas as requisições, de todas as lojas</p>
         </div>
         <% if (podeSeparar) { %>
-            <a href="/requisicoes/separacao" class="btn btn-outline-dark">
-                <i class="bi bi-box-seam"></i> Fila de separação
+            <a href="/requisicoes/separacao" class="btn btn-outline-dark" title="Fila de separação">
+                <i class="bi bi-box-seam"></i>
+                <span class="d-none d-sm-inline">Fila de separação</span>
             </a>
         <% } %>
         <a href="/requisicoes/nova" class="btn req-btn-principal">
-            <i class="bi bi-plus-lg"></i> Nova requisição
+            <i class="bi bi-plus-lg"></i>
+            <span class="d-none d-sm-inline">Nova requisição</span>
+            <span class="d-sm-none">Nova</span>
         </a>
     </div>
 

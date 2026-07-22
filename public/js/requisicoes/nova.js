@@ -192,22 +192,24 @@ function desenharLista() {
         const saldo = Number(item.ESTOQUE_GRUPO) || 0;
         const linha = document.createElement('tr');
         linha.dataset.produto = item.CODPROD;
+        // data-label alimenta o layout de cards no celular (ver requisicoes.css)
         linha.innerHTML = `
-            <td><strong>${item.CODPROD}</strong></td>
-            <td>
+            <td data-label="Produto">
                 ${item.DESCRPROD || ''}
-                ${item.MARCA ? `<div class="text-muted small">${item.MARCA}</div>` : ''}
+                ${item.MARCA ? `<div class="text-muted small fw-normal">${item.MARCA}</div>` : ''}
             </td>
-            <td class="text-muted">${item.REFERENCIA || '-'}</td>
-            <td class="${saldo > 0 ? 'saldo-ok' : 'saldo-zero'} fw-semibold">
+            <td data-label="Código"><strong>${item.CODPROD}</strong></td>
+            <td data-label="Referência" class="text-muted">${item.REFERENCIA || '-'}</td>
+            <td data-label="Saldo grupo" class="${saldo > 0 ? 'saldo-ok' : 'saldo-zero'} fw-semibold">
                 ${saldo > 0 ? saldo + ' un' : 'sem saldo'}
             </td>
-            <td>
-                <input type="number" min="1" class="req-qtd-input" value="${item.qtd}"
+            <td data-label="Quantidade">
+                <input type="number" min="1" inputmode="numeric" class="req-qtd-input" value="${item.qtd}"
                     onchange="alterarQtd(${item.CODPROD}, this.value)">
             </td>
-            <td>
-                <button class="btn btn-sm btn-outline-danger" onclick="remover(${item.CODPROD})">
+            <td data-label="">
+                <button class="btn btn-outline-danger req-btn-remover" onclick="remover(${item.CODPROD})"
+                        aria-label="Remover produto">
                     <i class="bi bi-trash"></i>
                 </button>
             </td>`;

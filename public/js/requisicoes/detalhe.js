@@ -200,12 +200,17 @@ function desenharBarra() {
             (pendentes ? ` · <span class="text-danger">${pendentes} faltando</span>` : '');
 
         botoes.innerHTML = `
-            <button class="btn btn-light border" onclick="salvar()">
-                <i class="bi bi-save"></i> Salvar parcial
+            <button class="btn btn-light border d-flex align-items-center justify-content-center gap-1"
+                    onclick="salvar()">
+                <i class="bi bi-save"></i>
+                <span class="d-none d-sm-inline">Salvar parcial</span>
+                <span class="d-sm-none">Salvar</span>
             </button>
             <button class="req-btn-principal" id="btnLiberar" ${pendentes ? 'disabled' : ''}
                     onclick="liberar()">
-                <i class="bi bi-check2-circle"></i> Finalizar separação
+                <i class="bi bi-check2-circle"></i>
+                <span class="d-none d-sm-inline">Finalizar separação</span>
+                <span class="d-sm-none">Finalizar</span>
             </button>`;
         return;
     }
@@ -222,7 +227,7 @@ function desenharBarra() {
     // Qualquer usuario pode confirmar o recebimento: quem recebe na loja de
     // destino nem sempre e quem abriu a requisicao.
     if (cabecalho.STATUS === 'FINALIZADA') {
-        resumo.innerHTML = 'Separação concluída — confira os itens e confirme o recebimento';
+        resumo.innerHTML = 'Separação concluída — confira e confirme o recebimento';
         botoes.innerHTML = `
             <button class="req-btn-principal" onclick="receber()">
                 <i class="bi bi-check2-all"></i> Confirmar recebimento
