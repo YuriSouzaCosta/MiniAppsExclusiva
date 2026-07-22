@@ -113,8 +113,11 @@ async function buscarProdutos(req, res) {
         const like = '%' + termo.replace(/\s+/g, '%') + '%';
         const empresas = GRUPOS[grupo] || [];
 
-        const binds = { like, exato: termo };
+        // "like" e palavra reservada no Oracle e nao pode nomear bind (ORA-01745)
+        const binds = { termoLike: like, termoExato: termo };
         let colEstoque = '0 AS ESTOQUE_GRUPO';
+        // sem grupo nao ha saldo para ordenar; com grupo, quem tem estoque vem primeiro
+        let ordem = 'V.DESCRPROD';
 
         if (empresas.length) {
             const listaEmp = empresas.map((emp, i) => {
@@ -125,6 +128,7 @@ async function buscarProdutos(req, res) {
                              FROM VW_MIRROR_EST_YSC E
                             WHERE E.CODPROD = V.CODPROD
                               AND E.CODEMP IN (${listaEmp})) AS ESTOQUE_GRUPO`;
+            ordem = 'ESTOQUE_GRUPO DESC, V.DESCRPROD';
         }
 
         const result = await conn.execute(
@@ -139,15 +143,15 @@ async function buscarProdutos(req, res) {
                   FROM VW_CONSULTA_SITE_YSC V
                  WHERE V.ATIVO = 'S'
                    AND (
-                        UPPER(V.DESCRPROD) LIKE :like
-                     OR UPPER(TO_CHAR(V.REFERENCIA)) LIKE :like
-                     OR UPPER(TO_CHAR(V.REFFORN)) LIKE :like
-                     OR TO_CHAR(V.CODPROD) = :exato
+                        UPPER(V.DESCRPROD) LIKE :termoLike
+                     OR UPPER(TO_CHAR(V.REFERENCIA)) LIKE :termoLike
+                     OR UPPER(TO_CHAR(V.REFFORN)) LIKE :termoLike
+                     OR TO_CHAR(V.CODPROD) = :termoExato
                      OR EXISTS (SELECT 1 FROM TGFBAR B
                                  WHERE B.CODPROD = V.CODPROD
-                                   AND TRIM(B.CODBARRA) = :exato)
+                                   AND TRIM(B.CODBARRA) = :termoExato)
                    )
-                 ORDER BY V.DESCRPROD
+                 ORDER BY ${ordem}
              ) WHERE ROWNUM <= 50`,
             binds,
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
