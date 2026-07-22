@@ -725,6 +725,127 @@ async function cancelarRequisicao(req, res) {
     }
 }
 
+// Exclui a requisicao inteira (os itens saem por ON DELETE CASCADE).
+// So e permitido enquanto nada foi gerado no Sankhya: apagar uma
+// requisicao que ja virou transferencia deixaria a nota orfa, sem como
+// rastrear de onde veio.
+async function excluirRequisicao(req, res) {
+    const numReq = Number(req.params.num);
+    let conn;
+    try {
+        conn = await db.getConnection();
+
+        const cab = await conn.execute(
+            `SELECT C.REQUISITANTE, C.STATUS,
+                    (SELECT COUNT(*) FROM JIVA.AD_REQ_ITE_YSC I
+                      WHERE I.NUM_REQ = C.NUM_REQ AND I.NUNOTA IS NOT NULL) AS COM_NOTA
+               FROM JIVA.AD_REQ_CAB_YSC C
+              WHERE C.NUM_REQ = :numReq`,
+            { numReq },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        if (!cab.rows.length) {
+            return res.status(404).json({ error: 'Requisição não encontrada' });
+        }
+
+        const { REQUISITANTE, STATUS, COM_NOTA } = cab.rows[0];
+
+        if (REQUISITANTE !== req.user.username && req.user.role !== 'ADMIN') {
+            return res.status(403).json({ error: 'Só o requisitante ou um admin pode excluir' });
+        }
+        if (COM_NOTA > 0) {
+            return res.status(409).json({
+                error: 'Esta requisição já gerou transferência no Sankhya e não pode ser excluída'
+            });
+        }
+        if (!['ABERTA', 'EM_SEPARACAO', 'CANCELADA'].includes(STATUS)) {
+            return res.status(409).json({
+                error: `Requisição está ${STATUS} — não pode mais ser excluída`
+            });
+        }
+
+        await conn.execute(
+            `DELETE FROM JIVA.AD_REQ_CAB_YSC WHERE NUM_REQ = :numReq`,
+            { numReq }
+        );
+
+        await conn.commit();
+        console.log('Requisicao excluida:', numReq, 'por', req.user.username);
+        res.json({ success: true });
+    } catch (err) {
+        if (conn) { try { await conn.rollback(); } catch (e) { console.error(e); } }
+        console.error('Erro ao excluir requisicao:', err);
+        res.status(500).json({ error: 'Erro ao excluir a requisição', details: err.message });
+    } finally {
+        if (conn) { try { await conn.close(); } catch (e) { console.error(e); } }
+    }
+}
+
+// Exclui um item da requisicao. O separador tambem pode, durante a
+// separacao, para tirar da lista o que foi pedido por engano.
+async function excluirItem(req, res) {
+    const numReq = Number(req.params.num);
+    const sequencia = Number(req.params.seq);
+    let conn;
+    try {
+        conn = await db.getConnection();
+
+        const dados = await conn.execute(
+            `SELECT C.REQUISITANTE, C.STATUS, C.SEPARADOR, I.NUNOTA,
+                    (SELECT COUNT(*) FROM JIVA.AD_REQ_ITE_YSC X
+                      WHERE X.NUM_REQ = C.NUM_REQ) AS TOTAL_ITENS
+               FROM JIVA.AD_REQ_CAB_YSC C
+               JOIN JIVA.AD_REQ_ITE_YSC I ON I.NUM_REQ = C.NUM_REQ
+              WHERE C.NUM_REQ = :numReq AND I.SEQUENCIA = :sequencia`,
+            { numReq, sequencia },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        if (!dados.rows.length) {
+            return res.status(404).json({ error: 'Item não encontrado' });
+        }
+
+        const { REQUISITANTE, STATUS, SEPARADOR, NUNOTA, TOTAL_ITENS } = dados.rows[0];
+        const autorizado = REQUISITANTE === req.user.username
+            || req.user.role === 'ADMIN'
+            || (STATUS === 'EM_SEPARACAO' && SEPARADOR === req.user.username);
+
+        if (!autorizado) {
+            return res.status(403).json({ error: 'Sem permissão para excluir este item' });
+        }
+        if (NUNOTA) {
+            return res.status(409).json({
+                error: `Item já saiu na transferência ${NUNOTA} e não pode ser excluído`
+            });
+        }
+        if (!['ABERTA', 'EM_SEPARACAO'].includes(STATUS)) {
+            return res.status(409).json({
+                error: `Requisição está ${STATUS} — não é possível alterar os itens`
+            });
+        }
+        if (TOTAL_ITENS <= 1) {
+            return res.status(409).json({
+                error: 'Este é o último item — exclua a requisição inteira'
+            });
+        }
+
+        await conn.execute(
+            `DELETE FROM JIVA.AD_REQ_ITE_YSC WHERE NUM_REQ = :numReq AND SEQUENCIA = :sequencia`,
+            { numReq, sequencia }
+        );
+
+        await conn.commit();
+        res.json({ success: true, restantes: TOTAL_ITENS - 1 });
+    } catch (err) {
+        if (conn) { try { await conn.rollback(); } catch (e) { console.error(e); } }
+        console.error('Erro ao excluir item:', err);
+        res.status(500).json({ error: 'Erro ao excluir o item', details: err.message });
+    } finally {
+        if (conn) { try { await conn.close(); } catch (e) { console.error(e); } }
+    }
+}
+
 module.exports = {
     index,
     nova,
@@ -738,5 +859,7 @@ module.exports = {
     salvarItens,
     liberarRequisicao,
     confirmarRecebimento,
-    cancelarRequisicao
+    cancelarRequisicao,
+    excluirRequisicao,
+    excluirItem
 };

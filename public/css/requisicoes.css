@@ -310,6 +310,14 @@ body.req-body {
 .sep-desc { font-weight: 600; font-size: .98rem; line-height: 1.3; }
 .sep-meta { font-size: .78rem; color: var(--req-suave); margin-top: .15rem; }
 
+.sep-lado {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: .5rem;
+    flex: 0 0 auto;
+}
+
 .sep-qtd-pedida {
     font-size: 1.35rem;
     font-weight: 700;
@@ -317,6 +325,35 @@ body.req-body {
     white-space: nowrap;
     text-align: right;
     line-height: 1.1;
+}
+
+/* lixeira do item — discreta, mas com alvo de toque cheio */
+.sep-btn-excluir {
+    border: 1px solid var(--req-borda);
+    background: var(--req-card);
+    color: var(--req-nao);
+    border-radius: 10px;
+    min-width: var(--req-toque);
+    min-height: var(--req-toque);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.sep-btn-excluir:hover {
+    background: #fef2f2;
+    border-color: var(--req-nao);
+}
+
+.req-btn-excluir {
+    min-height: var(--req-toque);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    flex: 0 0 auto;
 }
 
 .sep-acoes {
@@ -495,6 +532,8 @@ body.req-body {
     .req-barra-info { text-align: center; }
     .req-barra-botoes { justify-content: stretch; }
     .req-barra-botoes > * { flex: 1 1 0; }
+    /* a lixeira fica compacta para não roubar espaço da ação principal */
+    .req-barra-botoes > .req-btn-excluir { flex: 0 0 auto; min-width: var(--req-toque); }
 
     .sep-btn { flex-direction: column; gap: .15rem; font-size: .78rem; padding: .6rem .25rem; }
     .sep-btn i { font-size: 1.1rem; }

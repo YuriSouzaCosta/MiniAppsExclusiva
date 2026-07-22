@@ -13,6 +13,8 @@ router.put('/api/requisicoes/:num/itens', ensureAuth, requisicoesController.salv
 router.post('/api/requisicoes/:num/liberar', ensureAuth, requisicoesController.liberarRequisicao);
 router.post('/api/requisicoes/:num/receber', ensureAuth, requisicoesController.confirmarRecebimento);
 router.post('/api/requisicoes/:num/cancelar', ensureAuth, requisicoesController.cancelarRequisicao);
+router.delete('/api/requisicoes/:num', ensureAuth, requisicoesController.excluirRequisicao);
+router.delete('/api/requisicoes/:num/itens/:seq', ensureAuth, requisicoesController.excluirItem);
 
 // ========== VIEW ROUTES ==========
 // as rotas fixas vem antes de /:num para nao serem capturadas por ela

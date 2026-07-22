@@ -68,6 +68,23 @@ function desenharCabecalho() {
         </div>`).join('');
 }
 
+// A requisição só pode ser excluída enquanto nada foi gerado no Sankhya.
+// O servidor valida de novo; aqui é só para não mostrar botão inútil.
+function podeExcluirRequisicao() {
+    const dono = cabecalho.REQUISITANTE === USUARIO || PODE_SEPARAR;
+    const semNota = itens.every(item => !item.NUNOTA);
+    return dono && semNota && ['ABERTA', 'EM_SEPARACAO', 'CANCELADA'].includes(cabecalho.STATUS);
+}
+
+function podeExcluirItem(item) {
+    if (item.NUNOTA) return false;
+    if (!['ABERTA', 'EM_SEPARACAO'].includes(cabecalho.STATUS)) return false;
+    if (itens.length <= 1) return false;
+    return cabecalho.REQUISITANTE === USUARIO
+        || PODE_SEPARAR
+        || cabecalho.SEPARADOR === USUARIO;
+}
+
 function desenharItens() {
     const container = document.getElementById('listaItens');
 
@@ -123,7 +140,15 @@ function desenharItens() {
                             ${saldo > 0 ? saldo + ' un' : 'sem saldo'}</strong>
                         </div>
                     </div>
-                    <div class="sep-qtd-pedida">${formatarQtd(item.QTD)} un</div>
+                    <div class="sep-lado">
+                        <div class="sep-qtd-pedida">${formatarQtd(item.QTD)} un</div>
+                        ${podeExcluirItem(item) ? `
+                            <button class="sep-btn-excluir" title="Excluir item"
+                                    aria-label="Excluir item ${item.COD_SNK}"
+                                    onclick="excluirItem(${item.SEQUENCIA})">
+                                <i class="bi bi-trash"></i>
+                            </button>` : ''}
+                    </div>
                 </div>
                 ${botoes}
                 ${origem}
@@ -192,6 +217,15 @@ function desenharBarra() {
     barra.style.display = 'flex';
     botoes.innerHTML = '';
 
+    // O botão de excluir acompanha todos os estados em que a exclusão é
+    // possível, sempre à esquerda para não competir com a ação principal.
+    const btnExcluir = podeExcluirRequisicao() ? `
+        <button class="btn btn-outline-danger req-btn-excluir" onclick="excluirRequisicao()"
+                title="Excluir requisição">
+            <i class="bi bi-trash"></i>
+            <span class="d-none d-sm-inline">Excluir</span>
+        </button>` : '';
+
     if (modoSeparacao) {
         const pendentes = itensPendentes().length;
         const prontos = itens.length - pendentes;
@@ -199,7 +233,7 @@ function desenharBarra() {
         resumo.innerHTML = `<strong>${prontos}/${itens.length}</strong> item(ns) marcado(s)` +
             (pendentes ? ` · <span class="text-danger">${pendentes} faltando</span>` : '');
 
-        botoes.innerHTML = `
+        botoes.innerHTML = btnExcluir + `
             <button class="btn btn-light border d-flex align-items-center justify-content-center gap-1"
                     onclick="salvar()">
                 <i class="bi bi-save"></i>
@@ -217,7 +251,7 @@ function desenharBarra() {
 
     if (PODE_SEPARAR && cabecalho.STATUS === 'ABERTA') {
         resumo.innerHTML = `<strong>${itens.length}</strong> item(ns) solicitado(s)`;
-        botoes.innerHTML = `
+        botoes.innerHTML = btnExcluir + `
             <button class="req-btn-principal" onclick="assumir()">
                 <i class="bi bi-box-seam"></i> Iniciar separação
             </button>`;
@@ -228,7 +262,7 @@ function desenharBarra() {
     // destino nem sempre e quem abriu a requisicao.
     if (cabecalho.STATUS === 'FINALIZADA') {
         resumo.innerHTML = 'Separação concluída — confira e confirme o recebimento';
-        botoes.innerHTML = `
+        botoes.innerHTML = btnExcluir + `
             <button class="req-btn-principal" onclick="receber()">
                 <i class="bi bi-check2-all"></i> Confirmar recebimento
             </button>`;
@@ -237,14 +271,18 @@ function desenharBarra() {
 
     if (cabecalho.STATUS === 'ABERTA' && cabecalho.REQUISITANTE === USUARIO) {
         resumo.innerHTML = `<strong>${itens.length}</strong> item(ns) aguardando separação`;
-        botoes.innerHTML = `
-            <button class="btn btn-outline-danger" onclick="cancelar()">
-                <i class="bi bi-x-circle"></i> Cancelar requisição
+        botoes.innerHTML = btnExcluir + `
+            <button class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-1"
+                    onclick="cancelar()">
+                <i class="bi bi-x-circle"></i>
+                <span class="d-none d-sm-inline">Cancelar requisição</span>
+                <span class="d-sm-none">Cancelar</span>
             </button>`;
         return;
     }
 
     resumo.innerHTML = `<strong>${itens.length}</strong> item(ns)`;
+    botoes.innerHTML = btnExcluir;
 }
 
 async function assumir() {
@@ -350,6 +388,63 @@ async function receber() {
         carregar();
     } catch (err) {
         Swal.fire('Erro', err.message, 'error');
+    }
+}
+
+async function excluirItem(sequencia) {
+    const item = itens.find(i => i.SEQUENCIA === sequencia);
+
+    const confirmacao = await Swal.fire({
+        title: 'Excluir este item?',
+        html: `<div class="text-start">${item ? item.DESCRPROD || 'Produto ' + item.COD_SNK : ''}</div>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, excluir',
+        cancelButtonText: 'Voltar',
+        confirmButtonColor: '#dc2626'
+    });
+
+    if (!confirmacao.isConfirmed) return;
+
+    try {
+        const resposta = await fetch(`/requisicoes/api/requisicoes/${NUM_REQ}/itens/${sequencia}`,
+            { method: 'DELETE' });
+        const dados = await resposta.json();
+        if (!resposta.ok) throw new Error(dados.error || 'Falha ao excluir');
+        carregar();
+    } catch (err) {
+        Swal.fire('Não foi possível excluir', err.message, 'warning');
+    }
+}
+
+async function excluirRequisicao() {
+    const confirmacao = await Swal.fire({
+        title: `Excluir a requisição #${NUM_REQ}?`,
+        text: `Os ${itens.length} item(ns) serão apagados junto. Esta ação não tem volta.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, excluir',
+        cancelButtonText: 'Voltar',
+        confirmButtonColor: '#dc2626'
+    });
+
+    if (!confirmacao.isConfirmed) return;
+
+    try {
+        const resposta = await fetch(`/requisicoes/api/requisicoes/${NUM_REQ}`, { method: 'DELETE' });
+        const dados = await resposta.json();
+        if (!resposta.ok) throw new Error(dados.error || 'Falha ao excluir');
+
+        await Swal.fire({
+            icon: 'success',
+            title: 'Requisição excluída',
+            timer: 1300,
+            showConfirmButton: false
+        });
+
+        window.location.href = '/requisicoes';
+    } catch (err) {
+        Swal.fire('Não foi possível excluir', err.message, 'warning');
     }
 }
 
