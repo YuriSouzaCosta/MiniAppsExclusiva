@@ -11,6 +11,8 @@ const GRUPOS = {
 };
 
 const LOCAL_SHOWROOM = 110000;
+// Lojas que recebem mercadoria — uma por grupo.
+const EMPRESAS_DESTINO = [1, 4, 5];
 const ROLES_SEPARACAO = ['ESTOQUISTA', 'ADMIN', 'GERENTE'];
 
 function podeSeparar(user) {
@@ -59,8 +61,9 @@ async function nova(req, res) {
         conn = await db.getConnection();
         const codemp = await empresaDoUsuario(conn, req.user.username);
 
+        // So as lojas que recebem mercadoria: 1 (Exclusiva), 4 (Prime) e 5 (Site).
         const empresas = await conn.execute(
-            `SELECT CODEMP, NOMEFANTASIA FROM TSIEMP WHERE CODEMP IN (1,2,3,4,5,6,7) ORDER BY CODEMP`,
+            `SELECT CODEMP, NOMEFANTASIA FROM TSIEMP WHERE CODEMP IN (1,4,5) ORDER BY CODEMP`,
             {},
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
@@ -175,6 +178,9 @@ async function criarRequisicao(req, res) {
     if (!Array.isArray(itens) || itens.length === 0) {
         return res.status(400).json({ error: 'Informe ao menos um produto' });
     }
+    if (!EMPRESAS_DESTINO.includes(Number(codempDestino))) {
+        return res.status(400).json({ error: 'Empresa de destino inválida' });
+    }
     if (GRUPOS[grupo].includes(Number(codempDestino))) {
         return res.status(400).json({
             error: 'A empresa de destino faz parte do grupo requisitado — escolha outro destino'
@@ -247,14 +253,11 @@ async function listarRequisicoes(req, res) {
         const binds = {};
         let filtro = '';
 
-        // escopo "fila" = tela de separacao; "minhas" = do proprio requisitante
-        if (escopo === 'fila') {
-            if (!podeSeparar(req.user)) {
-                return res.status(403).json({ error: 'Sem permissão para a fila de separação' });
-            }
-        } else {
-            filtro += ' AND C.REQUISITANTE = :requisitante';
-            binds.requisitante = req.user.username;
+        // Toda requisicao e visivel para qualquer usuario logado: a loja que
+        // recebe nem sempre e quem abriu o pedido. O que muda por perfil e a
+        // tela de separacao, restrita a ESTOQUISTA, GERENTE e ADMIN.
+        if (escopo === 'fila' && !podeSeparar(req.user)) {
+            return res.status(403).json({ error: 'Sem permissão para a fila de separação' });
         }
 
         if (status) {

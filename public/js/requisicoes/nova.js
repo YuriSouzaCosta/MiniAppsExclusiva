@@ -38,9 +38,39 @@ campoBusca.addEventListener('keydown', evento => {
     }
 });
 
-document.getElementById('grupo').addEventListener('change', () => {
+// Empresas que compõem cada grupo de origem — usadas para bloquear o
+// destino quando ele pertence ao próprio grupo requisitado.
+const EMPRESAS_DO_GRUPO = { EXCLUSIVA: [1, 3], PRIME: [4, 2], SITE: [5, 7] };
+
+const campoGrupo = document.getElementById('grupo');
+const campoDestino = document.getElementById('codempDestino');
+
+campoGrupo.addEventListener('change', () => {
+    ajustarDestinos();
     if (campoBusca.value.trim().length >= 2) buscar();
 });
+
+function ajustarDestinos() {
+    const doGrupo = EMPRESAS_DO_GRUPO[campoGrupo.value] || [];
+    let selecionadoInvalido = false;
+
+    Array.from(campoDestino.options).forEach(opcao => {
+        const invalido = doGrupo.includes(Number(opcao.value));
+        opcao.disabled = invalido;
+        opcao.textContent = opcao.textContent.replace(' (é a origem)', '');
+        if (invalido) {
+            opcao.textContent += ' (é a origem)';
+            if (opcao.selected) selecionadoInvalido = true;
+        }
+    });
+
+    if (selecionadoInvalido) {
+        const valida = Array.from(campoDestino.options).find(o => !o.disabled);
+        if (valida) valida.selected = true;
+    }
+}
+
+ajustarDestinos();
 
 async function buscar(adicionarSeUnico) {
     const termo = campoBusca.value.trim();

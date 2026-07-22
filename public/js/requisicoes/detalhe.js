@@ -205,7 +205,7 @@ function desenharBarra() {
             </button>
             <button class="req-btn-principal" id="btnLiberar" ${pendentes ? 'disabled' : ''}
                     onclick="liberar()">
-                <i class="bi bi-check2-circle"></i> Pronto — liberar requisição
+                <i class="bi bi-check2-circle"></i> Finalizar separação
             </button>`;
         return;
     }
@@ -219,7 +219,9 @@ function desenharBarra() {
         return;
     }
 
-    if (cabecalho.STATUS === 'FINALIZADA' && cabecalho.REQUISITANTE === USUARIO) {
+    // Qualquer usuario pode confirmar o recebimento: quem recebe na loja de
+    // destino nem sempre e quem abriu a requisicao.
+    if (cabecalho.STATUS === 'FINALIZADA') {
         resumo.innerHTML = 'Separação concluída — confira os itens e confirme o recebimento';
         botoes.innerHTML = `
             <button class="req-btn-principal" onclick="receber()">
@@ -283,11 +285,11 @@ async function liberar() {
     if (itensPendentes().length) return;
 
     const confirmacao = await Swal.fire({
-        title: 'Liberar a requisição?',
+        title: 'Finalizar a separação?',
         text: 'As transferências serão geradas no Sankhya e o requisitante verá o resultado.',
         icon: 'question',
         showCancelButton: true,
-        confirmButtonText: 'Sim, liberar',
+        confirmButtonText: 'Sim, finalizar',
         cancelButtonText: 'Voltar',
         confirmButtonColor: '#ea580c'
     });
@@ -314,12 +316,14 @@ async function liberar() {
 
         await Swal.fire({
             icon: dados.avisos && dados.avisos.length ? 'warning' : 'success',
-            title: 'Requisição liberada',
+            title: 'Separação finalizada',
             html: `<div class="text-start">${notas || 'Nenhuma transferência gerada.'}</div>${avisos}`,
             confirmButtonColor: '#ea580c'
         });
 
-        carregar();
+        // Separação encerrada: volta para a fila, em vez de deixar o separador
+        // parado numa tela onde a única ação seria confirmar o recebimento.
+        window.location.href = '/requisicoes/separacao';
     } catch (err) {
         Swal.fire('Erro ao liberar', err.message, 'error');
         if (botao) botao.disabled = false;
