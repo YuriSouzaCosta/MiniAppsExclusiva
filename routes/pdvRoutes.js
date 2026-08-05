@@ -10,8 +10,10 @@ router.post('/login', pdvController.postPdvLogin);
 // Ensure all PDV routes are protected
 router.use(authMiddleware.ensureAuth);
 
+const requireManager = authMiddleware.requireRole('ADMIN', 'GERENTE');
+
 // Manager Routes
-router.get('/manager', pdvController.getManagerDashboard);
+router.get('/manager', requireManager, pdvController.getManagerDashboard);
 
 // Salesperson Routes
 router.get('/sales', pdvController.getSalesDashboard);
@@ -23,7 +25,6 @@ router.post('/create-header', pdvController.createOrderHeader);
 router.post('/order', pdvController.postOrder);
 router.get('/products', pdvController.searchProducts);
 router.get('/marcas', pdvController.getMarcas);
-router.get('/partners', pdvController.searchPartners);
 router.get('/partners', pdvController.searchPartners);
 router.get('/payment-methods', pdvController.getPaymentMethods);
 router.get('/order-details', pdvController.getOrderDetails);

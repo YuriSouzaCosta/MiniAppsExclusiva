@@ -3,316 +3,321 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" />
-  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Responsive CSS -->
   <link rel="stylesheet" href="/css/responsive.css">
-  
   <style>
     :root {
-      --primary-color: #ea580c; /* Orange-600 */
-      --primary-hover: #c2410c; /* Orange-700 */
-      --bg-color: #f8fafc; /* Slate-50 */
+      --primary-color: #ea580c;
+      --primary-hover: #c2410c;
+      --primary-soft: #fff4ec;
+      --bg-color: #f8fafc;
       --card-bg: #ffffff;
-      --text-primary: #1e293b; /* Slate-800 */
-      --text-secondary: #64748b; /* Slate-500 */
-      --card-hover-transform: translateY(-5px);
-      --card-transition: all 0.3s ease;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --line: #e2e8f0;
     }
-    
-    body { 
-      background-color: var(--bg-color);
-      min-height: 100vh;
-      font-family: 'Inter', 'Segoe UI', sans-serif;
-      color: var(--text-primary);
-    }
+    body { background-color: var(--bg-color); min-height: 100vh; font-family: 'Inter','Segoe UI',sans-serif; color: var(--text-primary); }
+    .menu-container { max-width: 1200px !important; }
 
-    .dashboard-header {
-      background: #ffffff;
-      border-bottom: 1px solid #e2e8f0;
-      padding: 2rem 0;
-      margin-bottom: 3rem;
-      box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-    }
+    .dashboard-header { background:#fff; border-bottom:1px solid var(--line); padding:1.5rem 0; margin-bottom:2rem; box-shadow:0 1px 3px rgb(0 0 0 / .06); }
 
-    .app-card {
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      background: var(--card-bg);
-      transition: var(--card-transition);
-      height: 100%;
-      text-decoration: none;
-      color: var(--text-primary);
-      overflow: hidden;
-      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 2.5rem 1.5rem;
-      cursor: pointer;
-    }
+    .search-input-group { box-shadow:0 1px 2px rgb(0 0 0 / .05); border-radius:.6rem; overflow:hidden; border:1px solid var(--line); background:#fff; }
+    .search-input-group:focus-within { border-color:var(--primary-color); box-shadow:0 0 0 3px rgba(234,88,12,.1); }
 
-    .app-card:hover {
-      transform: var(--card-hover-transform);
-      box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-      border-color: var(--primary-color);
-      color: var(--primary-color);
-    }
+    .logout-btn { transition:all .25s; color:var(--text-secondary); border-color:var(--line); }
+    .logout-btn:hover { transform:scale(1.04); background:#fee2e2; color:#ef4444; border-color:#fee2e2; }
 
-    .app-icon {
-      font-size: 2.5rem;
-      margin-bottom: 1.25rem;
-      color: var(--text-secondary);
-      transition: var(--card-transition);
-    }
+    /* ---- Categorias ---- */
+    .cat-sec { margin-bottom:2rem; }
+    .cat-head { display:flex; align-items:center; gap:10px; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid #eef2f7; }
+    .cat-head > i { color:var(--primary-color); font-size:1.05rem; width:22px; text-align:center; }
+    .cat-head .cat-name { font-weight:700; font-size:1.05rem; letter-spacing:.2px; }
+    .cat-head .cat-count { font-size:.72rem; font-weight:600; color:var(--text-secondary); background:#f1f5f9; border-radius:20px; padding:2px 10px; }
 
-    .app-card:hover .app-icon {
-      transform: scale(1.1);
-      color: var(--primary-color);
-    }
+    /* ---- Cards ---- */
+    .app-card { position:relative; display:flex; align-items:center; height:100%; border:1px solid var(--line); border-radius:14px; background:var(--card-bg); box-shadow:0 1px 2px rgb(0 0 0 / .05); transition:transform .18s, box-shadow .18s, border-color .18s; }
+    .app-card:hover { transform:translateY(-3px); box-shadow:0 10px 20px -10px rgb(0 0 0 / .18); border-color:var(--primary-color); }
+    .app-link { display:flex; align-items:center; gap:14px; padding:16px; text-decoration:none; color:var(--text-primary); flex:1; min-width:0; }
+    .app-tile { flex:0 0 auto; width:48px; height:48px; border-radius:12px; background:var(--primary-soft); color:var(--primary-color); display:flex; align-items:center; justify-content:center; font-size:1.4rem; transition:all .18s; }
+    .app-card:hover .app-tile { background:var(--primary-color); color:#fff; }
+    .app-text { min-width:0; }
+    .app-title { display:block; font-weight:600; font-size:.95rem; line-height:1.25; }
+    .app-desc { display:block; font-size:.8rem; color:var(--text-secondary); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-    .app-title {
-      font-weight: 600;
-      font-size: 1rem;
-      text-align: center;
-      margin: 0;
-    }
+    .fav-btn { position:absolute; top:9px; right:9px; background:none; border:none; color:#cbd5e1; font-size:.95rem; line-height:1; padding:5px; cursor:pointer; border-radius:6px; transition:color .15s, background .15s; z-index:2; }
+    .fav-btn:hover { color:var(--primary-color); background:#f8fafc; }
+    .fav-btn.on { color:#f59e0b; }
 
-    .logout-btn {
-      transition: all 0.3s ease;
-      color: var(--text-secondary);
-      border-color: #e2e8f0;
-    }
-    
-    .logout-btn:hover {
-      transform: scale(1.05);
-      background-color: #fee2e2;
-      color: #ef4444;
-      border-color: #fee2e2;
-    }
-
-    .menu-container {
-      max-width: 1200px !important;
-    }
-    
-    .search-input-group {
-        box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-        border-radius: 0.5rem;
-        overflow: hidden;
-        border: 1px solid #e2e8f0;
-    }
-    
-    .search-input-group:focus-within {
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
-    }
+    .empty-msg { display:none; text-align:center; color:var(--text-secondary); padding:2.5rem 0; }
+    .empty-msg i { font-size:1.6rem; display:block; margin-bottom:.5rem; color:#cbd5e1; }
   </style>
-  <title>Central de Links</title>
+  <title>Central de Acessos</title>
 </head>
 
 <body>
-  <!-- Header Section -->
   <header class="dashboard-header">
     <div class="container menu-container">
       <div class="row align-items-center">
-        <div class="col-md-8 text-center text-md-start">
-          <h1 class="mb-0 fw-bold" style="color: var(--text-primary); display: flex; align-items: center;">
-            <img src="/images/logo.png" alt="Logo" style="height: 40px; margin-right: 15px;">
-            Central de Acessos
+        <div class="col-md-7 text-center text-md-start">
+          <h1 class="mb-0 fw-bold" style="color:var(--text-primary); display:flex; align-items:center; justify-content:center;" >
+            <img src="/images/logo.png" alt="Logo" style="height:40px; margin-right:15px;">
+            <span class="d-none d-md-inline">Central de Acessos</span>
           </h1>
-          <p class="mb-0 mt-2 fs-5" style="color: var(--text-secondary);">
-            Bem-vindo, <span class="fw-bold" style="color: var(--primary-color);"><%= user.username.charAt(0).toUpperCase() + user.username.slice(1).toLowerCase() %></span>
+          <p class="mb-0 mt-2 fs-6" style="color:var(--text-secondary);">
+            Bem-vindo, <span class="fw-bold" style="color:var(--primary-color);"><%= user.username.charAt(0).toUpperCase() + user.username.slice(1).toLowerCase() %></span>
           </p>
         </div>
-        <div class="col-md-4 text-center text-md-end mt-3 mt-md-0">
-          <button id="logoutBtn" class="btn btn-lg logout-btn px-4">
-            <i class="fas fa-sign-out-alt me-2"></i>Sair
-          </button>
-          <form id="logoutForm" action="/logout" method="POST" style="display: none;"></form>
-        </div>
-      </div>
-      
-      <!-- Search Bar -->
-      <div class="row justify-content-center mt-4">
-        <div class="col-md-6">
-          <div class="input-group input-group-lg search-input-group">
-            <span class="input-group-text bg-white border-0 text-muted">
-              <i class="fas fa-search"></i>
-            </span>
-            <input type="text" id="searchInput" class="form-control border-0" placeholder="Buscar aplicativo..." aria-label="Buscar aplicativo">
+        <div class="col-md-5 mt-3 mt-md-0">
+          <div class="d-flex gap-2 justify-content-center justify-content-md-end align-items-center">
+            <div class="input-group input-group-lg search-input-group" style="max-width:340px;">
+              <span class="input-group-text bg-white border-0 text-muted"><i class="fas fa-search"></i></span>
+              <input type="text" id="searchInput" class="form-control border-0" placeholder="Buscar acesso..." aria-label="Buscar acesso">
+            </div>
+            <button id="logoutBtn" class="btn btn-lg logout-btn px-3" title="Sair"><i class="fas fa-sign-out-alt"></i></button>
+            <form id="logoutForm" action="/logout" method="POST" style="display:none;"></form>
           </div>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- Main Content -->
   <div class="container pb-5 menu-container">
-    <div class="row g-4 justify-content-center" id="appsContainer">
-      
-      <!-- Controle dos Cartões -->
-       <% if (user.role === 'ADMIN') { %>
-      <div class="col-6 col-md-4 col-lg-3 app-item">
-        <a href="/controle-cartao" class="app-card">
-          <i class="fas fa-credit-card app-icon"></i>
-          <h3 class="app-title">Controle de Cartões</h3>
-        </a>
+
+    <!-- Favoritos (dinamico) -->
+    <div class="cat-sec" id="favSec" style="display:none;">
+      <div class="cat-head"><i class="fas fa-star" style="color:#f59e0b;"></i><span class="cat-name">Favoritos</span><span class="cat-count" id="favCount">0</span></div>
+      <div class="row g-3" id="favGrid"></div>
+    </div>
+
+    <div id="catSecs">
+
+      <!-- ===== Vendas e PDV ===== -->
+      <div class="cat-sec">
+        <div class="cat-head"><i class="fas fa-cash-register"></i><span class="cat-name">Vendas e PDV</span><span class="cat-count">0</span></div>
+        <div class="row g-3">
+          <div class="col-12 col-sm-6 col-lg-4 app-item" data-key="pdv">
+            <div class="app-card">
+              <a href="/pdv/login" class="app-link"><span class="app-tile"><i class="fas fa-cash-register"></i></span><span class="app-text"><span class="app-title">Sistema PDV</span><span class="app-desc">Ponto de venda e caixa</span></span></a>
+              <button class="fav-btn" type="button" data-key="pdv" aria-label="Favoritar"><i class="far fa-star"></i></button>
+            </div>
+          </div>
+          <% if (user.role === 'ADMIN') { %>
+          <div class="col-12 col-sm-6 col-lg-4 app-item" data-key="faturamento">
+            <div class="app-card">
+              <a href="/faturamento" class="app-link"><span class="app-tile"><i class="fas fa-money-bill-trend-up"></i></span><span class="app-text"><span class="app-title">Faturamento por Vendedor</span><span class="app-desc">Vendas, painel e metas</span></span></a>
+              <button class="fav-btn" type="button" data-key="faturamento" aria-label="Favoritar"><i class="far fa-star"></i></button>
+            </div>
+          </div>
+          <% } %>
+          <div class="col-12 col-sm-6 col-lg-4 app-item" data-key="consulta-vend">
+            <div class="app-card">
+              <a href="/consulta-produtos/vendedor" class="app-link"><span class="app-tile"><i class="fas fa-search-dollar"></i></span><span class="app-text"><span class="app-title">Consulta de Produtos</span><span class="app-desc">Preço e estoque</span></span></a>
+              <button class="fav-btn" type="button" data-key="consulta-vend" aria-label="Favoritar"><i class="far fa-star"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Estoque e lojas ===== -->
+      <div class="cat-sec">
+        <div class="cat-head"><i class="fas fa-boxes-stacked"></i><span class="cat-name">Estoque e lojas</span><span class="cat-count">0</span></div>
+        <div class="row g-3">
+          <div class="col-12 col-sm-6 col-lg-4 app-item" data-key="requisicoes">
+            <div class="app-card">
+              <a href="/requisicoes" class="app-link"><span class="app-tile"><i class="fas fa-clipboard-list"></i></span><span class="app-text"><span class="app-title">Requisições entre Lojas</span><span class="app-desc">Pedidos entre lojas</span></span></a>
+              <button class="fav-btn" type="button" data-key="requisicoes" aria-label="Favoritar"><i class="far fa-star"></i></button>
+            </div>
+          </div>
+          <% if (user.role === 'ADMIN') { %>
+          <div class="col-12 col-sm-6 col-lg-4 app-item" data-key="transferencias">
+            <div class="app-card">
+              <a href="/transferencias" class="app-link"><span class="app-tile"><i class="fas fa-exchange-alt"></i></span><span class="app-text"><span class="app-title">Transferências</span><span class="app-desc">Transferir estoque</span></span></a>
+              <button class="fav-btn" type="button" data-key="transferencias" aria-label="Favoritar"><i class="far fa-star"></i></button>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6 col-lg-4 app-item" data-key="analise-transf">
+            <div class="app-card">
+              <a href="/analise-transferencias" class="app-link"><span class="app-tile"><i class="fas fa-chart-line"></i></span><span class="app-text"><span class="app-title">Análise de Transferências</span><span class="app-desc">Relatório de transferências</span></span></a>
+              <button class="fav-btn" type="button" data-key="analise-transf" aria-label="Favoritar"><i class="far fa-star"></i></button>
+            </div>
+          </div>
+          <% } %>
+          <div class="col-12 col-sm-6 col-lg-4 app-item" data-key="coletor">
+            <div class="app-card">
+              <a href="/coletor" class="app-link"><span class="app-tile"><i class="fas fa-barcode"></i></span><span class="app-text"><span class="app-title">Coletor</span><span class="app-desc">Leitor de código de barras</span></span></a>
+              <button class="fav-btn" type="button" data-key="coletor" aria-label="Favoritar"><i class="far fa-star"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Produtos e preços ===== -->
+      <% if (user.role === 'ADMIN') { %>
+      <div class="cat-sec">
+        <div class="cat-head"><i class="fas fa-tags"></i><span class="cat-name">Produtos e preços</span><span class="cat-count">0</span></div>
+        <div class="row g-3">
+          <div class="col-12 col-sm-6 col-lg-4 app-item" data-key="consulta-custo">
+            <div class="app-card">
+              <a href="/consulta-produtos" class="app-link"><span class="app-tile"><i class="fas fa-tags"></i></span><span class="app-text"><span class="app-title">Consulta de Produtos C/ Custo</span><span class="app-desc">Preço, custo e margem</span></span></a>
+              <button class="fav-btn" type="button" data-key="consulta-custo" aria-label="Favoritar"><i class="far fa-star"></i></button>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6 col-lg-4 app-item" data-key="calc-custo">
+            <div class="app-card">
+              <a href="/calculadora-custo" class="app-link"><span class="app-tile"><i class="fas fa-calculator"></i></span><span class="app-text"><span class="app-title">Calculadora de Custo</span><span class="app-desc">Simula o custo do produto</span></span></a>
+              <button class="fav-btn" type="button" data-key="calc-custo" aria-label="Favoritar"><i class="far fa-star"></i></button>
+            </div>
+          </div>
+        </div>
       </div>
       <% } %>
 
-
-      <!-- Central de Requisições (todos os perfis) -->
-      <div class="col-6 col-md-4 col-lg-3 app-item">
-        <a href="/requisicoes" class="app-card">
-          <i class="fas fa-clipboard-list app-icon"></i>
-          <h3 class="app-title">Requisições entre Lojas</h3>
-        </a>
-      </div>
-
-      <!-- Transferências (ADMIN) -->
-      <% if (user.role === 'ADMIN') { %>
-        <div class="col-6 col-md-4 col-lg-3 app-item">
-          <a href="/transferencias" class="app-card">
-            <i class="fas fa-exchange-alt app-icon"></i>
-            <h3 class="app-title">Transferências</h3>
-          </a>
+      <!-- ===== Compras ===== -->
+      <% if (user.role === 'ADMIN' || user.role === 'ASS_COMPRA') { %>
+      <div class="cat-sec">
+        <div class="cat-head"><i class="fas fa-truck-loading"></i><span class="cat-name">Compras</span><span class="cat-count">0</span></div>
+        <div class="row g-3">
+          <div class="col-12 col-sm-6 col-lg-4 app-item" data-key="pedido-compra">
+            <div class="app-card">
+              <a href="/pedidosCompras?" class="app-link"><span class="app-tile"><i class="fas fa-truck-loading"></i></span><span class="app-text"><span class="app-title">Pedido de Compra</span><span class="app-desc">Gera pedidos de compra</span></span></a>
+              <button class="fav-btn" type="button" data-key="pedido-compra" aria-label="Favoritar"><i class="far fa-star"></i></button>
+            </div>
+          </div>
+          <% if (user.role === 'ADMIN') { %>
+          <div class="col-12 col-sm-6 col-lg-4 app-item" data-key="orcamento-ocr">
+            <div class="app-card">
+              <a href="/orcamento-ocr" class="app-link"><span class="app-tile"><i class="fas fa-file-invoice"></i></span><span class="app-text"><span class="app-title">Orçamento OCR</span><span class="app-desc">Lê orçamento por foto</span></span></a>
+              <button class="fav-btn" type="button" data-key="orcamento-ocr" aria-label="Favoritar"><i class="far fa-star"></i></button>
+            </div>
+          </div>
+          <% } %>
         </div>
-      <% } %>
-
-      <!-- Análise de Transferências (ADMIN) -->
-      <% if (user.role === 'ADMIN') { %>
-        <div class="col-6 col-md-4 col-lg-3 app-item">
-          <a href="/analise-transferencias" class="app-card">
-            <i class="fas fa-chart-line app-icon"></i>
-            <h3 class="app-title">Análise de Transferências</h3>
-          </a>
-        </div>
-      <% } %>
-
-      <!-- Calculadora Custo -->
-      <% if (user.role === 'ADMIN') { %>
-      <div class="col-6 col-md-4 col-lg-3 app-item">
-        <a href="/calculadora-custo" class="app-card">
-          <i class="fas fa-calculator app-icon"></i>
-          <h3 class="app-title">Calculadora Custo</h3>
-        </a>
       </div>
       <% } %>
 
-      <!-- Produtos Avariados -->
-      <% if (user.role === 'ADMIN') { %>
-      <div class="col-6 col-md-4 col-lg-3 app-item">
-        <a href="http://exclusiva.intranet/pendenciaFornecedor" class="app-card">
-          <i class="fas fa-box-open app-icon"></i>
-          <h3 class="app-title">Produtos Avariados</h3>
-        </a>
-      </div>
-      <% } %>
-
-      <!-- Consulta de Produtos (GERENTE/ADMIN) -->
-      <% if (user.role === 'ADMIN') { %>
-        <div class="col-6 col-md-4 col-lg-3 app-item">
-          <a href="/consulta-produtos" class="app-card">
-            <i class="fas fa-tags app-icon"></i>
-            <h3 class="app-title">Consulta de Produtos C/ Custo</h3>
-          </a>
+      <!-- ===== Fiscal e notas ===== -->
+      <div class="cat-sec">
+        <div class="cat-head"><i class="fas fa-file-invoice-dollar"></i><span class="cat-name">Fiscal e notas</span><span class="cat-count">0</span></div>
+        <div class="row g-3">
+          <% if (user.role === 'ADMIN') { %>
+          <div class="col-12 col-sm-6 col-lg-4 app-item" data-key="acomp-notas">
+            <div class="app-card">
+              <a href="/acompanhamento-notas" class="app-link"><span class="app-tile"><i class="fas fa-file-import"></i></span><span class="app-text"><span class="app-title">Acompanhamento de Notas</span><span class="app-desc">Entrada e status de notas</span></span></a>
+              <button class="fav-btn" type="button" data-key="acomp-notas" aria-label="Favoritar"><i class="far fa-star"></i></button>
+            </div>
+          </div>
+          <% } %>
+          <div class="col-12 col-sm-6 col-lg-4 app-item" data-key="acomp-notas-lite">
+            <div class="app-card">
+              <a href="/acompanhamento-notas-lite" class="app-link"><span class="app-tile"><i class="fas fa-file-invoice-dollar"></i></span><span class="app-text"><span class="app-title">Acompanhamento de Notas (Lite)</span><span class="app-desc">Notas, versão simples</span></span></a>
+              <button class="fav-btn" type="button" data-key="acomp-notas-lite" aria-label="Favoritar"><i class="far fa-star"></i></button>
+            </div>
+          </div>
         </div>
-      <% } %>
-
-      <!-- Consulta de Produtos Vendedor -->
-      <div class="col-6 col-md-4 col-lg-3 app-item">
-        <a href="/consulta-produtos/vendedor" class="app-card">
-          <i class="fas fa-search-dollar app-icon"></i>
-          <h3 class="app-title">Consulta de Produtos</h3>
-        </a>
       </div>
 
-
-      <!-- Coletor (ADMIN) -->
-      
-        <div class="col-6 col-md-4 col-lg-3 app-item">
-          <a href="/coletor" class="app-card">
-            <i class="fas fa-barcode app-icon"></i>
-            <h3 class="app-title">Coletor</h3>
-          </a>
+      <!-- ===== Financeiro ===== -->
+      <% if (user.role === 'ADMIN' || user.role === 'ASS_COMPRA') { %>
+      <div class="cat-sec">
+        <div class="cat-head"><i class="fas fa-credit-card"></i><span class="cat-name">Financeiro</span><span class="cat-count">0</span></div>
+        <div class="row g-3">
+          <% if (user.role === 'ADMIN') { %>
+          <div class="col-12 col-sm-6 col-lg-4 app-item" data-key="financeiro">
+            <div class="app-card">
+              <a href="/acompanhamento-financeiro" class="app-link"><span class="app-tile"><i class="fas fa-file-invoice-dollar"></i></span><span class="app-text"><span class="app-title">Acompanhamento Financeiro</span><span class="app-desc">Boletos e contas a pagar</span></span></a>
+              <button class="fav-btn" type="button" data-key="financeiro" aria-label="Favoritar"><i class="far fa-star"></i></button>
+            </div>
+          </div>
+          <% } %>
+          <div class="col-12 col-sm-6 col-lg-4 app-item" data-key="baixa-boletos">
+            <div class="app-card">
+              <a href="/baixa-boletos" class="app-link"><span class="app-tile"><i class="fas fa-file-pdf"></i></span><span class="app-text"><span class="app-title">Baixa de Boletos</span><span class="app-desc">Baixa por PDF de boleto</span></span></a>
+              <button class="fav-btn" type="button" data-key="baixa-boletos" aria-label="Favoritar"><i class="far fa-star"></i></button>
+            </div>
+          </div>
         </div>
-          
-        <!-- Pedido de Compra (ADMIN) -->
-         <% if (user.role === 'ADMIN' || user.role === 'ASS_COMPRA') { %>
-        <div class="col-6 col-md-4 col-lg-3 app-item">
-          <a href="/pedidosCompras?" class="app-card">
-            <i class="fas fa-truck-loading app-icon"></i>
-            <h3 class="app-title">Pedido de Compra</h3>
-          </a>
-        </div>
-      <% } %>
-
-      <!-- Orçamento OCR (ADMIN) -->
-      <% if (user.role === 'ADMIN') { %>
-        <div class="col-6 col-md-4 col-lg-3 app-item">
-          <a href="/orcamento-ocr" class="app-card">
-            <i class="fas fa-file-invoice app-icon"></i>
-            <h3 class="app-title">Orçamento OCR</h3>
-          </a>
-        </div>
-      <% } %>
-
-      <!-- PDV System (NOVO) -->
-      <div class="col-6 col-md-4 col-lg-3 app-item">
-        <a href="/pdv/login" class="app-card">
-          <i class="fas fa-cash-register app-icon"></i>
-          <h3 class="app-title">Sistema PDV</h3>
-        </a>
       </div>
+      <% } %>
 
     </div>
+
+    <div class="empty-msg" id="emptyMsg"><i class="fas fa-search"></i>Nenhum acesso encontrado.</div>
   </div>
 
-  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js" integrity="sha384-fbbOQedDUMZZ5KreZpsbe1LCZPVmfTnH7ois6mU1QK+m14rQ1l2bGBq41eYeM/fS" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  
+
   <script>
-    // Logout confirmation
-    document.getElementById('logoutBtn').addEventListener('click', function(e) {
-      e.preventDefault();
-      
-      Swal.fire({
-        title: 'Tem certeza?',
-        text: "Você será desconectado do sistema.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sim, sair!',
-        cancelButtonText: 'Cancelar',
-        background: '#fff',
-        color: '#000'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          document.getElementById('logoutForm').submit();
-        }
+    const FAV_KEY = 'favMenu_v1';
+    const $ = s => document.querySelector(s);
+    const getFavs = () => { try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch (e) { return []; } };
+    const setFavs = a => localStorage.setItem(FAV_KEY, JSON.stringify(a));
+    const isFav = k => getFavs().indexOf(k) > -1;
+
+    function syncStars() {
+      document.querySelectorAll('.fav-btn').forEach(b => {
+        const on = isFav(b.dataset.key);
+        b.classList.toggle('on', on);
+        b.querySelector('i').className = (on ? 'fas' : 'far') + ' fa-star';
       });
+    }
+    function renderFavs() {
+      const grid = $('#favGrid'); grid.innerHTML = '';
+      getFavs().forEach(k => {
+        const orig = document.querySelector('#catSecs .app-item[data-key="' + k + '"]');
+        if (orig) grid.appendChild(orig.cloneNode(true));
+      });
+      const n = grid.children.length;
+      $('#favSec').style.display = n ? '' : 'none';
+      $('#favCount').textContent = n;
+    }
+    function toggleFav(k) {
+      const f = getFavs(); const i = f.indexOf(k);
+      if (i > -1) f.splice(i, 1); else f.push(k);
+      setFavs(f); renderFavs(); syncStars();
+    }
+    function countSections() {
+      document.querySelectorAll('.cat-sec').forEach(s => {
+        if (s.id === 'favSec') return;
+        const vis = [...s.querySelectorAll('.app-item')].filter(a => a.style.display !== 'none').length;
+        s.style.display = vis ? '' : 'none';
+        const c = s.querySelector('.cat-count'); if (c) c.textContent = vis;
+      });
+    }
+
+    document.addEventListener('click', function (e) {
+      const b = e.target.closest('.fav-btn');
+      if (b) { e.preventDefault(); e.stopPropagation(); toggleFav(b.dataset.key); }
     });
 
-    // Search functionality
-    document.getElementById('searchInput').addEventListener('keyup', function() {
-      const query = this.value.toLowerCase();
-      const apps = document.querySelectorAll('.app-item');
-      
-      apps.forEach(app => {
-        const title = app.querySelector('.app-title').textContent.toLowerCase();
-        if (title.includes(query)) {
-          app.style.display = '';
-        } else {
-          app.style.display = 'none';
-        }
+    $('#searchInput').addEventListener('keyup', function () {
+      const q = this.value.toLowerCase().trim();
+      document.querySelectorAll('.app-item').forEach(a => {
+        const t = a.querySelector('.app-title').textContent.toLowerCase();
+        const d = a.querySelector('.app-desc') ? a.querySelector('.app-desc').textContent.toLowerCase() : '';
+        a.style.display = (t.indexOf(q) > -1 || d.indexOf(q) > -1) ? '' : 'none';
       });
+      let anyVisible = 0;
+      document.querySelectorAll('.cat-sec').forEach(s => {
+        const vis = [...s.querySelectorAll('.app-item')].filter(a => a.style.display !== 'none').length;
+        s.style.display = vis ? '' : 'none';
+        const c = s.querySelector('.cat-count'); if (c) c.textContent = vis;
+        anyVisible += vis;
+      });
+      $('#emptyMsg').style.display = anyVisible ? 'none' : 'block';
+    });
+
+    renderFavs(); syncStars(); countSections();
+
+    document.getElementById('logoutBtn').addEventListener('click', function () {
+      Swal.fire({
+        title: 'Tem certeza?', text: "Você será desconectado do sistema.", icon: 'warning',
+        showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, sair!', cancelButtonText: 'Cancelar', background: '#fff', color: '#000'
+      }).then(r => { if (r.isConfirmed) document.getElementById('logoutForm').submit(); });
     });
   </script>
 </body>

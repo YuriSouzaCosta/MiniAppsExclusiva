@@ -12,7 +12,7 @@
                            id="startDate"
                            name="startDate" 
                            value="<%= typeof startDateISO !== 'undefined' ? startDateISO : '' %>"
-                           class="pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm"
+                           class="pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm"
                            required>
                 </div>
                 <div class="relative">
@@ -21,21 +21,21 @@
                            id="endDate"
                            name="endDate" 
                            value="<%= typeof endDateISO !== 'undefined' ? endDateISO : '' %>"
-                           class="pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm"
+                           class="pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm"
                            required>
                 </div>
             </div>
 
             <div class="relative min-w-[150px]">
                 <label for="status" class="block text-xs font-medium text-gray-500 mb-1">Status</label>
-                <select name="status" id="status" class="pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm h-[38px]">
+                <select name="status" id="status" class="pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm h-[38px]">
                     <option value="all" <%= status === 'all' ? 'selected' : '' %>>Todos</option>
                     <option value="open" <%= status === 'open' ? 'selected' : '' %>>Aberto (Pendente)</option>
                     <option value="invoiced" <%= status === 'invoiced' ? 'selected' : '' %>>Faturado</option>
                 </select>
             </div>
 
-            <button type="submit" class="mb-[1px] inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <button type="submit" class="mb-[1px] inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
                 <i data-lucide="filter" class="w-4 h-4 mr-2"></i>
                 Filtrar
             </button>
@@ -92,7 +92,7 @@
                                 </td>
                                 <td class="px-4 py-3 text-center">
                                     <% if (order.PENDENTE === 'S') { %>
-                                        <a href="/pdv/pos?nunota=<%= order.NUNOTA %>" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors" title="Editar Pedido">
+                                        <a href="/pdv/pos?nunota=<%= order.NUNOTA %>" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-50 text-orange-600 hover:bg-orange-100 transition-colors" title="Editar Pedido">
                                             <i data-lucide="edit" class="w-4 h-4"></i>
                                         </a>
                                     <% } else { %>

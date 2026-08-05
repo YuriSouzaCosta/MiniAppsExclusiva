@@ -32,6 +32,11 @@ const analiseTransferenciasRoutes = require('./routes/transferencias/analiseTran
 const requisicoesRoutes = require('./routes/requisicoes/requisicoesRoutes');
 const homeRoutes = require('./routes/homeRoutes');
 const orcamentoOCRRoutes = require('./routes/orcamentoOCR');
+const faturamentoRoutes = require('./routes/faturamentoRoutes');
+const acompanhamentoNotasRoutes = require('./routes/acompanhamentoNotasRoutes');
+const acompanhamentoNotasLiteRoutes = require('./routes/acompanhamentoNotasLiteRoutes');
+const acompanhamentoFinanceiroRoutes = require('./routes/acompanhamentoFinanceiroRoutes');
+const baixaBoletosRoutes = require('./routes/baixaBoletosRoutes');
 const consultaProduto = require('./controllers/consultaController');
 
 // Import Middleware
@@ -43,7 +48,7 @@ app.use('/', authRoutes);
 
 // middleware para proteger rotas depois do login
 app.use((req, res, next) => {
-  const publicPaths = ['/login', '/css', '/js', '/public', '/auth', '/coletor', '/gertec', '/favicon.ico', '/consulta-ean'];
+  const publicPaths = ['/login', '/pdv/login', '/css', '/js', '/public', '/auth', '/coletor', '/gertec', '/favicon.ico', '/consulta-ean'];
   if (publicPaths.some(p => req.path.startsWith(p))) {
     return next();
   }
@@ -83,6 +88,11 @@ app.use('/transferencias', transferenciasRoutes);
 app.use('/analise-transferencias', analiseTransferenciasRoutes);
 app.use('/requisicoes', requisicoesRoutes);
 app.use('/orcamento-ocr', orcamentoOCRRoutes);
+app.use('/faturamento', faturamentoRoutes);
+app.use('/acompanhamento-notas', acompanhamentoNotasRoutes);
+app.use('/acompanhamento-notas-lite', acompanhamentoNotasLiteRoutes);
+app.use('/acompanhamento-financeiro', acompanhamentoFinanceiroRoutes);
+app.use('/baixa-boletos', baixaBoletosRoutes);
 app.use('/', homeRoutes);
 app.use('/', coletorRoutes);
 app.use('/pdv', require('./routes/pdvRoutes'));

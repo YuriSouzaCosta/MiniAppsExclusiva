@@ -12,7 +12,7 @@
                            id="startDate"
                            name="startDate" 
                            value="<%= typeof startDateISO !== 'undefined' ? startDateISO : '' %>"
-                           class="pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm"
+                           class="pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm"
                            required>
                 </div>
                 <div class="relative">
@@ -21,7 +21,7 @@
                            id="endDate"
                            name="endDate" 
                            value="<%= typeof endDateISO !== 'undefined' ? endDateISO : '' %>"
-                           class="pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm"
+                           class="pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm"
                            required>
                 </div>
             </div>
@@ -30,7 +30,7 @@
             <div class="flex items-center gap-2">
                 <div class="relative">
                     <label for="manager" class="block text-xs font-medium text-gray-500 mb-1">Gerente</label>
-                    <select name="manager" id="manager" class="pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm h-[38px]">
+                    <select name="manager" id="manager" class="pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm h-[38px]">
                         <option value="">Todos os Gerentes</option>
                         <% managers.forEach(m => { %>
                             <option value="<%= m.CODVEND %>" <%= selectedManager == m.CODVEND ? 'selected' : '' %>>
@@ -48,7 +48,7 @@
                     <div class="relative" id="companyDropdown">
                         <button type="button" 
                                 onclick="document.getElementById('companyOptions').classList.toggle('hidden')"
-                                class="bg-white relative w-full border border-gray-300 rounded-lg shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm h-[38px] flex items-center justify-between min-w-[150px]">
+                                class="bg-white relative w-full border border-gray-300 rounded-lg shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 sm:text-sm h-[38px] flex items-center justify-between min-w-[150px]">
                             <span class="block truncate" id="selectedCompaniesText">Selecione...</span>
                             <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                 <i data-lucide="chevron-down" class="h-4 w-4 text-gray-400"></i>
@@ -67,7 +67,7 @@
                                         <input id="empresa-<%= i %>" 
                                                type="checkbox" 
                                                value="<%= i %>"
-                                               class="company-checkbox focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                                               class="company-checkbox focus:ring-orange-500 h-4 w-4 text-orange-600 border-gray-300 rounded"
                                                <%= (typeof req !== 'undefined' && req.query.empresas || '').split(',').includes(String(i)) ? 'checked' : '' %>
                                                onclick="event.stopPropagation(); updateSelectedCompanies()">
                                     </div>
@@ -108,12 +108,12 @@
                 // Initialize text
                 document.addEventListener('DOMContentLoaded', updateSelectedCompanies);
             </script>
-            <button type="submit" class="mb-[1px] inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <button type="submit" class="mb-[1px] inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
                 <i data-lucide="filter" class="w-4 h-4 mr-2"></i>
                 Filtrar
             </button>
             <% if ((typeof startDate !== 'undefined' && startDate) || (typeof endDate !== 'undefined' && endDate) || (typeof selectedManager !== 'undefined' && selectedManager)) { %>
-                <a href="/pdv/manager" class="mb-[1px] inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <a href="/pdv/manager" class="mb-[1px] inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
                     Limpar
                 </a>
             <% } %>
@@ -243,7 +243,7 @@
                 {
                     label: 'Valor (R$)',
                     data: <%- JSON.stringify(chartData.values) %>,
-                    backgroundColor: '#2563eb',
+                    backgroundColor: '#ea580c',
                     borderRadius: 4,
                     yAxisID: 'y',
                 }
@@ -270,7 +270,7 @@
                         weight: 'bold',
                         size: 11
                     },
-                    color: '#1e40af'
+                    color: '#c2410c'
                 },
                 tooltip: {
                     callbacks: {

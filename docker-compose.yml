@@ -7,5 +7,7 @@ services:
       - "3000:3000"
     env_file:
       - .env
+    volumes:
+      - ./data:/usr/src/app/data   # metas.json persiste entre rebuilds
     security_opt:
       - apparmor=unconfined

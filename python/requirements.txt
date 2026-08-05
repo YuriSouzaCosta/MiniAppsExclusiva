@@ -10,3 +10,7 @@
 paddlepaddle
 paddleocr
 Pillow
+pymupdf        # PDF -> imagem (módulo Baixa de Boletos)
+zxing-cpp      # decodificar código de barras (módulo Baixa de Boletos)
+pytesseract    # OCR de PDF escaneado / imagem (requer Tesseract + idioma 'por')
+pdfplumber     # extração de texto nativo p/ detectar modelo Itaú Sispag

@@ -6,8 +6,8 @@ const authMiddleware = require('../middleware/authMiddleware');
 
 exports.getManagerDashboard = async (req, res) => {
     // Default to current month if no dates provided
-    const startDate = moment(req.query.startDate).format('DD/MM/YYYY') || moment().startOf('month').format('DD/MM/YYYY');
-    const endDate = moment(req.query.endDate).format('DD/MM/YYYY') || moment().endOf('month').format('DD/MM/YYYY');
+    const startDate = req.query.startDate ? moment(req.query.startDate).format('DD/MM/YYYY') : moment().startOf('month').format('DD/MM/YYYY');
+    const endDate = req.query.endDate ? moment(req.query.endDate).format('DD/MM/YYYY') : moment().endOf('month').format('DD/MM/YYYY');
     const selectedManager = req.query.manager; // For ADMIN filtering
     console.log(startDate, endDate, 'Manager:', selectedManager);
 
@@ -192,8 +192,8 @@ exports.getSalesDashboard = async (req, res) => {
     const isViewingOther = req.user.role === 'ADMIN' && sellerId;
 
     // Default to current month if no dates provided
-    const startDate = moment(req.query.startDate).format('DD/MM/YYYY') || moment().startOf('month').format('DD/MM/YYYY');
-    const endDate = moment(req.query.endDate).format('DD/MM/YYYY') || moment().endOf('month').format('DD/MM/YYYY');
+    const startDate = req.query.startDate ? moment(req.query.startDate).format('DD/MM/YYYY') : moment().startOf('month').format('DD/MM/YYYY');
+    const endDate = req.query.endDate ? moment(req.query.endDate).format('DD/MM/YYYY') : moment().endOf('month').format('DD/MM/YYYY');
     const today = moment().format('DD/MM/YYYY');
 
     let metrics = {
@@ -286,7 +286,7 @@ exports.postOrder = async (req, res) => {
         const { nunota, items, additionalDiscount } = req.body;
         console.log('Order items received for NUNOTA:', nunota, items);
 
-        if (!nunota) {
+        if (!nunota || !Array.isArray(items) || !items.length) {
             return res.status(400).json({ success: false, message: 'NUNOTA não informada' });
         }
 
@@ -294,7 +294,7 @@ exports.postOrder = async (req, res) => {
 
         // Retrieve CODEMP from TGFCAB
         const cabResult = await conn.execute(
-            `SELECT CODEMP FROM TGFCAB WHERE NUNOTA = :nunota`,
+            `SELECT CODEMP, CODVEND FROM TGFCAB WHERE NUNOTA = :nunota`,
             { nunota }
         );
 
@@ -303,6 +303,10 @@ exports.postOrder = async (req, res) => {
         }
 
         const codemp = cabResult.rows[0].CODEMP;
+        const vendedorPedido = cabResult.rows[0].CODVEND;
+        if (req.user.role !== 'ADMIN' && Number(vendedorPedido) !== Number(req.user.codvend)) {
+            return res.status(403).json({ success: false, message: 'Você não pode alterar pedido de outro vendedor' });
+        }
         console.log(`Retrieved CODEMP from TGFCAB for NUNOTA ${nunota}:`, codemp);
 
         if (!codemp) {
@@ -331,7 +335,7 @@ exports.postOrder = async (req, res) => {
 
             console.log(`Inserting item ${p_codprod} with SEQUENCIA ${p_sequencia} and CODEMP ${p_codemp}`);
             await conn.execute(
-                `INSERT INTO TGFITE (NUNOTA, SEQUENCIA, CODEMP, CODPROD, QTDNEG, VLRUNIT, VLRTOT, CODVOL, CODLOCALORIG, )
+                `INSERT INTO TGFITE (NUNOTA, SEQUENCIA, CODEMP, CODPROD, QTDNEG, VLRUNIT, VLRTOT, CODVOL, CODLOCALORIG)
                  VALUES (:nunota, :sequencia, :codemp, :codprod, :qtd, :vlr, :total, 'UN', 110000)`,
                 {
                     nunota: p_nunota,
@@ -704,7 +708,7 @@ exports.getOrderDetails = async (req, res) => {
         // Fetch Header
         const headerQuery = `
             SELECT 
-                NUNOTA, CODPARC, CODTIPVENDA, VLRNOTA,
+                NUNOTA, CODPARC, CODVEND, CODTIPVENDA, VLRNOTA,
                 (SELECT RAZAOSOCIAL FROM TGFPAR WHERE CODPARC = TGFCAB.CODPARC) AS PARCEIRO_NOME,
                 (SELECT CGC_CPF FROM TGFPAR WHERE CODPARC = TGFCAB.CODPARC) AS PARCEIRO_CGC,
                 (SELECT DESCRTIPVENDA FROM TGFTPV WHERE CODTIPVENDA = TGFCAB.CODTIPVENDA AND DHALTER = (SELECT MAX(DHALTER) FROM TGFTPV WHERE CODTIPVENDA = TGFCAB.CODTIPVENDA)) AS TIPVENDA_DESC
@@ -718,6 +722,9 @@ exports.getOrderDetails = async (req, res) => {
         }
 
         const header = headerResult.rows[0];
+        if (req.user.role !== 'ADMIN' && Number(header.CODVEND) !== Number(req.user.codvend)) {
+            return res.status(403).json({ success: false, message: 'Você não pode consultar pedido de outro vendedor' });
+        }
 
         // Fetch Items
         const itemsQuery = `

@@ -1,0 +1,752 @@
+{
+  ".claude/settings.json": {
+    "mtime": 1785518192.5131884,
+    "ast_hash": "5cec4c5e5e204531861948d2bb7210e7",
+    "semantic_hash": ""
+  },
+  ".vscode/extensions.json": {
+    "mtime": 1784900733.4975107,
+    "ast_hash": "c426b209892996900bd5c46c9fc05043",
+    "semantic_hash": ""
+  },
+  ".vscode/settings.json": {
+    "mtime": 1784667093.470522,
+    "ast_hash": "f52e394bca5f0e009bf136ed37d17c92",
+    "semantic_hash": ""
+  },
+  "app.js": {
+    "mtime": 1785526071.247655,
+    "ast_hash": "30947b9f250cb7bdf9fdb471db8d3d40",
+    "semantic_hash": ""
+  },
+  "baixa_boletos_ddl.sql": {
+    "mtime": 1785531007.3192232,
+    "ast_hash": "8b412a55c071a3eecc2ee37838f68551",
+    "semantic_hash": ""
+  },
+  "config/db/oracle.js": {
+    "mtime": 1764560361.7457294,
+    "ast_hash": "ec6563e068aaabb95c6a08caae5b702d",
+    "semantic_hash": ""
+  },
+  "controllers/acompanhamentoFinanceiroController.js": {
+    "mtime": 1785519994.3980167,
+    "ast_hash": "9c59f36ebf4c816cab3ed9fd4b389c41",
+    "semantic_hash": ""
+  },
+  "controllers/acompanhamentoNotasController.js": {
+    "mtime": 1785444251.6410928,
+    "ast_hash": "1332ed48181ff8dc918477031c232d99",
+    "semantic_hash": ""
+  },
+  "controllers/authController.js": {
+    "mtime": 1764196214.7364285,
+    "ast_hash": "9afdd0e16c59e64c12df5d6cb93f639f",
+    "semantic_hash": ""
+  },
+  "controllers/baixaBoletosController.js": {
+    "mtime": 1785596018.2578783,
+    "ast_hash": "aaac44861143cd30a05ce84c7dd23f9c",
+    "semantic_hash": ""
+  },
+  "controllers/calculadoraCustoController.js": {
+    "mtime": 1764196214.7374394,
+    "ast_hash": "aad9c844c03e6585c021b9529001d970",
+    "semantic_hash": ""
+  },
+  "controllers/coletorController.js": {
+    "mtime": 1764196214.7384286,
+    "ast_hash": "46dab245f5d5a048c18c287c1188cde1",
+    "semantic_hash": ""
+  },
+  "controllers/consultaController.js": {
+    "mtime": 1784667093.47804,
+    "ast_hash": "08fcd3db55635efc4d54eed705e17067",
+    "semantic_hash": ""
+  },
+  "controllers/consultaProdutosController.js": {
+    "mtime": 1764196214.7394404,
+    "ast_hash": "afb134a81a7cdc1195c0971de7e690d7",
+    "semantic_hash": ""
+  },
+  "controllers/contagemController.js": {
+    "mtime": 1764560361.7468162,
+    "ast_hash": "ef225f62aa3350da5c929674f2a73372",
+    "semantic_hash": ""
+  },
+  "controllers/controleCartaoController.js": {
+    "mtime": 1764196214.7404282,
+    "ast_hash": "8bfcbc99062770764819389a35e043b3",
+    "semantic_hash": ""
+  },
+  "controllers/exportacaoController.js": {
+    "mtime": 1764560361.7485678,
+    "ast_hash": "b71685edcf80f992b13e04803a90e9d0",
+    "semantic_hash": ""
+  },
+  "controllers/faturamentoController.js": {
+    "mtime": 1785505396.2184222,
+    "ast_hash": "8b0eb736a9669289e51da7322077542d",
+    "semantic_hash": ""
+  },
+  "controllers/homeController.js": {
+    "mtime": 1764196214.7424269,
+    "ast_hash": "984d58b21917b9cec69dcaa91caf8df8",
+    "semantic_hash": ""
+  },
+  "controllers/orcamentoOCRController.js": {
+    "mtime": 1784667093.480036,
+    "ast_hash": "da0aefb398e565faf50df88f9a109295",
+    "semantic_hash": ""
+  },
+  "controllers/pdvController.js": {
+    "mtime": 1784667093.4820378,
+    "ast_hash": "c87b064742db713a6ae1802aabb859c8",
+    "semantic_hash": ""
+  },
+  "controllers/pedidos/pedidoComprasController.js": {
+    "mtime": 1784667093.4850383,
+    "ast_hash": "bba38d9ee3762c9d26f1f1ea2013ece6",
+    "semantic_hash": ""
+  },
+  "controllers/produtoController.js": {
+    "mtime": 1764560361.7503967,
+    "ast_hash": "3315630be615aec4ad24b1a62ab0dfb4",
+    "semantic_hash": ""
+  },
+  "controllers/requisicoes/requisicoesController.js": {
+    "mtime": 1784725381.8210487,
+    "ast_hash": "13f79293d360b83260f7dd114425037d",
+    "semantic_hash": ""
+  },
+  "controllers/transferencias/analiseTransferenciasController.js": {
+    "mtime": 1765996156.9474082,
+    "ast_hash": "f78cb68d85519b516d13161eb45f818a",
+    "semantic_hash": ""
+  },
+  "controllers/transferencias/transferenciasController.js": {
+    "mtime": 1767634539.5232618,
+    "ast_hash": "d2883aec118ca1a7d89781f07a3218d1",
+    "semantic_hash": ""
+  },
+  "controllers/usuarioController.js": {
+    "mtime": 1764196214.7444293,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "data/metas.json": {
+    "mtime": 1785416874.0219128,
+    "ast_hash": "8a80554c91d9fca8acb82f023de02f11",
+    "semantic_hash": ""
+  },
+  "middleware/authMiddleware.js": {
+    "mtime": 1784667093.4990387,
+    "ast_hash": "a7f3101acc04ca324932d91030f7e26a",
+    "semantic_hash": ""
+  },
+  "package.json": {
+    "mtime": 1779739750.6072187,
+    "ast_hash": "7247e73dcfbdaaafa46f509644b7e12c",
+    "semantic_hash": ""
+  },
+  "public/js/create_user.js": {
+    "mtime": 1764196214.7544274,
+    "ast_hash": "98c4d25fc60b37fa75defadbbe31b6b1",
+    "semantic_hash": ""
+  },
+  "public/js/pdv/pos.js": {
+    "mtime": 1784667093.5150478,
+    "ast_hash": "3bc6b218ebae1ca6e0bc01951d6bb0f0",
+    "semantic_hash": ""
+  },
+  "public/js/pedidos/scriptPedidos.js": {
+    "mtime": 1784667093.5190477,
+    "ast_hash": "47451b4b736317f6b4926926806335b9",
+    "semantic_hash": ""
+  },
+  "public/js/requisicoes/detalhe.js": {
+    "mtime": 1784725415.6236782,
+    "ast_hash": "f2035f7d9da7f85ddaad0d2ff44760a6",
+    "semantic_hash": ""
+  },
+  "public/js/requisicoes/lista.js": {
+    "mtime": 1784668570.7231388,
+    "ast_hash": "ea5b42790658ba9b77d8c0d90a0b5951",
+    "semantic_hash": ""
+  },
+  "public/js/requisicoes/nova.js": {
+    "mtime": 1784721657.5552611,
+    "ast_hash": "1e4cb0a3a34481a41f484554a80a0351",
+    "semantic_hash": ""
+  },
+  "public/js/script.js": {
+    "mtime": 1764677305.935714,
+    "ast_hash": "24ce5474ff8f9189a2a4293bfdcff320",
+    "semantic_hash": ""
+  },
+  "public/js/scriptControlBuy.js": {
+    "mtime": 1746454013.2401834,
+    "ast_hash": "17c9b401dede3a80f925918ef7e781db",
+    "semantic_hash": ""
+  },
+  "public/js/scriptHistorico.js": {
+    "mtime": 1764677987.5581727,
+    "ast_hash": "8ce499f43ebcb12f1137d3a582ee454f",
+    "semantic_hash": ""
+  },
+  "public/js/scriptPendencia.js": {
+    "mtime": 1764677984.9622872,
+    "ast_hash": "c1108fde1ab967e52e97a56d11dbb8bf",
+    "semantic_hash": ""
+  },
+  "public/js/transferencias/scriptAnaliseTransferencias.js": {
+    "mtime": 1765996264.645227,
+    "ast_hash": "9e073f87d7b9a97474f3c3e58fba496a",
+    "semantic_hash": ""
+  },
+  "public/js/transferencias/scriptTransferencias.js": {
+    "mtime": 1767634482.5523522,
+    "ast_hash": "f7e2a71bcda8a0cf35b47db4fe6bd1de",
+    "semantic_hash": ""
+  },
+  "python/ocr_boleto.py": {
+    "mtime": 1785530872.7007563,
+    "ast_hash": "d7c5122c88f2656ac8f6dce8396fbb47",
+    "semantic_hash": ""
+  },
+  "python/ocr_processor.py": {
+    "mtime": 1784667093.530798,
+    "ast_hash": "3527294266be84d91c833e227c03915e",
+    "semantic_hash": ""
+  },
+  "routes/acompanhamentoFinanceiroRoutes.js": {
+    "mtime": 1785519999.8151498,
+    "ast_hash": "a34b73f426d8493c4474351f7dd35b26",
+    "semantic_hash": ""
+  },
+  "routes/acompanhamentoNotasLiteRoutes.js": {
+    "mtime": 1785443798.4172835,
+    "ast_hash": "82aad9464b0c1b72ae963151e264e3f7",
+    "semantic_hash": ""
+  },
+  "routes/acompanhamentoNotasRoutes.js": {
+    "mtime": 1785444659.225263,
+    "ast_hash": "a7348a364c8571847a9fd504819d8334",
+    "semantic_hash": ""
+  },
+  "routes/authRoutes.js": {
+    "mtime": 1764196214.7564359,
+    "ast_hash": "7e671b5506bfb49ddaa1401558a1eef1",
+    "semantic_hash": ""
+  },
+  "routes/baixaBoletosRoutes.js": {
+    "mtime": 1785530996.6200426,
+    "ast_hash": "d79e97b62ba8248c393e9a62e833e8bd",
+    "semantic_hash": ""
+  },
+  "routes/calculadoraCustoRoutes.js": {
+    "mtime": 1764196214.757432,
+    "ast_hash": "52038643311d0ecd148333ce99a8807a",
+    "semantic_hash": ""
+  },
+  "routes/coletorRoutes.js": {
+    "mtime": 1764196214.7584317,
+    "ast_hash": "62da586c58a7f7db4f39aa14b3dca720",
+    "semantic_hash": ""
+  },
+  "routes/consultaProdutosRoutes.js": {
+    "mtime": 1764196214.759432,
+    "ast_hash": "2de83928aea20fd2d8a586cac1c80dd1",
+    "semantic_hash": ""
+  },
+  "routes/contagemRoutes.js": {
+    "mtime": 1764470345.828454,
+    "ast_hash": "0e4e965ce008bd078e6bb707dc383bae",
+    "semantic_hash": ""
+  },
+  "routes/controleCartaoRoutes.js": {
+    "mtime": 1764196214.7604272,
+    "ast_hash": "f5f150b4a39db10f1f5dea9f8aff7789",
+    "semantic_hash": ""
+  },
+  "routes/exportacaoRoutes.js": {
+    "mtime": 1764196214.7614264,
+    "ast_hash": "e81ec971fe6f46713cb1f6ad2b2d2e6f",
+    "semantic_hash": ""
+  },
+  "routes/faturamentoRoutes.js": {
+    "mtime": 1785416860.9011512,
+    "ast_hash": "dc3b93cada8826bc81a6e4110c7da9ea",
+    "semantic_hash": ""
+  },
+  "routes/homeRoutes.js": {
+    "mtime": 1764196214.7614264,
+    "ast_hash": "108000f6c1ff66b276634577fe1db72e",
+    "semantic_hash": ""
+  },
+  "routes/orcamentoOCR.js": {
+    "mtime": 1784667093.5377963,
+    "ast_hash": "39843b09c5f09641135b29abb0ec618f",
+    "semantic_hash": ""
+  },
+  "routes/pdvRoutes.js": {
+    "mtime": 1784667093.5397904,
+    "ast_hash": "855e65fb0a8e39da081a9fb378d0e83e",
+    "semantic_hash": ""
+  },
+  "routes/pedidos/pedidoComprasRoutes.js": {
+    "mtime": 1784667093.5447922,
+    "ast_hash": "ce414e293eb503bf6b8aeb58a4293d2e",
+    "semantic_hash": ""
+  },
+  "routes/produtoRoutes.js": {
+    "mtime": 1764196214.7634356,
+    "ast_hash": "ccc1a988b7719043422acf9a27e9d6d6",
+    "semantic_hash": ""
+  },
+  "routes/requisicoes/requisicoesRoutes.js": {
+    "mtime": 1784722292.5938919,
+    "ast_hash": "6e96e4f2200f60f564e5eafee6b28140",
+    "semantic_hash": ""
+  },
+  "routes/transferencias/analiseTransferenciasRoutes.js": {
+    "mtime": 1765996163.0476596,
+    "ast_hash": "b1b5f32b3fc57c549323be553fe044e3",
+    "semantic_hash": ""
+  },
+  "routes/transferencias/transferenciasRoutes.js": {
+    "mtime": 1767633729.9284441,
+    "ast_hash": "6fa1d5f585206edbf4144b6bd0a82948",
+    "semantic_hash": ""
+  },
+  "scratch/gen_teste_boleto.py": {
+    "mtime": 1785526283.7840335,
+    "ast_hash": "642612ffd70fa0bc40f5e7b1aa380d31",
+    "semantic_hash": ""
+  },
+  "scratch/gen_teste_pix.py": {
+    "mtime": 1785530754.3620758,
+    "ast_hash": "9a9ffa4cdbea1c9a78fd19e7609f3387",
+    "semantic_hash": ""
+  },
+  "scratch/run_ddl.js": {
+    "mtime": 1785596099.900971,
+    "ast_hash": "bfa393ded37430c31034c3cee69897e3",
+    "semantic_hash": ""
+  },
+  "scratch/test_fin.js": {
+    "mtime": 1785445135.9309845,
+    "ast_hash": "c12985e6327d9fcc4563bdd5e5747f3b",
+    "semantic_hash": ""
+  },
+  "views/ControlCompras/CompilerPySIEG.py": {
+    "mtime": 1744053845.3727722,
+    "ast_hash": "91e4ba965065dc43b879d21ff26e206e",
+    "semantic_hash": ""
+  },
+  "views/ControlCompras/home.ejs": {
+    "mtime": 1744310066.2175975,
+    "ast_hash": "1e90311720a2443d839ca9d97bcaa49c",
+    "semantic_hash": ""
+  },
+  "views/ControlCompras/step1_compras.ejs": {
+    "mtime": 1746456829.6583972,
+    "ast_hash": "58cf6936451822a2a7c9a5fcdd3118f9",
+    "semantic_hash": ""
+  },
+  "views/ControlCompras/step2_compras.ejs": {
+    "mtime": 1746456773.158362,
+    "ast_hash": "3e80b9b992e4776c14424adfee9fd160",
+    "semantic_hash": ""
+  },
+  "views/ControlCompras/step3_compras.ejs": {
+    "mtime": 1746457355.0864413,
+    "ast_hash": "4be41e4d116640a0dc7702ab218a73d6",
+    "semantic_hash": ""
+  },
+  "views/ControlCompras/step4_compras.ejs": {
+    "mtime": 1746466953.2447789,
+    "ast_hash": "4811d5625ff970d500df39ebe3463bd6",
+    "semantic_hash": ""
+  },
+  "views/ControlCompras/step5_compras.ejs": {
+    "mtime": 1746471682.2625253,
+    "ast_hash": "45128c400e87e3373f1a7c0a7fbf1f24",
+    "semantic_hash": ""
+  },
+  "views/analise-transferencias/index.ejs": {
+    "mtime": 1765996215.5273404,
+    "ast_hash": "eebe2fc5c0fe33ec79d2418c53f1a535",
+    "semantic_hash": ""
+  },
+  "views/calculadoraCusto/index.ejs": {
+    "mtime": 1765290960.9949787,
+    "ast_hash": "27b067d96a85318dd84436e6d0f808b5",
+    "semantic_hash": ""
+  },
+  "views/calculadoraCusto/layout.ejs": {
+    "mtime": 1764196214.765425,
+    "ast_hash": "f4ecace9426375ea48ff0d21d6fc3d90",
+    "semantic_hash": ""
+  },
+  "views/coletor.ejs": {
+    "mtime": 1764782342.1011136,
+    "ast_hash": "ac7f8f243bfdbe2bedefd5eb06e0c659",
+    "semantic_hash": ""
+  },
+  "views/coletorDev.ejs": {
+    "mtime": 1741437659.1603727,
+    "ast_hash": "a23f27fd9db6b18b6fbc95eded31a46a",
+    "semantic_hash": ""
+  },
+  "views/consultaPendenciaFornecedor.ejs": {
+    "mtime": 1741437659.7670922,
+    "ast_hash": "614a707791fb55c0691df82153d86476",
+    "semantic_hash": ""
+  },
+  "views/consultaProdutos/index.ejs": {
+    "mtime": 1784667093.644164,
+    "ast_hash": "e2e09ba06b359818d0268a08b3eb1849",
+    "semantic_hash": ""
+  },
+  "views/consultaProdutos/layout.ejs": {
+    "mtime": 1764196214.7704315,
+    "ast_hash": "f4ecace9426375ea48ff0d21d6fc3d90",
+    "semantic_hash": ""
+  },
+  "views/controleCartao/layout.ejs": {
+    "mtime": 1764196214.7714283,
+    "ast_hash": "7dcc2a0d51b3bbf75a3b0c099fb3a742",
+    "semantic_hash": ""
+  },
+  "views/controleCartao/novo.ejs": {
+    "mtime": 1765290951.8952265,
+    "ast_hash": "26c4968de82a4bd53fbd38c9dfb1dff8",
+    "semantic_hash": ""
+  },
+  "views/controleCartao/pendentes.ejs": {
+    "mtime": 1764196214.7724254,
+    "ast_hash": "ad3b816f0a73c34b0baf2ad3262ecdaa",
+    "semantic_hash": ""
+  },
+  "views/historicoPendenciaFornecedor.ejs": {
+    "mtime": 1764196214.7764323,
+    "ast_hash": "03fcef35675eee6faf60feb1ccab2ec9",
+    "semantic_hash": ""
+  },
+  "views/importador.ejs": {
+    "mtime": 1764678461.6406908,
+    "ast_hash": "e45ab6d0c0584880247e8a4d825c4748",
+    "semantic_hash": ""
+  },
+  "views/layouts/main.ejs": {
+    "mtime": 1764196214.7774346,
+    "ast_hash": "02a131f6880041d5ac2c0579db017873",
+    "semantic_hash": ""
+  },
+  "views/login.ejs": {
+    "mtime": 1784667093.6491656,
+    "ast_hash": "87d307d10bb613066217d4b7af536948",
+    "semantic_hash": ""
+  },
+  "views/menu.backup-20260731.ejs": {
+    "mtime": 1785507965.1231043,
+    "ast_hash": "38d7a9dc17d74795d02db1a81d3bd38f",
+    "semantic_hash": ""
+  },
+  "views/menu.ejs": {
+    "mtime": 1785530356.7105558,
+    "ast_hash": "730f53cff9f35ef369f013443756183d",
+    "semantic_hash": ""
+  },
+  "views/orcamento-ocr/index.ejs": {
+    "mtime": 1784667093.659175,
+    "ast_hash": "e2119194009d7db3855243b6c8fd57a0",
+    "semantic_hash": ""
+  },
+  "views/partials/header.ejs": {
+    "mtime": 1764196214.7814288,
+    "ast_hash": "b87aa94b64012101ddba5a8129af3f55",
+    "semantic_hash": ""
+  },
+  "views/partials/sidebar.ejs": {
+    "mtime": 1784667093.669205,
+    "ast_hash": "f0f54bfad654e47912b88ae8345cb425",
+    "semantic_hash": ""
+  },
+  "views/partials/sidebar_extra.ejs": {
+    "mtime": 1764196214.783429,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "views/pdv/login.ejs": {
+    "mtime": 1784667093.6721988,
+    "ast_hash": "fdfd50873a7c4a190d3f1a4239066750",
+    "semantic_hash": ""
+  },
+  "views/pdv/manager_dashboard.ejs": {
+    "mtime": 1785787016.3611598,
+    "ast_hash": "b2a6d08e8beb0d330c3c379449d23938",
+    "semantic_hash": ""
+  },
+  "views/pdv/my_orders.ejs": {
+    "mtime": 1785787027.5944452,
+    "ast_hash": "63798efac928fedece6e194581e594c8",
+    "semantic_hash": ""
+  },
+  "views/pdv/new_order.ejs": {
+    "mtime": 1785787041.8819911,
+    "ast_hash": "9c7c0dc67478aad2fa461641044c6d66",
+    "semantic_hash": ""
+  },
+  "views/pdv/partials/footer.ejs": {
+    "mtime": 1784667093.686731,
+    "ast_hash": "d839d63aacce7fca4cd2a7ac3b0752b2",
+    "semantic_hash": ""
+  },
+  "views/pdv/partials/header.ejs": {
+    "mtime": 1785788078.4036498,
+    "ast_hash": "94641b46b30d38d656d297a9f0dfb30b",
+    "semantic_hash": ""
+  },
+  "views/pdv/sales_dashboard.ejs": {
+    "mtime": 1785787029.1492674,
+    "ast_hash": "b463fe750346fb6519785c7d45a9d5a8",
+    "semantic_hash": ""
+  },
+  "views/pedidos/fazerPedidos.ejs": {
+    "mtime": 1784667093.6987264,
+    "ast_hash": "8bf2257671b8c0ac8ada56f34a4c7e24",
+    "semantic_hash": ""
+  },
+  "views/pedidos/finalizarPedidos.ejs": {
+    "mtime": 1784667093.7017276,
+    "ast_hash": "bcec46b60d2cc92c11e7b0632827a21d",
+    "semantic_hash": ""
+  },
+  "views/pedidos/listaPedidos.ejs": {
+    "mtime": 1784667093.7087271,
+    "ast_hash": "a4348877a9d9d82c5ea95e02ac8f7459",
+    "semantic_hash": ""
+  },
+  "views/pedidos/painelPedidos.ejs": {
+    "mtime": 1784667093.710733,
+    "ast_hash": "b19b8aa106e7e7d39d9d902177118e76",
+    "semantic_hash": ""
+  },
+  "views/pedidos/pedidoCompras.ejs": {
+    "mtime": 1784667093.715722,
+    "ast_hash": "6c279b25bdc873130ef1a6c4db095241",
+    "semantic_hash": ""
+  },
+  "views/pedidos/pedidoFinalizados.ejs": {
+    "mtime": 1784667093.7187355,
+    "ast_hash": "abc3b9aece32efd19ef55e04c1af891a",
+    "semantic_hash": ""
+  },
+  "views/pendenciaFornecedores.ejs": {
+    "mtime": 1741617965.520974,
+    "ast_hash": "18bae658d1cd9dcb997ce65eb27b1de8",
+    "semantic_hash": ""
+  },
+  "views/requisicoes/detalhe.ejs": {
+    "mtime": 1784721748.3418064,
+    "ast_hash": "fb65dc43f679a1b3c16627fe611b82e3",
+    "semantic_hash": ""
+  },
+  "views/requisicoes/index.ejs": {
+    "mtime": 1784721724.774019,
+    "ast_hash": "a4ce960b48b380eed5cfd2166925168b",
+    "semantic_hash": ""
+  },
+  "views/requisicoes/nova.ejs": {
+    "mtime": 1784721709.3738122,
+    "ast_hash": "aee4c4cb41f39d20618b2951dfa96c1d",
+    "semantic_hash": ""
+  },
+  "views/requisicoes/sem-acesso.ejs": {
+    "mtime": 1784668690.7895813,
+    "ast_hash": "84edec7c382405fb4bb7b13d21cf6c66",
+    "semantic_hash": ""
+  },
+  "views/requisicoes/separacao.ejs": {
+    "mtime": 1784721735.7780874,
+    "ast_hash": "16f173aae0057ba94b08b5ca499fe12f",
+    "semantic_hash": ""
+  },
+  "views/transferencias/index.ejs": {
+    "mtime": 1765290933.7683852,
+    "ast_hash": "98aae84ca838e588a69741045840c7e4",
+    "semantic_hash": ""
+  },
+  "ESTRUTURA.md": {
+    "mtime": 1785775409.6578753,
+    "ast_hash": "a26a54a95040ff50b6ff7eda9f8ccd32",
+    "semantic_hash": ""
+  },
+  "RESUMO.md": {
+    "mtime": 1784667093.473512,
+    "ast_hash": "e3c1c2de9bc22afe4141c160ddd5b515",
+    "semantic_hash": ""
+  },
+  "docker-compose.yml": {
+    "mtime": 1785416879.2441502,
+    "ast_hash": "1426a6455f6bae210c117350a676bd24",
+    "semantic_hash": ""
+  },
+  "index.html": {
+    "mtime": 1741608433.559497,
+    "ast_hash": "24900ab229d1240684ff63d6730cda63",
+    "semantic_hash": ""
+  },
+  "python/requirements.txt": {
+    "mtime": 1785525962.4926856,
+    "ast_hash": "520904c4102124e4a54b4f9eb374ae69",
+    "semantic_hash": ""
+  },
+  "views/acompanhamentoFinanceiro/index.html": {
+    "mtime": 1785788054.2612453,
+    "ast_hash": "15d01e5858438b184cccbdc73976605e",
+    "semantic_hash": ""
+  },
+  "views/acompanhamentoNotas/index.html": {
+    "mtime": 1785787970.830333,
+    "ast_hash": "212fe97b85984e7082dd522b73b572ba",
+    "semantic_hash": ""
+  },
+  "views/acompanhamentoNotas/indexLite.html": {
+    "mtime": 1785787997.9205203,
+    "ast_hash": "5e7c8baf97c1df42a737abc0a06d5973",
+    "semantic_hash": ""
+  },
+  "views/baixaBoletos/index.html": {
+    "mtime": 1785788054.6983566,
+    "ast_hash": "f1207fd2afa67c4cb37c63b6fb896346",
+    "semantic_hash": ""
+  },
+  "views/faturamento/index.html": {
+    "mtime": 1785788077.9601004,
+    "ast_hash": "ef425036da2c7af06f1c87c1fbb5b9a2",
+    "semantic_hash": ""
+  },
+  "views/faturamento/painel.html": {
+    "mtime": 1785788025.4493997,
+    "ast_hash": "4ca8acebb3f51c81c856db7b15333894",
+    "semantic_hash": ""
+  },
+  "views/faturamento/vendedor.html": {
+    "mtime": 1785788078.1858222,
+    "ast_hash": "7505ac0d431daa0235b8699c765eedf2",
+    "semantic_hash": ""
+  },
+  "scratch/teste_boleto.pdf": {
+    "mtime": 1785526300.6277504,
+    "ast_hash": "77426769b51c57a4c42d395a43ca986c",
+    "semantic_hash": ""
+  },
+  "scratch/teste_boleto_scan.pdf": {
+    "mtime": 1785526357.3550186,
+    "ast_hash": "702baa69700abb34e9fbbf5410339516",
+    "semantic_hash": ""
+  },
+  "uploads/boletos/1785529134713_file.pdf": {
+    "mtime": 1785529134.7173817,
+    "ast_hash": "badd959491bbdec16c32323888461f1d",
+    "semantic_hash": ""
+  },
+  "public/images/logo.jpeg": {
+    "mtime": 1741726214.2721124,
+    "ast_hash": "c5f6c92fe32d4ffc4538d2ca929b208a",
+    "semantic_hash": ""
+  },
+  "public/images/logo.png": {
+    "mtime": 1741784617.4159281,
+    "ast_hash": "43caac3512516161491613126327fdde",
+    "semantic_hash": ""
+  },
+  "public/images/logo_branca.png": {
+    "mtime": 1764196214.7534282,
+    "ast_hash": "7f975bf040153ab627c419609658637e",
+    "semantic_hash": ""
+  },
+  "scratch/teste_pix.png": {
+    "mtime": 1785530770.1403334,
+    "ast_hash": "4480aaea12ca5c644b0e435e8282daf8",
+    "semantic_hash": ""
+  },
+  "uploads/boletos/1785531172681_teste_pix.png": {
+    "mtime": 1785531172.6903415,
+    "ast_hash": "4480aaea12ca5c644b0e435e8282daf8",
+    "semantic_hash": ""
+  },
+  "uploads/boletos/1785531335244_teste_pix.png": {
+    "mtime": 1785531335.2510455,
+    "ast_hash": "4480aaea12ca5c644b0e435e8282daf8",
+    "semantic_hash": ""
+  },
+  "uploads/imagens/1779802183412_WhatsApp_Image_2026-05-14_at_16.34.39_2_.jpeg": {
+    "mtime": 1784667093.55179,
+    "ast_hash": "45e58bf3a8bb3ac3245cc4f32160baa6",
+    "semantic_hash": ""
+  },
+  "uploads/imagens/1779804075869_WhatsApp_Image_2026-05-14_at_16.34.39_2_.jpeg": {
+    "mtime": 1784667093.558791,
+    "ast_hash": "45e58bf3a8bb3ac3245cc4f32160baa6",
+    "semantic_hash": ""
+  },
+  "uploads/imagens/1779805703911_WhatsApp_Image_2026-05-14_at_16.34.39_2_.jpeg": {
+    "mtime": 1784667093.5638063,
+    "ast_hash": "45e58bf3a8bb3ac3245cc4f32160baa6",
+    "semantic_hash": ""
+  },
+  "uploads/imagens/1779806409826_WhatsApp_Image_2026-05-14_at_16.34.39_2_.jpeg": {
+    "mtime": 1784667093.5688035,
+    "ast_hash": "45e58bf3a8bb3ac3245cc4f32160baa6",
+    "semantic_hash": ""
+  },
+  "uploads/imagens/1779808362664_WhatsApp_Image_2026-05-14_at_16.34.39_2_.jpeg": {
+    "mtime": 1784667093.5747986,
+    "ast_hash": "45e58bf3a8bb3ac3245cc4f32160baa6",
+    "semantic_hash": ""
+  },
+  "uploads/imagens/1779808664585_WhatsApp_Image_2026-05-26_at_12.15.48.jpeg": {
+    "mtime": 1784667093.5794475,
+    "ast_hash": "6ee4a06b0d1f99ed99dc18b49cc4e9a4",
+    "semantic_hash": ""
+  },
+  "uploads/imagens/1779815735232_WhatsApp_Image_2026-05-26_at_12.15.48.jpeg": {
+    "mtime": 1784667093.5824413,
+    "ast_hash": "6ee4a06b0d1f99ed99dc18b49cc4e9a4",
+    "semantic_hash": ""
+  },
+  "uploads/imagens/1779820970266_WhatsApp_Image_2026-05-26_at_12.15.48.jpeg": {
+    "mtime": 1784667093.5864396,
+    "ast_hash": "6ee4a06b0d1f99ed99dc18b49cc4e9a4",
+    "semantic_hash": ""
+  },
+  "uploads/imagens/1779994060937_WhatsApp_Image_2026-05-26_at_12.15.48.jpeg": {
+    "mtime": 1784667093.5901656,
+    "ast_hash": "6ee4a06b0d1f99ed99dc18b49cc4e9a4",
+    "semantic_hash": ""
+  },
+  "uploads/imagens/1780083394245_WhatsApp_Image_2026-05-26_at_12.15.48_1_.jpeg": {
+    "mtime": 1784667093.5941644,
+    "ast_hash": "6ee4a06b0d1f99ed99dc18b49cc4e9a4",
+    "semantic_hash": ""
+  },
+  "uploads/imagens/1780085410624_WhatsApp_Image_2026-05-29_at_16.35.16.jpeg": {
+    "mtime": 1784667093.5961678,
+    "ast_hash": "e739b4107dae717a319031146b898eb5",
+    "semantic_hash": ""
+  },
+  "uploads/imagens/temp_pad_1779820970266_WhatsApp_Image_2026-05-26_at_12.15.48.jpeg": {
+    "mtime": 1784667093.5991642,
+    "ast_hash": "1eaebb55c7b073b83d1cdb46ecea3f3a",
+    "semantic_hash": ""
+  },
+  "uploads/imagens/temp_pad_1779994060937_WhatsApp_Image_2026-05-26_at_12.15.48.jpeg": {
+    "mtime": 1784667093.6031668,
+    "ast_hash": "1eaebb55c7b073b83d1cdb46ecea3f3a",
+    "semantic_hash": ""
+  }
+}

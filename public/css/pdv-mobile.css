@@ -120,8 +120,8 @@
     }
     
     .product-card-mobile:active {
-        border-color: #3b82f6;
-        background-color: #eff6ff;
+        border-color: #ea580c;
+        background-color: #fff4ec;
         transform: scale(0.98);
     }
     
@@ -313,13 +313,13 @@
 }
 
 .numeric-keypad .key-action {
-    background: #3b82f6;
+    background: #ea580c;
     color: white;
-    border-color: #3b82f6;
+    border-color: #ea580c;
 }
 
 .numeric-keypad .key-action:active {
-    background: #2563eb;
+    background: #c2410c;
 }
 
 .numeric-keypad .key-delete {
@@ -691,6 +691,6 @@
 }
 
 .focus-visible-only:focus-visible {
-    outline: 2px solid #3b82f6;
+    outline: 2px solid #ea580c;
     outline-offset: 2px;
 }
