@@ -1,421 +1,324 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Finalizar Pedidos - Pedido de Compras</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" href="css/style.css" />
+
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/responsive.css" />
     <style>
-        * {
-            font-family: 'Inter', sans-serif;
-        }
+      body {
+        font-family: 'Poppins', sans-serif;
+      }
+      .sidebar .nav-link {
+          color: #475569;
+          font-weight: 500;
+          padding: 10px 15px;
+          border-radius: 8px;
+          transition: all 0.3s ease;
+          text-decoration: none;
+          display: flex;
+          align-items: center;
+      }
+      .sidebar .nav-link:hover {
+          color: #ea580c;
+          background: #fff7ed;
+      }
+      .sidebar .nav-link.active {
+          color: #ea580c;
+          background: #fff7ed;
+          font-weight: 600;
+      }
+      .sidebar .nav-link i {
+          margin-right: 10px;
+          font-size: 1.1rem;
+      }
 
-        body {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            min-height: 100vh;
-            display: flex;
-        }
+      .pedido-card {
+          background: white;
+          border-radius: 16px;
+          padding: 1.75rem;
+          margin-bottom: 1.5rem;
+          box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+          border: 1px solid #e2e8f0;
+          transition: all 0.3s ease;
+          animation: fadeInUp 0.5s ease;
+      }
 
-        .sidebar {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
-            min-height: 100vh;
-            width: 280px;
-            position: fixed;
-            left: 0;
-            top: 0;
-            z-index: 1000;
-        }
+      .pedido-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      }
 
-        .sidebar-header {
-            padding: 2rem 1.5rem;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        }
+      @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+      }
 
-        .sidebar-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #dc2626;
-            margin: 0;
-        }
+      .card-header-custom {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1.5rem;
+          padding-bottom: 1rem;
+          border-bottom: 2px solid #f8fafc;
+      }
 
-        .nav-pills .nav-link {
-            color: #4a5568;
-            border-radius: 12px;
-            margin: 0.25rem 0;
-            padding: 0.75rem 1rem;
-            transition: all 0.3s ease;
-            font-weight: 500;
-        }
+      .pedido-numero {
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: #1e293b;
+      }
 
-        .nav-pills .nav-link:hover {
-            background: rgba(239, 68, 68, 0.1);
-            color: #dc2626;
-            transform: translateX(4px);
-        }
+      .badge-feito {
+          background: #fff7ed;
+          color: #ea580c;
+          padding: 0.5rem 1rem;
+          border-radius: 20px;
+          font-weight: 600;
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          border: 1px solid #ffedd5;
+      }
 
-        .nav-pills .nav-link.active {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-        }
+      .info-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+          gap: 1.25rem;
+          margin-bottom: 1.5rem;
+      }
 
-        .nav-pills .nav-link i {
-            margin-right: 0.5rem;
-            font-size: 1.1rem;
-        }
+      .info-item {
+          display: flex;
+          flex-direction: column;
+      }
 
-        .main-content {
-            margin-left: 280px;
-            padding: 2rem;
-            width: calc(100% - 280px);
-        }
+      .info-label {
+          font-size: 0.7rem;
+          font-weight: 600;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 0.25rem;
+      }
 
-        .page-header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
+      .info-value {
+          font-size: 0.9rem;
+          font-weight: 600;
+          color: #334155;
+      }
 
-        .page-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #2d3748;
-            margin: 0;
-        }
+      .form-section {
+          background: #f8fafc;
+          border-radius: 12px;
+          padding: 1.25rem;
+          margin-bottom: 1.5rem;
+          border: 1px solid #e2e8f0;
+      }
 
-        .page-subtitle {
-            color: #718096;
-            margin: 0.5rem 0 0 0;
-        }
+      .form-section-title {
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: #ea580c;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 1rem;
+      }
 
-        .pedido-card {
-            background: white;
-            border-radius: 16px;
-            padding: 1.75rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
-            animation: fadeInUp 0.5s ease;
-        }
+      .input-custom {
+          width: 100%;
+          padding: 0.6rem 1rem;
+          border: 1px solid #cbd5e1;
+          border-radius: 8px;
+          font-size: 0.9rem;
+          transition: all 0.2s;
+          background: white;
+      }
 
-        .pedido-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-        }
+      .input-custom:focus {
+          outline: none;
+          border-color: #ea580c;
+          box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
+      }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+      .actions-section {
+          display: flex;
+          gap: 0.75rem;
+          padding-top: 1rem;
+          border-top: 1px solid #f1f5f9;
+      }
 
-        .card-header-custom {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid #f7fafc;
-        }
+      .btn-action {
+          flex: 1;
+          padding: 0.6rem 1.25rem;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 0.9rem;
+          border: none;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+      }
 
-        .pedido-numero {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #2d3748;
-        }
+      .btn-success-custom {
+          background-color: #10b981;
+          color: white;
+      }
+      .btn-success-custom:hover {
+          background-color: #059669;
+      }
 
-        .badge-feito {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.875rem;
-            text-transform: uppercase;
-        }
+      .btn-primary-custom {
+          background-color: #ea580c;
+          color: white;
+      }
+      .btn-primary-custom:hover {
+          background-color: #c2410c;
+      }
 
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1.25rem;
-            margin-bottom: 1.5rem;
-        }
+      .btn-danger-custom {
+          background-color: #ef4444;
+          color: white;
+      }
+      .btn-danger-custom:hover {
+          background-color: #dc2626;
+      }
 
-        .info-item {
-            display: flex;
-            flex-direction: column;
-        }
+      .btn-dark-custom {
+          background-color: #334155;
+          color: white;
+      }
+      .btn-dark-custom:hover {
+          background-color: #1e293b;
+      }
 
-        .info-label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #718096;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.25rem;
-        }
+      .empty-state {
+          text-align: center;
+          padding: 4rem 2rem;
+          background: white;
+          border-radius: 12px;
+          border: 1px solid #e2e8f0;
+      }
 
-        .info-value {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #2d3748;
-        }
+      .empty-state i {
+          font-size: 3rem;
+          color: #cbd5e1;
+          margin-bottom: 1rem;
+      }
 
-        .form-section {
-            background: #fef2f2;
-            border-radius: 12px;
-            padding: 1.25rem;
-            margin-bottom: 1.5rem;
-            border: 1px solid #fecaca;
-        }
+      .input-group-custom {
+          position: relative;
+      }
 
-        .form-section-title {
-            font-size: 0.875rem;
-            font-weight: 700;
-            color: #dc2626;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 1rem;
-        }
+      .dropdown-menu-custom {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          z-index: 1050;
+          background: white;
+          border: 1px solid #cbd5e1;
+          border-top: none;
+          border-radius: 0 0 8px 8px;
+          max-height: 220px;
+          overflow-y: auto;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      }
 
-        .input-group-custom {
-            position: relative;
-        }
+      .dropdown-menu-custom .dropdown-item {
+          display: block;
+          padding: 0.5rem 1rem;
+          color: #334155;
+          text-decoration: none;
+          font-size: 0.85rem;
+          cursor: pointer;
+          border-bottom: 1px solid #f1f5f9;
+          transition: background-color 0.15s ease;
+      }
 
-        .input-custom {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 2px solid #fecaca;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            transition: all 0.3s ease;
-            background: white;
-        }
+      .dropdown-menu-custom .dropdown-item:last-child {
+          border-bottom: none;
+      }
 
-        .input-custom:focus {
-            outline: none;
-            border-color: #ef4444;
-            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
-        }
+      .dropdown-menu-custom .dropdown-item:hover {
+          background-color: #fff7ed;
+          color: #ea580c;
+      }
 
-        .dropdown-menu-custom {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 2px solid #fecaca;
-            border-radius: 12px;
-            margin-top: 0.5rem;
-            max-height: 200px;
-            overflow-y: auto;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-            z-index: 1000;
-        }
+      .dropdown-menu-custom .dropdown-item.disabled {
+          color: #94a3b8;
+          cursor: default;
+          font-style: italic;
+      }
 
-        .dropdown-item-custom {
-            padding: 0.75rem 1rem;
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
-
-        .dropdown-item-custom:hover {
-            background: #fef2f2;
-        }
-
-        .actions-section {
-            display: flex;
-            gap: 0.75rem;
-            padding-top: 1rem;
-            border-top: 2px solid #f7fafc;
-        }
-
-        .btn-action {
-            flex: 1;
-            padding: 0.75rem 1.5rem;
-            border-radius: 12px;
-            font-weight: 600;
-            border: none;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .btn-action:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-        }
-
-        .btn-success-custom {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-        }
-
-        .btn-primary-custom {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-        }
-
-        .btn-danger-custom {
-            background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
-            color: white;
-        }
-
-        .btn-dark-custom {
-            background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
-            color: white;
-        }
-
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-        }
-
-        .spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-
-        .empty-state i {
-            font-size: 4rem;
-            color: #cbd5e0;
-            margin-bottom: 1rem;
-        }
-
-        /* Floating Buttons */
-        .floating-buttons-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 1000;
-        }
-
-        .btn-floating {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: #500001;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            transition: transform 0.2s, background-color 0.2s;
-            border: none;
-            cursor: pointer;
-            font-size: 1.2rem;
-        }
-
-        .btn-floating:hover {
-            transform: scale(1.1);
-            background-color: #7a0002;
-            color: white;
-        }
-
-        .btn-logout {
-            background-color: #d33;
-        }
-
-        .btn-logout:hover {
-            background-color: #ff4d4d;
-        }
+      .pedido-loja {
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: #64748b;
+          background: #f1f5f9;
+          padding: 0.25rem 0.75rem;
+          border-radius: 6px;
+      }
     </style>
-</head>
-<body>
+  </head>
+
+  <body>
+    <div class="layout">
     <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <h1 class="sidebar-title">
-                <i class="bi bi-cart-check"></i> Pedidos de Compras
-            </h1>
-        </div>
-        <div class="p-3">
-            <ul class="nav nav-pills flex-column">
-                <li class="nav-item">
-                    <a href="/pedidosCompras" class="nav-link">
-                        <i class="bi bi-plus-circle"></i>
-                        Criar Pedidos
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/listaPedidos" class="nav-link">
-                        <i class="bi bi-list-ul"></i>
-                        Lista de Pedidos
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/fazerPedidos" class="nav-link">
-                        <i class="bi bi-clipboard-check"></i>
-                        Fazer Pedidos
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/finalizarPedidos" class="nav-link active">
-                        <i class="bi bi-check-circle"></i>
-                        Finalizar Pedidos
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/pedidosFinalizados" class="nav-link">
-                        <i class="bi bi-archive"></i>
-                        Pedidos Finalizados
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </div>
+   <%- include('../partials/sidebar', { module: 'pedidos', activePage: 'finalizar' }) %>
 
     <!-- Main Content -->
-    <div class="main-content">
+    <div class="content">
+      
         <!-- Page Header -->
-        <div class="page-header">
-            <h1 class="page-title">Finalizar Pedidos</h1>
-            <p class="page-subtitle">Complete os pedidos com fornecedor e forma de pagamento</p>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+              <h1 style="font-size: 1.5rem; color: #1e293b; margin-bottom: 0;">Finalizar Pedidos</h1>
+              <p style="color: #64748b; margin-bottom: 0;">Complete os pedidos com fornecedor e forma de pagamento</p>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input 
+                        type="text" 
+                        id="searchSupplier" 
+                        class="form-control border-start-0 ps-0" 
+                        placeholder="Buscar por fornecedor ou marca..."
+                        autocomplete="off"
+                    >
+                    <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <select id="storeFilter" class="form-select">
+                    <option value="">Todas as Lojas</option>
+                    <option value="PRIME">PRIME</option>
+                    <option value="EXCLUSIVA">EXCLUSIVA</option>
+                </select>
+            </div>
+            
+            <div class="col-md-4">
+                <button type="button" id="btnGenerateReport" class="btn btn-primary-custom w-100">
+                    <i class="bi bi-file-earmark-text me-2"></i> Gerar Relatório
+                </button>
+            </div>
         </div>
 
         <!-- Pedidos Container -->
@@ -429,49 +332,54 @@
         </div>
     </div>
 
-    <!-- Modal de Mensagem -->
-    <div class="modal fade" id="mensagemModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title d-flex align-items-center" id="mensagemModalLabel">
-                        <span id="mensagemModalIcon"></span>
-                        <span>Status do Pedido</span>
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="mensagemModalBody"></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Loader -->
-    <div id="loader" class="loading-overlay" style="display: none;">
-        <div class="d-flex flex-column align-items-center">
-            <div class="spinner"></div>
-            <p class="text-white mt-3 fw-bold">Processando...</p>
-        </div>
-    </div>
-
-    <!-- Floating Buttons -->
-    <div class="floating-buttons-container">
-        <a href="/" class="btn-floating" title="Voltar ao Menu">
-            <i class="fas fa-home"></i>
-        </a>
-        <button id="logoutBtn" class="btn-floating btn-logout" title="Sair">
-            <i class="fas fa-sign-out-alt"></i>
-        </button>
-    </div>
-
     <form id="logoutForm" action="/logout" method="POST" style="display: none;"></form>
 
+    <!-- Modal Pre Lancamento -->
+    <div class="modal fade" id="modalPreLancamento" tabindex="-1" aria-labelledby="modalPreLancamentoLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header bg-light">
+            <h5 class="modal-title" id="modalPreLancamentoLabel" style="color: #1e293b;">
+                <i class="bi bi-box-seam me-2"></i> Ajustar Valores e Lançar Pedido #<span id="spanNumPedidoPre"></span>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-0">
+             <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0 text-center align-middle" style="font-size: 0.95rem;">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Cód. Produto</th>
+                            <th>Descrição</th>
+                            <th style="min-width: 100px;">Quantidade</th>
+                            <th style="min-width: 130px;">Valor Un. (R$)</th>
+                            <th>Valor Total (R$)</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyItensPre">
+                    </tbody>
+                </table>
+             </div>
+          </div>
+          <div class="modal-footer bg-light d-flex justify-content-between align-items-center">
+            <div class="fw-bold fs-5 text-primary">
+                Total do Pedido: R$ <span id="totalPedidoPre">0.00</span>
+            </div>
+            <div>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success px-4" id="btnConfirmarLancamentoPre">
+                    <i class="bi bi-check-circle me-1"></i> Confirmar Lançamento
+                </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
-    <script src="/js/pedidos/scriptPedidos.js"></script>
+    <script src="/js/pedidos/scriptPedidos.js?v=2"></script>
     <script>
         // Logout functionality with SweetAlert2
         document.getElementById('logoutBtn').addEventListener('click', function(e) {
@@ -481,8 +389,8 @@
                 text: "Você será desconectado do sistema.",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
+                confirmButtonColor: '#ea580c',
+                cancelButtonColor: '#64748b',
                 confirmButtonText: 'Sim, sair!',
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
@@ -491,6 +399,207 @@
                 }
             });
         });
+
+        let currentPreNumPedido = null;
+        let currentPreFornId = null;
+        let currentPrePagId = null;
+        let itnDataPre = [];
+
+        async function abrirModalPreLancamento(fornId, pagId, numPedido) {
+            currentPreNumPedido = numPedido;
+            currentPreFornId = fornId;
+            currentPrePagId = pagId;
+            
+            document.getElementById('spanNumPedidoPre').innerText = numPedido;
+            document.getElementById('tbodyItensPre').innerHTML = '<tr><td colspan="5" class="py-4">Carregando itens do pedido...</td></tr>';
+            document.getElementById('totalPedidoPre').innerText = '0.00';
+            
+            const modal = new bootstrap.Modal(document.getElementById('modalPreLancamento'));
+            modal.show();
+
+            try {
+                // Fetch from PEDIDO_PROCESSADO_YSC
+                const response = await fetch(`${apiBase}/loadPedidos?id_pedido=${numPedido}`);
+                if (!response.ok) throw new Error('Erro ao buscar itens');
+                
+                const rawItems = await response.json();
+                
+                // Set default vlrunit and total correctly (ignoring items with 0 quantity)
+                itnDataPre = rawItems
+                    .filter(item => (parseFloat(item.QTD_PEDIR) || 0) > 0)
+                    .map(item => {
+                        const qtd = parseFloat(item.QTD_PEDIR) || 0;
+                        const vlrtotal = parseFloat(item.VLR_TOTAL) || 0;
+                        const preco = item.PRECO ? parseFloat(item.PRECO) : (qtd > 0 ? (vlrtotal / qtd) : 0);
+                        return {
+                            CODPROD: item.CODPROD,
+                            DESCRPROD: item.DESCRPROD,
+                            QTD_PEDIR: qtd,
+                            VLRUNIT: preco
+                        };
+                    });
+
+                renderTablePre();
+            } catch (err) {
+                console.error(err);
+                document.getElementById('tbodyItensPre').innerHTML = `<tr><td colspan="5" class="text-danger font-weight-bold">Erro ao carregar itens: ${err.message}</td></tr>`;
+            }
+        }
+
+        function renderTablePre() {
+            const tbody = document.getElementById('tbodyItensPre');
+            tbody.innerHTML = '';
+            let totalPedido = 0;
+
+            if (itnDataPre.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="py-4 text-muted">Ainda não existem itens neste pedido.</td></tr>';
+                document.getElementById('totalPedidoPre').innerText = '0.00';
+                return;
+            }
+
+            itnDataPre.forEach((item, index) => {
+                const totalItem = (item.QTD_PEDIR * item.VLRUNIT);
+                totalPedido += totalItem;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.CODPROD}</td>
+                    <td class="text-start">${item.DESCRPROD}</td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm text-center input-qtd-pre" step="1" min="1" data-index="${index}" value="${item.QTD_PEDIR}">
+                    </td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm text-center input-vlrunit-pre" step="0.01" min="0" data-index="${index}" value="${item.VLRUNIT.toFixed(2)}">
+                    </td>
+                    <td class="fw-bold txt-total-item-pre" style="color: #334155;">R$ ${totalItem.toFixed(2)}</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline-danger btn-excluir-item" data-index="${index}" title="Remover Item">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('totalPedidoPre').innerText = totalPedido.toFixed(2);
+
+            function recalcRowAndTotal(tr, idx) {
+                const newTotalItem = itnDataPre[idx].QTD_PEDIR * itnDataPre[idx].VLRUNIT;
+                tr.querySelector('.txt-total-item-pre').innerText = `R$ ${newTotalItem.toFixed(2)}`;
+                
+                let newGlobal = 0;
+                itnDataPre.forEach(i => newGlobal += (parseFloat(i.QTD_PEDIR) * parseFloat(i.VLRUNIT)));
+                document.getElementById('totalPedidoPre').innerText = newGlobal.toFixed(2);
+            }
+
+            document.querySelectorAll('.input-qtd-pre').forEach(inp => {
+                inp.addEventListener('input', (e) => {
+                    const idx = e.target.getAttribute('data-index');
+                    itnDataPre[idx].QTD_PEDIR = parseFloat(e.target.value) || 0;
+                    recalcRowAndTotal(e.target.closest('tr'), idx);
+                });
+            });
+
+            document.querySelectorAll('.input-vlrunit-pre').forEach(inp => {
+                inp.addEventListener('input', (e) => {
+                    const idx = e.target.getAttribute('data-index');
+                    itnDataPre[idx].VLRUNIT = parseFloat(e.target.value) || 0;
+                    recalcRowAndTotal(e.target.closest('tr'), idx);
+                });
+            });
+
+            document.querySelectorAll('.btn-excluir-item').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = e.currentTarget.getAttribute('data-index');
+                    itnDataPre.splice(idx, 1);
+                    renderTablePre();
+                });
+            });
+        }
+
+        document.getElementById('btnConfirmarLancamentoPre').addEventListener('click', async () => {
+            if (!currentPreNumPedido) return;
+
+            const formaPagElement = document.getElementById(currentPrePagId);
+            const fornecedorElement = document.getElementById(currentPreFornId);
+            
+            if (!formaPagElement || !fornecedorElement || !formaPagElement.value || !fornecedorElement.value || !formaPagElement.dataset.codtipvenda || !fornecedorElement.dataset.codparc) {
+                Swal.fire('Atenção!', 'Feche o modal e preencha o Fornecedor e Forma de Pagamento no card antes de confirmar.', 'warning');
+                return;
+            }
+
+            const payload = {
+                numero_pedido: currentPreNumPedido,
+                idPagamento: formaPagElement.value,
+                idFornecedor: fornecedorElement.value,
+                cod_pagamento: formaPagElement.dataset.codtipvenda,
+                cod_fornecedor: fornecedorElement.dataset.codparc,
+                items: itnDataPre.map(i => ({ codprod: i.CODPROD, vlrunit: i.VLRUNIT, qtdPedir: i.QTD_PEDIR }))
+            };
+
+            Swal.fire({
+                title: 'Lançando Pedido no Sankhya...',
+                text: 'Gerando a Nota e processando valores finais...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+                const response = await fetch(`${apiBase}/finalizarPedidoComValores`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                console.log('Resposta do servidor:', result);
+                if (!response.ok) {
+                    let errorMsg = result.error || 'Erro ao lançar pedido';
+                    if (result.details) {
+                        console.error('Detalhes do erro:', result.details);
+                        // Formatar erros Oracle para exibição amigável
+                        if (result.details.includes('ORA-01422')) {
+                            errorMsg = 'Erro de concorrência no Sankhya (ORA-01422). Tente novamente em alguns segundos.';
+                        } else if (result.details.includes('ORA-')) {
+                            errorMsg += `<br><br><small style="color:#dc2626;font-weight:600;">Erro Oracle: ${result.details}</small>`;
+                        } else {
+                            errorMsg += `<br><br><small style="color:#6b7280;">${result.details}</small>`;
+                        }
+                    }
+                    if (result.errorCode) {
+                        errorMsg += `<br><small style="color:#94a3b8;">Código: ${result.errorCode}</small>`;
+                    }
+                    throw new Error(errorMsg);
+                }
+
+                let mensagemSucesso = '✅ Pedido gerado e itens atualizados com sucesso!';
+                if (result.nunota) {
+                    mensagemSucesso += `<br><small>NUNOTA: ${result.nunota}</small>`;
+                }
+                if (result.mensagemProcedure) {
+                    mensagemSucesso += `<br><br><small>Sankhya: ${result.mensagemProcedure}</small>`;
+                }
+
+                Swal.fire({
+                    title: 'Sucesso!',
+                    html: mensagemSucesso,
+                    icon: 'success',
+                    confirmButtonColor: '#28a745'
+                }).then(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('modalPreLancamento'));
+                    if (modal) modal.hide();
+                    carregaPedidosFeitos(); // recarrega dashboard
+                });
+            } catch (err) {
+                console.error('Erro ao finalizar pedido:', err);
+                Swal.fire({
+                    title: 'Erro!',
+                    html: err.message,
+                    icon: 'error',
+                    confirmButtonColor: '#dc3545'
+                });
+            }
+        });
     </script>
-</body>
+  </body>
 </html>

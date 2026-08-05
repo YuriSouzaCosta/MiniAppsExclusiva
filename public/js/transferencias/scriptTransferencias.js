@@ -374,7 +374,7 @@ async function transferirTudo() {
     }
 
     try {
-        const response = await fetch(`${apiBase}/api/criar`, {
+        const response = await fetch(`${apiBase}/api/criarTransferencias`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -390,16 +390,68 @@ async function transferirTudo() {
 
         const resultado = await response.json();
 
-        Swal.fire({
-            icon: 'success',
-            title: 'Sucesso!',
-            text: resultado.message,
-            confirmButtonColor: '#10b981'
-        });
+        console.log('Resultado das transferências:', resultado);
 
-        // Limpar lista
-        listaTransferencias = [];
-        renderizarLista();
+        // Verificar se houve erros
+        if (resultado.erros > 0) {
+            // Montar lista de erros
+            const errosDetalhes = resultado.resultados
+                .filter(r => r.status === 'error')
+                .map(r => `• Produto ${r.codProd}: ${r.mensagem}`)
+                .join('\n');
+
+            await Swal.fire({
+                icon: 'warning',
+                title: 'Atenção!',
+                html: `
+                    <p><strong>${resultado.message}</strong></p>
+                    ${resultado.sucessos > 0 ? `<p style="color: #10b981;">✓ ${resultado.sucessos} transferência(s) criada(s)</p>` : ''}
+                    ${resultado.erros > 0 ? `<p style="color: #ef4444;">✗ ${resultado.erros} erro(s):</p>
+                    <pre style="text-align: left; font-size: 0.875rem; background: #f3f4f6; padding: 1rem; border-radius: 8px; max-height: 200px; overflow-y: auto;">${errosDetalhes}</pre>` : ''}
+                `,
+                confirmButtonColor: '#10b981'
+            });
+        } else {
+            await Swal.fire({
+                icon: 'success',
+                title: 'Sucesso!',
+                text: resultado.message,
+                confirmButtonColor: '#10b981'
+            });
+        }
+
+        // Limpar lista apenas se todas foram criadas com sucesso
+        if (resultado.erros === 0) {
+            listaTransferencias = [];
+            renderizarLista();
+        } else {
+            // Remover apenas as que foram criadas com sucesso
+            const codigosSucesso = resultado.resultados
+                .filter(r => r.status === 'success')
+                .map(r => `${r.codProd}_${r.empresaOrigem}_${r.localOrigem}`);
+
+            listaTransferencias = listaTransferencias.filter(item => {
+                const codigo = `${item.codProd}_${item.empresaOrigem}_${item.codLocalOrigem}`;
+                return !codigosSucesso.includes(codigo);
+            });
+
+            renderizarLista();
+
+            if (listaTransferencias.length > 0) {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+
+                Toast.fire({
+                    icon: 'info',
+                    title: `${listaTransferencias.length} item(s) com erro permanece(m) na lista`
+                });
+            }
+        }
 
     } catch (err) {
         console.error('Erro ao criar transferências:', err);
@@ -418,4 +470,122 @@ function limparProduto() {
     document.getElementById('selecaoSection').style.display = 'none';
     locaisOrigem = [];
     origemSelecionada = null;
+}
+
+// Puxar transferências pendentes
+async function puxarTransferencias(containerId = 'transferenciasContent') {
+    const container = document.getElementById(containerId);
+
+    if (!container) {
+        console.error('Container não encontrado:', containerId);
+        return;
+    }
+
+    try {
+        // Mostrar loading
+        container.innerHTML = `
+            <div style="text-align: center; padding: 3rem; color: #a0aec0;">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+                <p style="margin-top: 1rem;">Carregando transferências...</p>
+            </div>
+        `;
+
+        const response = await fetch(`${apiBase}/api/puxarTransferencias`);
+
+        if (!response.ok) {
+            throw new Error('Erro ao buscar transferências');
+        }
+
+        const transferencias = await response.json();
+
+        console.log('Transferências encontradas:', transferencias.length);
+
+        if (transferencias.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p>Nenhuma transferência pendente no momento</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Renderizar tabela
+        let html = `
+            <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);">
+                <h3 style="font-size: 1.25rem; font-weight: 700; color: #2d3748; margin-bottom: 1rem;">
+                    <i class="bi bi-list-check"></i> Transferências Pendentes (${transferencias.length})
+                </h3>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nº Nota</th>
+                                <th>Cód Produto</th>
+                                <th>Produto</th>
+                                <th>Referência</th>
+                                <th>Origem</th>
+                                <th>Destino</th>
+                                <th>Quantidade</th>
+                                <th>Data</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+
+        transferencias.forEach(item => {
+            html += `
+                <tr>
+                    <td>${item.NUNOTA || '-'}</td>
+                    <td>${item.CODPROD || '-'}</td>
+                    <td>${item.DESCRPROD || '-'}</td>
+                    <td>${item.REFERENCIA || item.CODVOL || '-'}</td>
+                    <td>${item.EMPRESA_ORIGEM || '-'} - ${item.LOCAL_ORIGEM || '-'}</td>
+                    <td>${item.EMPRESA_DESTINO || '-'} - ${item.LOCAL_DESTINO || '-'}</td>
+                    <td style="text-align: center;">${item.QTDNEG || item.QUANTIDADE || 0}</td>
+                    <td>${item.DTNEG || item.DATA_CRIACAO || '-'}</td>
+                    <td>
+                        <span style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); 
+                                     color: white; 
+                                     padding: 0.25rem 0.75rem; 
+                                     border-radius: 12px; 
+                                     font-size: 0.75rem; 
+                                     font-weight: 600;">
+                            Pendente
+                        </span>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+
+    } catch (err) {
+        console.error('Erro ao puxar transferências:', err);
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="bi bi-exclamation-triangle" style="color: #ef4444;"></i>
+                <p style="color: #ef4444;">Erro ao carregar transferências</p>
+                <button class="btn btn-primary-custom" onclick="puxarTransferencias('${containerId}')">
+                    <i class="bi bi-arrow-clockwise"></i> Tentar Novamente
+                </button>
+            </div>
+        `;
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: 'Não foi possível carregar as transferências pendentes'
+        });
+    }
 }

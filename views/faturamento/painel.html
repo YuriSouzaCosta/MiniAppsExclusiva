@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel de Faturamento — TV</title>
+<style>
+  :root{
+    --bg:#f8fafc; --panel:#ffffff; --panel2:#f8fafc; --line:#e2e8f0;
+    --ink:#1e293b; --muted:#64748b; --pos:#16a34a; --neg:#dc2626; --brand:#ea580c; --gold:#f59e0b;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);
+       color:var(--ink);font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       overflow:hidden}
+  .screen{height:100vh;display:flex;flex-direction:column;padding:2.2vh 2.4vw;gap:1.6vh}
+
+  /* topo */
+  .top{display:flex;align-items:center;gap:1.4vw}
+  .top h1{font-size:2.5vh;margin:0;font-weight:700;letter-spacing:.4px}
+  .top .logo{height:4vh;width:auto;flex:0 0 auto}
+  .top .per{font-size:1.7vh;color:var(--muted)}
+  .top .sp{flex:1}
+  .live{display:inline-flex;align-items:center;gap:.6vw;font-size:1.5vh;color:var(--muted)}
+  .live .dot{width:1.1vh;height:1.1vh;border-radius:50%;background:#64748b}
+  .live.on .dot{background:var(--pos);box-shadow:0 0 0 0 rgba(52,211,153,.5);animation:pulse 2s infinite}
+  .live.pulse .dot{background:var(--gold)}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(52,211,153,.45)}70%{box-shadow:0 0 0 1.4vh rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+  .clock{font-size:2vh;font-variant-numeric:tabular-nums;color:var(--ink);font-weight:600}
+  .gear{cursor:pointer;background:#f1f5f9;border:1px solid var(--line);color:var(--muted);
+        border-radius:10px;padding:.7vh 1vw;font-size:1.5vh}
+  .gear:hover{color:var(--ink)}
+
+  /* cartoes KPI */
+  .cards{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1fr;gap:1.2vw}
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);
+        border-radius:16px;padding:1.9vh 1.5vw;display:flex;flex-direction:column;justify-content:center;
+        box-shadow:0 1px 3px rgba(16,24,40,.08),0 1px 2px rgba(16,24,40,.04)}
+  .card .lab{font-size:1.55vh;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:600}
+  .card .val{font-size:2.7vh;font-weight:800;letter-spacing:-.3px;margin-top:.4vh;line-height:1.08;
+             font-variant-numeric:tabular-nums;white-space:nowrap}
+  .card.hero .val{font-size:3.7vh}
+  .card.hero{grid-row:span 1}
+  .card .yoy{margin-top:.8vh;font-size:1.6vh;font-weight:700;display:flex;align-items:center;gap:.5vw;flex-wrap:wrap}
+  .card .yoy .pct{font-weight:800}
+  .yoy.up{color:var(--pos)} .yoy.down{color:var(--neg)}
+  .card.liq .val{color:var(--pos)}
+  .card.dev .val{color:var(--neg)}
+  .card .prev{font-size:1.35vh;color:var(--muted);margin-top:.6vh;white-space:nowrap}
+  .card .prev b{color:var(--ink);font-weight:700}
+
+  /* rankings */
+  .rankwrap{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:1.2vw;min-height:0}
+  .rank{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);
+        border-radius:16px;padding:1.6vh 1.4vw;display:flex;flex-direction:column;min-height:0}
+  .rank h2{margin:0 0 1.2vh;font-size:1.9vh;font-weight:700;display:flex;align-items:center;gap:.6vw}
+  .rank h2 .tag{font-size:1.3vh;color:var(--muted);font-weight:500}
+  .rows{display:flex;flex-direction:column;gap:.9vh;flex:1;justify-content:space-between;overflow:hidden}
+  .r{display:grid;grid-template-columns:2.4vw 1fr auto;align-items:center;gap:.9vw}
+  .r .pos{font-size:1.7vh;font-weight:800;color:var(--muted);text-align:center}
+  .r:nth-child(1) .pos{color:var(--gold)}
+  .r .nm{min-width:0}
+  .r .nm .n1{font-size:1.85vh;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .r .track{height:.8vh;background:var(--line);border-radius:6px;margin-top:.5vh;overflow:hidden}
+  .r .fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--pos));border-radius:6px}
+  .r .vl{text-align:right;font-size:1.9vh;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .r .vl small{display:block;font-size:1.25vh;color:var(--muted);font-weight:600}
+
+  /* ajustes */
+  .settings{position:fixed;top:0;right:0;height:100vh;width:340px;background:var(--panel);
+            border-left:1px solid var(--line);padding:24px;transform:translateX(100%);
+            transition:transform .25s;z-index:20;box-shadow:-10px 0 30px rgba(16,24,40,.15)}
+  .settings.open{transform:translateX(0)}
+  .settings h3{margin:0 0 16px;font-size:16px}
+  .settings label{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;
+                  letter-spacing:.5px;margin:14px 0 6px;font-weight:600}
+  .settings select,.settings input{width:100%;padding:9px 10px;background:#fff;border:1px solid var(--line);
+       border-radius:8px;color:var(--ink);font-size:13px;font-family:inherit}
+  .settings .go{margin-top:14px;width:100%;background:var(--brand);color:#fff;border:none;
+       border-radius:8px;padding:11px;font-weight:700;cursor:pointer;font-size:14px}
+  .settings .x{position:absolute;top:14px;right:16px;cursor:pointer;color:var(--muted);font-size:20px}
+  .selhint{text-transform:none;color:var(--muted);font-weight:500;font-size:11px}
+  /* multiselect com checkbox (intuitivo) */
+  .ms{border:1px solid var(--line);border-radius:8px;background:#fff;overflow:hidden}
+  .ms-tools{display:flex;gap:6px;align-items:center;padding:6px;border-bottom:1px solid var(--line)}
+  .ms-tools .ms-search{flex:1;min-width:0;width:auto;padding:6px 8px;background:#fff;border:1px solid var(--line);
+       border-radius:6px;color:var(--ink);font-size:12px;font-family:inherit}
+  .ms-tools button{background:#f1f5f9;border:1px solid var(--line);color:var(--muted);border-radius:6px;
+       padding:5px 9px;font-size:11px;cursor:pointer;white-space:nowrap;width:auto;margin:0}
+  .ms-tools button:hover{color:var(--ink);border-color:var(--brand)}
+  .ms-list{max-height:168px;overflow:auto;padding:4px}
+  .ms-item{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:6px;cursor:pointer;
+       font-size:12.5px;color:var(--ink)}
+  .ms-item:hover{background:#f8fafc}
+  .ms-item input{width:17px;height:17px;accent-color:var(--brand);cursor:pointer;flex:0 0 auto;padding:0}
+  .ms-item span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ms-item.hide{display:none}
+  .empty{color:var(--muted);font-size:1.6vh;text-align:center;padding:3vh}
+
+  /* ---- MOBILE / tela estreita: vira visualizacao rolavel, fontes fixas ---- */
+  @media (max-width:860px){
+    body{overflow:auto}
+    .screen{height:auto;min-height:100vh;padding:14px 12px;gap:12px}
+    .top{flex-wrap:wrap;gap:6px 12px}
+    .top .logo{height:26px}
+    .top h1{font-size:19px;width:auto}
+    .top .per{font-size:12px;order:5;width:100%}
+    .live{font-size:12px} .live .dot{width:9px;height:9px}
+    .clock{font-size:15px} .gear{font-size:12px;padding:6px 10px}
+    .cards{grid-template-columns:1fr 1fr;gap:10px}
+    .card{padding:12px;border-radius:12px}
+    .card .lab{font-size:11px}
+    .card .val{font-size:19px;white-space:normal}
+    .card.hero{grid-column:1 / -1}
+    .card.hero .val{font-size:27px}
+    .card .yoy{font-size:12.5px;margin-top:6px}
+    .card .prev{font-size:11px;margin-top:5px;white-space:normal}
+    .rankwrap{grid-template-columns:1fr;gap:10px}
+    .rank{padding:12px}
+    .rank h2{font-size:14px} .rank h2 .tag{font-size:11px}
+    .rows{gap:9px}
+    .r{grid-template-columns:22px 1fr auto}
+    .r .pos{font-size:13px}
+    .r .nm .n1{font-size:13.5px}
+    .r .track{height:5px;margin-top:4px}
+    .r .vl{font-size:14px} .r .vl small{font-size:10.5px}
+    .settings{width:100%;max-width:360px}
+  }
+  @media (max-width:480px){
+    .cards{grid-template-columns:1fr}
+    .card.hero{grid-column:auto}
+    .card .val{font-size:22px}
+  }
+</style>
+</head>
+<body>
+<div class="screen">
+  <div class="top">
+    <img src="/images/logo.png" class="logo" alt="Exclusiva">
+    <h1>📊 Painel de Faturamento</h1>
+    <span class="per" id="per">—</span>
+    <span class="sp"></span>
+    <span class="live" id="live"><span class="dot"></span><span id="liveTxt">conectando…</span></span>
+    <span class="clock" id="clock">--:--:--</span>
+    <a class="gear" href="/" style="text-decoration:none" title="Central de Acessos">🏠 Central de Acessos</a>
+    <span class="gear" id="gear">⚙ Ajustes</span>
+  </div>
+
+  <div class="cards">
+    <div class="card hero liq"><div class="lab">Faturamento Líquido</div><div class="val" id="hLiq">–</div><div class="yoy" id="yLiq"></div><div class="prev" id="pLiq"></div></div>
+    <div class="card"><div class="lab">Faturamento Bruto</div><div class="val" id="hBru">–</div><div class="yoy" id="yBru"></div><div class="prev" id="pBru"></div></div>
+    <div class="card"><div class="lab">Nº de Vendas</div><div class="val" id="hQtd">–</div><div class="yoy" id="yQtd"></div><div class="prev" id="pQtd"></div></div>
+    <div class="card dev"><div class="lab">Devoluções</div><div class="val" id="hDev">–</div><div class="yoy" id="yDev"></div><div class="prev" id="pDev"></div></div>
+    <div class="card"><div class="lab">Ticket Médio</div><div class="val" id="hTic">–</div><div class="yoy" id="yTic"></div><div class="prev" id="pTic"></div></div>
+  </div>
+
+  <div class="rankwrap">
+    <div class="rank">
+      <h2>🏆 Ranking por Faturamento Líquido <span class="tag" id="tagLiq"></span></h2>
+      <div class="rows" id="rankLiq"></div>
+    </div>
+    <div class="rank">
+      <h2>🧾 Ranking por Nº de Vendas <span class="tag" id="tagQtd"></span></h2>
+      <div class="rows" id="rankQtd"></div>
+    </div>
+  </div>
+</div>
+
+<div class="settings" id="settings">
+  <span class="x" id="closeSet">✕</span>
+  <h3>Ajustes do painel</h3>
+  <label>Empresa(s) <span class="selhint" id="sEmpCount"></span></label>
+  <div class="ms" id="sEmp">
+    <div class="ms-tools">
+      <button type="button" class="ms-all">Todas</button>
+      <button type="button" class="ms-none">Limpar</button>
+    </div>
+    <div class="ms-list"></div>
+  </div>
+  <label>Data início</label>
+  <input type="date" id="sIni">
+  <label>Data fim <span class="selhint">(sempre hoje)</span></label>
+  <input type="date" id="sFin">
+  <button class="go" id="sGo">Aplicar empresa/período</button>
+  <label style="margin-top:22px">Vendedor(es) <span class="selhint" id="sVendCount"></span></label>
+  <div class="ms" id="sVend">
+    <div class="ms-tools">
+      <input type="search" class="ms-search" placeholder="buscar vendedor...">
+      <button type="button" class="ms-all">Todos</button>
+      <button type="button" class="ms-none">Limpar</button>
+    </div>
+    <div class="ms-list"></div>
+  </div>
+  <div style="color:var(--muted);font-size:11px;margin-top:6px">Filtra na hora, sem reconsultar o banco. Nenhum marcado = todos.</div>
+  <p style="color:var(--muted);font-size:11.5px;margin-top:16px;line-height:1.5">
+    Compara automaticamente com o mesmo período do ano anterior. Atualiza sozinho quando sai faturamento novo.</p>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+// numeros SEMPRE completos, sem abreviacao
+const fmtBRL = v => 'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtN   = v => v.toLocaleString('pt-BR');
+const brDate = s => s.split('-').reverse().join('/');
+
+let es=null, anoAnt='', lastAt='';
+let ATUAL=[], ANT=[];   // linhas por vendedor: periodo atual e mesmo periodo ano anterior
+
+// ---- relogio ----
+setInterval(()=>{ const d=new Date();
+  $('#clock').textContent=d.toLocaleTimeString('pt-BR'); },1000);
+
+function setLive(state){
+  const el=$('#live'), txt=$('#liveTxt'); el.classList.remove('on','pulse');
+  if(state==='pulse'){ el.classList.add('pulse'); txt.textContent='novo faturamento!'; }
+  else if(state==='off'){ txt.textContent='reconectando…'; }
+  else { el.classList.add('on'); txt.textContent = lastAt?('no ar · '+lastAt):'no ar'; }
+}
+
+// ---- preferencias salvas (localStorage) ----
+const PREFS_KEY='fatPainelPrefs';
+function loadPrefs(){ try{ return JSON.parse(localStorage.getItem(PREFS_KEY))||{}; }catch(e){ return {}; } }
+function savePrefs(){ try{ localStorage.setItem(PREFS_KEY, JSON.stringify({emp:empsSel(), vend:vendSel(), dtIni:$('#sIni').value})); }catch(e){} }
+function hojeISO(){ const d=new Date(); const m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0'); return `${d.getFullYear()}-${m}-${dd}`; }
+
+// ---- multiselect com checkbox (empresa + vendedor) ----
+function boxes(id){ return [...document.querySelectorAll('#'+id+' .ms-list input')]; }
+function updateCount(id, countId, wordAll){
+  const all=boxes(id), n=all.filter(b=>b.checked).length, t=all.length;
+  $('#'+countId).textContent = (n===0 || n===t) ? `(${wordAll}: ${t})` : `(${n} de ${t})`;
+}
+function empsSel(){
+  const marc=boxes('sEmp').filter(b=>b.checked).map(b=>b.value);
+  return marc.length ? marc : boxes('sEmp').map(b=>b.value);   // nenhuma marcada = todas
+}
+function buildEmp(empresas, selected){
+  const set = (selected && selected.length) ? new Set(selected.map(String)) : null; // null = todas
+  $('#sEmp .ms-list').innerHTML = empresas.map(e=>{
+    const ck = set ? set.has(String(e.codemp)) : true;
+    return `<label class="ms-item"><input type="checkbox" value="${e.codemp}" ${ck?'checked':''}><span>${e.codemp} — ${e.nome}</span></label>`;
+  }).join('');
+  updateCount('sEmp','sEmpCount','todas');
+}
+function applySearchVend(){
+  const q=($('#sVend .ms-search').value||'').trim().toLowerCase();
+  boxes('sVend').forEach(b=>{ const it=b.closest('.ms-item');
+    it.classList.toggle('hide', !!q && !it.textContent.toLowerCase().includes(q)); });
+}
+function wireMulti(id, countId, wordAll, onChange){
+  const root=$('#'+id);
+  const setVisiveis=(val)=>{ boxes(id).forEach(b=>{ if(!b.closest('.ms-item').classList.contains('hide')) b.checked=val; });
+                             updateCount(id,countId,wordAll); onChange&&onChange(); };
+  root.querySelector('.ms-all').addEventListener('click', ()=>setVisiveis(true));
+  root.querySelector('.ms-none').addEventListener('click', ()=>setVisiveis(false));
+  root.querySelector('.ms-list').addEventListener('change', ()=>{ updateCount(id,countId,wordAll); onChange&&onChange(); });
+  const s=root.querySelector('.ms-search'); if(s) s.addEventListener('input', applySearchVend);
+}
+
+// ---- YoY (variacao) e valor do ano passado, em cada card ----
+function yoy(elId, atual, ant, money, goodUp=true){
+  const el=$('#'+elId); const d=atual-ant;
+  const pct = ant? (d/ant*100) : (atual?100:0);
+  const up = d>=0, bom = (up===goodUp);
+  el.className='yoy '+(bom?'up':'down');
+  const val = money? fmtBRL(Math.abs(d)) : fmtN(Math.abs(d));
+  el.innerHTML = `${up?'▲':'▼'} ${val} <span class="pct">(${up?'+':'−'}${Math.abs(pct).toLocaleString('pt-BR',{maximumFractionDigits:1})}%)</span>`;
+}
+function setPrev(elId, val, money){
+  $('#'+elId).innerHTML = `Ano passado (${anoAnt}): <b>${money?fmtBRL(val):fmtN(val)}</b>`;
+}
+
+function ranking(elId, linhas, key, money){
+  const rows=[...linhas].filter(d=>d[key]>0).sort((a,b)=>b[key]-a[key]).slice(0,10);
+  const max=Math.max(1,...rows.map(d=>d[key]));
+  $('#'+elId).innerHTML = rows.map((d,i)=>{
+    const w=Math.max(2,d[key]/max*100);
+    const vl = money? fmtBRL(d[key]) : fmtN(d[key]);
+    const sub = money? `${fmtN(d.qtd_v)} vendas` : fmtBRL(d.liquido);
+    return `<div class="r"><div class="pos">${i+1}</div>
+      <div class="nm"><div class="n1">${d.apelido}</div><div class="track"><div class="fill" style="width:${w}%"></div></div></div>
+      <div class="vl">${vl}<small>${sub}</small></div></div>`;
+  }).join('') || '<div class="empty">Sem dados no período.</div>';
+}
+
+// ---- filtro de vendedor (client-side, recalcula os dois periodos) ----
+function vendSel(){ return boxes('sVend').filter(b=>b.checked).map(b=>b.value); }  // vazio = todos
+function filtraVend(linhas, sel){
+  if(sel.length===0) return linhas;
+  const set=new Set(sel); return linhas.filter(d=>set.has(String(d.codvend)));
+}
+function totais(linhas){
+  const b=linhas.reduce((s,d)=>s+d.bruto,0), dv=linhas.reduce((s,d)=>s+d.devol,0);
+  return {bruto:b, devol:dv, liquido:b-dv,
+          qtd_v:linhas.reduce((s,d)=>s+d.qtd_v,0),
+          qtd_d:linhas.reduce((s,d)=>s+d.qtd_d,0), vendedores:linhas.length};
+}
+let SAVED_VEND=null;   // usado para restaurar a selecao salva na 1a carga
+function popularVend(){
+  const prev = (SAVED_VEND!==null) ? SAVED_VEND
+             : boxes('sVend').filter(b=>b.checked).map(b=>b.value);
+  SAVED_VEND=null;
+  const prevSet=new Set(prev.map(String));
+  const map=new Map();
+  ATUAL.concat(ANT).forEach(d=>{ if(!map.has(d.codvend)) map.set(d.codvend, d.apelido); });
+  const arr=[...map.entries()].sort((a,b)=>String(a[1]).localeCompare(String(b[1])));
+  $('#sVend .ms-list').innerHTML = arr.map(([cod,nm])=>
+    `<label class="ms-item"><input type="checkbox" value="${cod}" ${prevSet.has(String(cod))?'checked':''}><span>${nm}</span></label>`).join('');
+  applySearchVend();
+  updateCount('sVend','sVendCount','todos');
+}
+
+function recompute(){
+  const sel=vendSel();
+  const la=filtraVend(ATUAL, sel), lp=filtraVend(ANT, sel);
+  const a=totais(la), p=totais(lp);
+  $('#hLiq').textContent=fmtBRL(a.liquido); yoy('yLiq',a.liquido,p.liquido,true);       setPrev('pLiq',p.liquido,true);
+  $('#hBru').textContent=fmtBRL(a.bruto);   yoy('yBru',a.bruto,p.bruto,true);           setPrev('pBru',p.bruto,true);
+  $('#hQtd').textContent=fmtN(a.qtd_v);     yoy('yQtd',a.qtd_v,p.qtd_v,false);          setPrev('pQtd',p.qtd_v,false);
+  $('#hDev').textContent=fmtBRL(a.devol);   yoy('yDev',a.devol,p.devol,true,false);     setPrev('pDev',p.devol,true);
+  const tic=a.qtd_v? a.bruto/a.qtd_v:0, ticp=p.qtd_v? p.bruto/p.qtd_v:0;
+  $('#hTic').textContent=fmtBRL(tic);       yoy('yTic',tic,ticp,true);                  setPrev('pTic',ticp,true);
+  ranking('rankLiq', la, 'liquido', true);
+  ranking('rankQtd', la, 'qtd_v', false);
+  $('#tagLiq').textContent=`top 10 de ${la.length}`;
+  $('#tagQtd').textContent=`top 10 de ${la.length}`;
+}
+
+async function carregar(){
+  const emp=empsSel().join(','), di=$('#sIni').value, df=$('#sFin').value;
+  try{
+    const r=await fetch(`/faturamento/api/painel?emp=${emp}&dt_ini=${di}&dt_fin=${df}`);
+    const j=await r.json();
+    if(j.erro){ $('#per').textContent='Erro: '+j.erro; return; }
+    ATUAL=j.atual.linhas||[]; ANT=j.anterior.linhas||[];
+    anoAnt=j.anterior.dt_ini.slice(0,4);
+    $('#per').innerHTML = `${brDate(j.atual.dt_ini)} a ${brDate(j.atual.dt_fin)} &nbsp;·&nbsp; vs ${brDate(j.anterior.dt_ini)} a ${brDate(j.anterior.dt_fin)}`;
+    popularVend();
+    recompute();
+    lastAt=new Date().toLocaleTimeString('pt-BR'); setLive('on');
+  }catch(e){ $('#per').textContent='Falha: '+e; setLive('off'); }
+}
+
+function startStream(){
+  if(es){ es.close(); es=null; }
+  const emp=empsSel().join(','), di=$('#sIni').value, df=$('#sFin').value;
+  es=new EventSource(`/faturamento/api/stream?emp=${emp}&dt_ini=${di}&dt_fin=${df}`);
+  es.addEventListener('init', ()=>setLive('on'));
+  es.addEventListener('change', ()=>{ setLive('pulse'); carregar(); });
+  es.onerror=()=>setLive('off');
+}
+
+// ---- ajustes ----
+$('#gear').addEventListener('click', ()=>$('#settings').classList.toggle('open'));
+$('#closeSet').addEventListener('click', ()=>$('#settings').classList.remove('open'));
+$('#sGo').addEventListener('click', ()=>{ $('#settings').classList.remove('open'); savePrefs(); carregar(); startStream(); });
+wireMulti('sEmp','sEmpCount','todas', null);                       // empresa aplica no botao
+wireMulti('sVend','sVendCount','todos', ()=>{ recompute(); savePrefs(); });  // vendedor instantaneo
+
+async function init(){
+  const prefs=loadPrefs();
+  $('#sIni').value = prefs.dtIni || `${new Date().getFullYear()}-01-01`;
+  $('#sFin').value = hojeISO();                                    // data fim SEMPRE hoje
+  const r=await fetch('/faturamento/api/filtros'); const j=await r.json();
+  buildEmp(j.empresas||[], prefs.emp);                             // restaura empresas (ou todas)
+  SAVED_VEND = (prefs.vend && prefs.vend.length) ? prefs.vend : null;  // restaura vendedores
+  await carregar();                                                // popularVend usa SAVED_VEND
+  startStream();
+}
+init();
+</script>
+</body>
+</html>

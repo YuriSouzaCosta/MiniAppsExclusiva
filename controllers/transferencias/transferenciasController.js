@@ -170,43 +170,92 @@ async function criarTransferencias(req, res) {
         for (const transf of transferencias) {
             const { codProd, empresaOrigem, codLocalOrigem, empresaDestino, codLocalDestino, quantidade } = transf;
 
-            // TODO: Ajustar esta query/procedure conforme seu sistema
-            // Exemplo: chamar procedure de transferência
-            const result = await conn.execute(
-                `BEGIN
-                    -- Sua procedure de transferência aqui
-                    -- Exemplo fictício:
-                    -- STP_CRIAR_TRANSFERENCIA(:codProd, :empOrigem, :localOrigem, :empDestino, :localDestino, :qtd, :resultado);
-                    :resultado := 'Transferência criada com sucesso';
-                END;`,
-                {
-                    codProd,
-                    empOrigem: empresaOrigem,
-                    localOrigem: codLocalOrigem,
-                    empDestino: empresaDestino,
-                    localDestino: codLocalDestino,
-                    qtd: quantidade,
-                    resultado: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 4000 }
-                }
-            );
-
-            resultados.push({
+            console.log('Criando transferência:', {
                 codProd,
                 empresaOrigem,
-                localOrigem: codLocalOrigem,
+                codLocalOrigem,
                 empresaDestino,
-                localDestino: codLocalDestino,
-                status: 'success',
-                mensagem: result.outBinds.resultado
+                codLocalDestino,
+                quantidade
             });
+
+            try {
+                // Chamar procedure real de transferência
+                const result = await conn.execute(
+                    `BEGIN
+                        JIVA.STP_CRIAR_TRANSFERENCIA_YSC(
+                            p_codprod       => :codProd,
+                            p_emp_origem    => :empOrigem,
+                            p_local_origem  => :localOrigem,
+                            p_emp_dest      => :empDestino,
+                            p_local_dest    => :localDestino,
+                            p_qtd           => :qtd,
+                            P_MENSAGEM      => :mensagem
+                        );
+                    END;`,
+                    {
+                        codProd: codProd,
+                        empOrigem: empresaOrigem,
+                        localOrigem: codLocalOrigem,
+                        empDestino: empresaDestino,
+                        localDestino: codLocalDestino,
+                        qtd: quantidade,
+                        mensagem: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 4000 }
+                    }
+                );
+
+                const mensagemRetorno = result.outBinds.mensagem;
+                console.log('Retorno da procedure:', mensagemRetorno);
+
+                resultados.push({
+                    codProd,
+                    empresaOrigem,
+                    localOrigem: codLocalOrigem,
+                    empresaDestino,
+                    localDestino: codLocalDestino,
+                    quantidade,
+                    status: 'success',
+                    mensagem: mensagemRetorno
+                });
+
+            } catch (itemErr) {
+                console.error('Erro ao criar transferência individual:', itemErr);
+                resultados.push({
+                    codProd,
+                    empresaOrigem,
+                    localOrigem: codLocalOrigem,
+                    empresaDestino,
+                    localDestino: codLocalDestino,
+                    quantidade,
+                    status: 'error',
+                    mensagem: itemErr.message
+                });
+            }
         }
 
         await conn.commit();
 
-        console.log('Transferências criadas:', resultados.length);
+        // Contar sucessos e erros
+        const sucessos = resultados.filter(r => r.status === 'success').length;
+        const erros = resultados.filter(r => r.status === 'error').length;
+
+        console.log('Transferências processadas:', { total: resultados.length, sucessos, erros });
+
+        let mensagemFinal = '';
+        if (erros === 0) {
+            mensagemFinal = `${sucessos} transferência(s) criada(s) com sucesso!`;
+        } else if (sucessos === 0) {
+            mensagemFinal = `Erro ao criar todas as ${erros} transferência(s)`;
+        } else {
+            mensagemFinal = `${sucessos} transferência(s) criada(s) com sucesso, ${erros} com erro`;
+        }
+
         res.json({
-            success: true,
-            message: `${resultados.length} transferência(s) criada(s) com sucesso`,
+            success: erros === 0,
+            message: mensagemFinal,
+            sucessos,
+            erros,
+            total: resultados.length,
             resultados
         });
 
@@ -236,10 +285,49 @@ async function criarTransferencias(req, res) {
     }
 }
 
+async function puxarTransferencias(req, res) {
+    console.log('=== PUXAR TRANSFERENCIAS - API chamada ===');
+    let conn;
+
+    try {
+        conn = await db.getConnection();
+
+        // Buscar transferências pendentes
+        const query = `
+            SELECT *
+            FROM VW_MIRROR_TRANS_YSC
+            WHERE AD_TRANSF_YSC = 'S'
+            ORDER BY NUNOTA
+        `;
+
+        const result = await conn.execute(
+            query,
+            {},
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        console.log('Transferências pendentes encontradas:', result.rows.length);
+        res.json(result.rows);
+
+    } catch (err) {
+        console.error('Erro ao buscar transferências pendentes:', err);
+        res.status(500).json({ error: 'Erro ao buscar transferências pendentes' });
+    } finally {
+        if (conn) {
+            try {
+                await conn.close();
+            } catch (e) {
+                console.error('Erro ao fechar conexão:', e);
+            }
+        }
+    }
+}
+
 module.exports = {
     index,
     buscarProduto,
     buscarEstoque,
     buscarLocaisDestino,
-    criarTransferencias
+    criarTransferencias,
+    puxarTransferencias
 };

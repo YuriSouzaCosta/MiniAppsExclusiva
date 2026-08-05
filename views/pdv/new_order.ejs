@@ -1,0 +1,376 @@
+<%- include('partials/header', { pageTitle: 'Novo Pedido' }) %>
+
+<div class="space-y-4 md:space-y-6 pb-32 md:pb-20" id="posApp">
+    <!-- Progress Bar - Mobile Enhanced -->
+    <div class="relative px-4 md:px-0">
+        <div class="absolute top-1/2 left-4 right-4 md:left-0 md:right-0 h-1 bg-gray-200 -z-10 rounded-full"></div>
+        <div class="absolute top-1/2 left-4 md:left-0 h-1 bg-green-600 -z-10 rounded-full transition-all duration-300" id="progressBar" style="width: 0%"></div>
+        <div class="flex justify-between">
+            <div class="touch-active flex flex-col items-center bg-gray-50 px-2 md:px-3 cursor-pointer" onclick="goToStep(1)">
+                <div class="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center border-2 border-green-600 bg-white text-green-600 transition-all shadow-sm" id="step1Indicator">
+                    <span class="font-bold text-base md:text-lg">1</span>
+                </div>
+                <span class="text-[11px] md:text-xs font-semibold mt-2 text-green-700">Cliente</span>
+            </div>
+            <div class="touch-active flex flex-col items-center bg-gray-50 px-2 md:px-3 cursor-pointer" onclick="goToStep(2)">
+                <div class="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center border-2 border-gray-300 bg-white text-gray-400 transition-all shadow-sm" id="step2Indicator">
+                    <span class="font-bold text-base md:text-lg">2</span>
+                </div>
+                <span class="text-[11px] md:text-xs font-semibold mt-2 text-gray-500">Produtos</span>
+            </div>
+            <div class="touch-active flex flex-col items-center bg-gray-50 px-2 md:px-3 cursor-pointer" onclick="goToStep(3)">
+                <div class="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center border-2 border-gray-300 bg-white text-gray-400 transition-all shadow-sm" id="step3Indicator">
+                    <span class="font-bold text-base md:text-lg">3</span>
+                </div>
+                <span class="text-[11px] md:text-xs font-semibold mt-2 text-gray-500">Pagar</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 1: Identification -->
+    <div id="step1" class="step-content">
+        <div class="space-y-4 md:space-y-6">
+            <div class="rounded-xl border border-gray-200 bg-white text-gray-950 shadow-sm">
+                <div class="p-4 md:p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-orange-100 p-2 rounded-full">
+                            <i data-lucide="user" class="w-5 h-5 text-orange-600"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-900">Identificação do Cliente</h3>
+                    </div>
+                    <div class="w-full relative">
+                        <div class="relative">
+                            <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"></i>
+                            <input type="text" id="clientName" class="flex h-14 md:h-12 w-full rounded-xl border-2 border-gray-200 bg-white pl-12 pr-4 py-3 text-lg placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all" placeholder="Buscar cliente..." autocomplete="off">
+                        </div>
+                        <input type="hidden" id="selectedCodparc" value="">
+                        <div id="partnerSearchResults" class="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl hidden max-h-72 overflow-y-auto">
+                            <!-- Results will be injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-gray-200 bg-white text-gray-950 shadow-sm">
+                <div class="p-4 md:p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-green-100 p-2 rounded-full">
+                            <i data-lucide="credit-card" class="w-5 h-5 text-green-600"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-900">Forma de Pagamento</h3>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <button onclick="selectPayment('avista')" class="payment-btn touch-active payment-btn-mobile flex items-center sm:flex-col justify-start sm:justify-center p-4 sm:p-4 rounded-xl border-2 border-gray-200 text-gray-600 transition-all gap-4 sm:gap-2 min-h-[64px] sm:min-h-0" data-method="avista">
+                            <div class="icon-wrapper bg-gray-100 p-3 rounded-xl sm:bg-transparent sm:p-0 sm:rounded-none">
+                                <i data-lucide="banknote" class="w-7 h-7 sm:w-6 sm:h-6"></i>
+                            </div>
+                            <div class="flex flex-col items-start sm:items-center">
+                                <span class="font-semibold text-base sm:text-sm">A Vista</span>
+                                <span class="text-xs text-gray-400 sm:hidden">Dinheiro, PIX</span>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-5 h-5 ml-auto text-gray-300 sm:hidden"></i>
+                        </button>
+                        <button onclick="selectPayment('cartao')" class="payment-btn touch-active payment-btn-mobile flex items-center sm:flex-col justify-start sm:justify-center p-4 sm:p-4 rounded-xl border-2 border-gray-200 text-gray-600 transition-all gap-4 sm:gap-2 min-h-[64px] sm:min-h-0" data-method="cartao">
+                            <div class="icon-wrapper bg-gray-100 p-3 rounded-xl sm:bg-transparent sm:p-0 sm:rounded-none">
+                                <i data-lucide="credit-card" class="w-7 h-7 sm:w-6 sm:h-6"></i>
+                            </div>
+                            <div class="flex flex-col items-start sm:items-center">
+                                <span class="font-semibold text-base sm:text-sm">Cartão</span>
+                                <span class="text-xs text-gray-400 sm:hidden">Crédito, Débito</span>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-5 h-5 ml-auto text-gray-300 sm:hidden"></i>
+                        </button>
+                        <button onclick="selectPayment('boleto')" class="payment-btn touch-active payment-btn-mobile flex items-center sm:flex-col justify-start sm:justify-center p-4 sm:p-4 rounded-xl border-2 border-gray-200 text-gray-600 transition-all gap-4 sm:gap-2 min-h-[64px] sm:min-h-0" data-method="boleto">
+                            <div class="icon-wrapper bg-gray-100 p-3 rounded-xl sm:bg-transparent sm:p-0 sm:rounded-none">
+                                <i data-lucide="file-text" class="w-7 h-7 sm:w-6 sm:h-6"></i>
+                            </div>
+                            <div class="flex flex-col items-start sm:items-center">
+                                <span class="font-semibold text-base sm:text-sm">Boleto</span>
+                                <span class="text-xs text-gray-400 sm:hidden">Prazo bancário</span>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-5 h-5 ml-auto text-gray-300 sm:hidden"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Products -->
+    <div id="step2" class="step-content hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+            <!-- Product Search and Grid (Left Side) -->
+            <div class="lg:col-span-2 space-y-4">
+                <!-- Search Bar - Mobile Optimized -->
+                <div class="sticky top-0 z-20 bg-gray-50 pb-3 -mx-4 px-4 pt-2 md:relative md:mx-0 md:px-0 md:pt-0">
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <div class="relative flex-1">
+                            <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"></i>
+                            <input type="text" id="productSearch" class="flex h-14 sm:h-12 w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 pl-12 text-base sm:text-lg placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all" placeholder="Buscar produto...">
+                        </div>
+                        
+                        <!-- Desktop Brand Filter -->
+                        <div class="hidden md:block w-64">
+                            <select id="brandFilterDesktop" class="flex h-12 w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all">
+                                <option value="">Todas as Marcas</option>
+                                <!-- Brands will be injected here -->
+                            </select>
+                        </div>
+
+                        <!-- Mobile Brand Filter Button -->
+                        <button onclick="openBrandModal()" class="md:hidden touch-active flex h-12 items-center justify-center gap-2 rounded-xl border-2 border-gray-200 bg-white px-4 py-2 text-sm font-semibold transition-all">
+                            <i data-lucide="filter" class="w-5 h-5 text-gray-500"></i>
+                            <span id="selectedBrandMobileLabel" class="truncate max-w-[150px]">Todas as Marcas</span>
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Product Grid - Single column on very small screens -->
+                <div class="grid grid-cols-1 min-[400px]:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 pb-24 lg:pb-0" id="productGrid">
+                    <!-- Products will be injected here via JS -->
+                </div>
+            </div>
+
+            <!-- Added Items List (Right Side - Desktop) -->
+            <div class="hidden lg:block lg:col-span-1">
+                <div class="sticky top-6 space-y-4">
+                    <div class="rounded-xl border border-gray-200 bg-white text-gray-950 shadow-sm overflow-hidden">
+                        <div class="p-4 border-b bg-gray-50 flex items-center justify-between">
+                            <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+                                <i data-lucide="shopping-cart" class="w-4 h-4 text-orange-600"></i>
+                                Itens Adicionados
+                            </h3>
+                            <span id="step2ItemCount" class="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                        </div>
+                        <div class="max-h-[calc(100vh-300px)] overflow-y-auto">
+                            <ul class="divide-y divide-gray-100" id="step2CartList">
+                                <li class="p-8 text-center text-gray-400 text-sm">
+                                    Nenhum item adicionado
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="p-4 border-t bg-gray-50">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-sm font-medium text-gray-600">Total Parcial</span>
+                                <span id="step2PartialTotal" class="text-xl font-bold text-orange-600">R$ 0,00</span>
+                            </div>
+                            <button onclick="nextStep()" class="w-full inline-flex items-center justify-center rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700 h-12 px-4 py-2 shadow-md">
+                                Revisar e Pagar
+                                <i data-lucide="chevron-right" class="w-4 h-4 ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Floating Cart Button - Enhanced -->
+            <div class="lg:hidden fixed bottom-36 right-4 z-40" id="floatingCartContainer">
+                <button onclick="openMobileCart()" id="floatingCartBtn" class="floating-cart-btn touch-active flex items-center gap-3 bg-gradient-to-r from-orange-600 to-orange-700 text-white px-5 py-4 rounded-2xl shadow-2xl transition-all">
+                    <div class="relative">
+                        <i data-lucide="shopping-cart" class="w-7 h-7"></i>
+                        <span id="mobileCartBadge" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-orange-600 shadow-sm">0</span>
+                    </div>
+                    <div class="text-left">
+                        <p class="text-[10px] uppercase font-bold opacity-90 leading-none tracking-wide">Ver Carrinho</p>
+                        <p id="mobileCartTotal" class="text-xl font-bold leading-tight">R$ 0,00</p>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-5 h-5 opacity-70"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3: Summary -->
+    <div id="step3" class="step-content hidden">
+        <div class="space-y-4 md:space-y-6 pb-32 md:pb-4">
+            <!-- Cart Items List -->
+            <div class="rounded-xl border border-gray-200 bg-white text-gray-950 shadow-sm overflow-hidden">
+                <div class="p-4 border-b bg-gray-50 flex items-center justify-between">
+                    <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+                        <i data-lucide="package" class="w-4 h-4 text-orange-600"></i>
+                        Itens do Pedido
+                    </h3>
+                    <span class="text-xs text-gray-500">Toque para editar</span>
+                </div>
+                <div class="max-h-[40vh] md:max-h-none overflow-y-auto">
+                    <ul class="divide-y divide-gray-100" id="cartItemsList">
+                        <!-- Cart items will be injected here -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Summary Card -->
+            <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200 space-y-4">
+                <div class="flex justify-between text-base">
+                    <span class="text-gray-600">Subtotal</span>
+                    <span id="summarySubtotal" class="font-semibold">R$ 0,00</span>
+                </div>
+                
+                <div class="flex justify-between text-base text-red-600">
+                    <span>Descontos Itens</span>
+                    <span id="summaryItemDiscounts" class="font-semibold">R$ 0,00 (0.00%)</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 py-3 border-t border-b border-gray-100">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-2">Desconto (R$)</label>
+                        <input type="number" id="additionalDiscount" class="flex h-12 w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-2 text-right text-base font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all" value="0" step="0.01" inputmode="decimal">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-2">Desconto (%)</label>
+                        <input type="number" id="additionalDiscountPercent" class="flex h-12 w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-2 text-right text-base font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all" value="0" step="0.01" inputmode="decimal">
+                    </div>
+                </div>
+
+                <div class="pt-2 flex justify-between items-center">
+                    <span class="text-lg font-bold text-gray-900">Total a Pagar</span>
+                    <span class="text-3xl md:text-4xl font-bold text-green-600" id="summaryTotal">R$ 0,00</span>
+                </div>
+            </div>
+
+            <!-- Finalize Button (Desktop) -->
+            <div class="hidden md:block">
+                <button onclick="finalizeOrder()" class="touch-active inline-flex items-center justify-center rounded-xl text-lg font-bold bg-gradient-to-r from-green-600 to-green-700 text-white h-14 w-full shadow-lg transition-all">
+                    <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
+                    Finalizar Pedido
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Sticky Finalize Button -->
+        <div class="md:hidden fixed bottom-20 left-0 right-0 p-4 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] z-30 safe-area-inset-bottom">
+            <button onclick="finalizeOrder()" class="touch-active inline-flex items-center justify-center rounded-xl text-lg font-bold bg-gradient-to-r from-green-600 to-green-700 text-white h-14 w-full shadow-lg transition-all">
+                <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
+                Finalizar Pedido
+            </button>
+        </div>
+    </div>
+
+    <!-- Navigation Footer - Mobile Enhanced -->
+    <div class="hidden md:flex fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 md:static md:bg-transparent md:border-0 md:p-0 justify-between gap-4 z-10">
+        <button onclick="prevStep()" id="prevBtn" class="touch-active inline-flex items-center justify-center rounded-xl text-sm font-semibold border-2 border-gray-200 bg-white text-gray-700 h-12 px-6 py-2 flex-1 md:flex-none transition-all" disabled>
+            <i data-lucide="chevron-left" class="w-5 h-5 mr-2"></i>
+            Voltar
+        </button>
+
+        <button onclick="nextStep()" id="nextBtn" class="touch-active inline-flex items-center justify-center rounded-xl text-sm font-semibold bg-gradient-to-r from-green-600 to-green-700 text-white h-12 px-6 py-2 flex-1 md:flex-none shadow-md transition-all">
+            Próximo
+            <i data-lucide="chevron-right" class="w-5 h-5 ml-2"></i>
+        </button>
+    </div>
+
+    <!-- Mobile Navigation Footer -->
+    <div class="md:hidden fixed bottom-20 left-0 right-0 p-3 bg-white/95 backdrop-blur-sm border-t border-gray-200 flex justify-between gap-3 z-20 safe-area-inset-bottom" id="mobileNavFooter">
+        <button onclick="prevStep()" id="prevBtnMobile" class="touch-active inline-flex items-center justify-center rounded-xl text-sm font-semibold border-2 border-gray-200 bg-white text-gray-700 h-12 px-4 py-2 flex-1 transition-all" disabled>
+            <i data-lucide="chevron-left" class="w-5 h-5 mr-1"></i>
+            Voltar
+        </button>
+
+        <button onclick="nextStep()" id="nextBtnMobile" class="touch-active inline-flex items-center justify-center rounded-xl text-sm font-semibold bg-gradient-to-r from-green-600 to-green-700 text-white h-12 px-4 py-2 flex-1 shadow-md transition-all">
+            Próximo
+            <i data-lucide="chevron-right" class="w-5 h-5 ml-1"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Item Modal - Fullscreen on Mobile -->
+<div id="itemModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm hidden animate-fade-in">
+    <div class="w-full sm:max-w-md transform overflow-hidden rounded-t-3xl sm:rounded-2xl bg-white text-left align-middle shadow-xl transition-all animate-slide-up sm:animate-scale-in max-h-[90vh] sm:max-h-none flex flex-col">
+        <!-- Header -->
+        <div class="flex items-center justify-between p-4 border-b border-gray-100">
+            <h3 class="text-lg font-semibold leading-6 text-gray-900 truncate pr-4" id="modalProductName">Nome do Produto</h3>
+            <button onclick="closeModal()" class="touch-active rounded-full p-2 bg-gray-100 transition-colors">
+                <i data-lucide="x" class="h-5 w-5 text-gray-600"></i>
+            </button>
+        </div>
+        
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-4">
+            <div class="flex justify-between items-center bg-gradient-to-r from-orange-50 to-amber-50 p-4 rounded-xl">
+                <span class="text-sm font-medium text-gray-600">Preço Unitário</span>
+                <span class="font-bold text-xl text-orange-600" id="modalProductPrice">R$ 0,00</span>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Quantidade</label>
+                <div class="qty-control-mobile flex items-center justify-center gap-4">
+                    <button onclick="updateQuantity(-1)" class="touch-active w-14 h-14 flex items-center justify-center rounded-xl border-2 border-gray-200 bg-white text-2xl font-bold text-gray-600">-</button>
+                    <input type="number" id="modalQuantity" class="w-24 h-14 text-center text-2xl font-bold rounded-xl border-2 border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" value="1" inputmode="numeric">
+                    <button onclick="updateQuantity(1)" class="touch-active w-14 h-14 flex items-center justify-center rounded-xl border-2 border-gray-200 bg-white text-2xl font-bold text-gray-600">+</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Desconto (R$)</label>
+                    <input type="number" id="modalDiscountValue" class="flex h-12 w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-2 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" value="0" inputmode="decimal">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Desconto (%)</label>
+                    <input type="number" id="modalDiscountPercent" class="flex h-12 w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-2 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" value="0" inputmode="decimal">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="p-4 border-t border-gray-100 bg-gray-50 space-y-3 safe-area-inset-bottom">
+            <div class="flex justify-between items-center">
+                <span class="font-semibold text-gray-700">Total Final</span>
+                <span class="text-2xl font-bold text-green-600" id="modalFinalTotal">R$ 0,00</span>
+            </div>
+            
+            <button onclick="confirmAddItem()" class="touch-active inline-flex items-center justify-center rounded-xl text-base font-bold bg-gradient-to-r from-orange-600 to-orange-700 text-white h-14 w-full shadow-lg transition-all">
+                <i data-lucide="plus" class="w-5 h-5 mr-2"></i>
+                Adicionar ao Pedido
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal - Fullscreen on Mobile -->
+<div id="paymentModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm hidden animate-fade-in">
+    <div class="w-full sm:max-w-md transform overflow-hidden rounded-t-3xl sm:rounded-2xl bg-white text-left align-middle shadow-xl transition-all animate-slide-up sm:animate-scale-in max-h-[85vh] sm:max-h-[80vh] flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-gray-100">
+            <h3 class="text-lg font-semibold leading-6 text-gray-900">Forma de Pagamento</h3>
+            <button onclick="closePaymentModal()" class="touch-active rounded-full p-2 bg-gray-100 transition-colors">
+                <i data-lucide="x" class="h-5 w-5 text-gray-600"></i>
+            </button>
+        </div>
+        <div class="p-4 border-b border-gray-100">
+            <div class="relative">
+                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                <input type="text" id="paymentSearch" class="flex h-12 w-full rounded-xl border-2 border-gray-200 bg-white pl-12 pr-4 py-2 text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="Buscar...">
+            </div>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-2" id="paymentMethodsList">
+            <!-- Payment methods will be injected here -->
+        </div>
+    </div>
+</div>
+
+<!-- Brand Selection Modal - Fullscreen on Mobile -->
+<div id="brandModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm hidden animate-fade-in">
+    <div class="w-full sm:max-w-md transform overflow-hidden rounded-t-3xl sm:rounded-2xl bg-white text-left align-middle shadow-xl transition-all animate-slide-up sm:animate-scale-in max-h-[85vh] sm:max-h-[80vh] flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-gray-100">
+            <h3 class="text-lg font-semibold leading-6 text-gray-900">Selecionar Marca</h3>
+            <button onclick="closeBrandModal()" class="touch-active rounded-full p-2 bg-gray-100 transition-colors">
+                <i data-lucide="x" class="h-5 w-5 text-gray-600"></i>
+            </button>
+        </div>
+        <div class="p-4 border-b border-gray-100">
+            <div class="relative">
+                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                <input type="text" id="brandSearch" class="flex h-12 w-full rounded-xl border-2 border-gray-200 bg-white pl-12 pr-4 py-2 text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="Buscar marca...">
+            </div>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-2" id="brandList">
+            <!-- Brands will be injected here -->
+        </div>
+    </div>
+</div>
+
+<input type="hidden" id="selectedCodtipvenda" value="">
+
+<script src="/js/pdv/pos.js"></script>
+<%- include('partials/footer') %>

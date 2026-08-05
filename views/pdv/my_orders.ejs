@@ -1,0 +1,120 @@
+<%- include('partials/header', { pageTitle: 'Meus Pedidos' }) %>
+
+<div class="space-y-4 md:space-y-6 pb-24 md:pb-4">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <h2 class="text-3xl font-bold text-gray-900">Meus Pedidos</h2>
+        
+        <form action="/pdv/my-orders" method="GET" class="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+            <div class="flex items-center gap-2">
+                <div class="relative">
+                    <label for="startDate" class="block text-xs font-medium text-gray-500 mb-1">Data Inicial</label>
+                    <input type="date" 
+                           id="startDate"
+                           name="startDate" 
+                           value="<%= typeof startDateISO !== 'undefined' ? startDateISO : '' %>"
+                           class="pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm"
+                           required>
+                </div>
+                <div class="relative">
+                    <label for="endDate" class="block text-xs font-medium text-gray-500 mb-1">Data Final</label>
+                    <input type="date" 
+                           id="endDate"
+                           name="endDate" 
+                           value="<%= typeof endDateISO !== 'undefined' ? endDateISO : '' %>"
+                           class="pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm"
+                           required>
+                </div>
+            </div>
+
+            <div class="relative min-w-[150px]">
+                <label for="status" class="block text-xs font-medium text-gray-500 mb-1">Status</label>
+                <select name="status" id="status" class="pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm h-[38px]">
+                    <option value="all" <%= status === 'all' ? 'selected' : '' %>>Todos</option>
+                    <option value="open" <%= status === 'open' ? 'selected' : '' %>>Aberto (Pendente)</option>
+                    <option value="invoiced" <%= status === 'invoiced' ? 'selected' : '' %>>Faturado</option>
+                </select>
+            </div>
+
+            <button type="submit" class="mb-[1px] inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
+                <i data-lucide="filter" class="w-4 h-4 mr-2"></i>
+                Filtrar
+            </button>
+        </form>
+    </div>
+
+    <div class="rounded-xl border border-gray-200 bg-white text-gray-950 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-100">
+                    <tr>
+                        <th class="px-4 py-3 font-medium">Nº Único</th>
+                        <th class="px-4 py-3 font-medium">Data</th>
+                        <th class="px-4 py-3 font-medium">Cliente</th>
+                        <% if (user.role === 'ADMIN' || user.role === 'GERENTE') { %>
+                            <th class="px-4 py-3 font-medium">Vendedor</th>
+                        <% } %>
+                        <th class="px-4 py-3 font-medium text-right">Valor</th>
+                        <th class="px-4 py-3 font-medium text-center">Status</th>
+                        <th class="px-4 py-3 font-medium text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    <% if (orders && orders.length > 0) { %>
+                        <% orders.forEach(order => { %>
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900">
+                                    #<%= order.NUNOTA %>
+                                </td>
+                                <td class="px-4 py-3 text-gray-500">
+                                    <%= order.DTNEG %>
+                                </td>
+                                <td class="px-4 py-3 text-gray-900 font-medium">
+                                    <%= order.RAZAOSOCIAL %>
+                                </td>
+                                <% if (user.role === 'ADMIN' || user.role === 'GERENTE') { %>
+                                    <td class="px-4 py-3 text-gray-500">
+                                        <%= order.VENDEDOR || order.CODVEND %>
+                                    </td>
+                                <% } %>
+                                <td class="px-4 py-3 text-right font-bold text-gray-900">
+                                    R$ <%= order.VLRNOTA.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <% if (order.PENDENTE === 'S') { %>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            Aberto
+                                        </span>
+                                    <% } else { %>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            Faturado
+                                        </span>
+                                    <% } %>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <% if (order.PENDENTE === 'S') { %>
+                                        <a href="/pdv/pos?nunota=<%= order.NUNOTA %>" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-50 text-orange-600 hover:bg-orange-100 transition-colors" title="Editar Pedido">
+                                            <i data-lucide="edit" class="w-4 h-4"></i>
+                                        </a>
+                                    <% } else { %>
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-400 cursor-not-allowed" title="Pedido Faturado - Não editável">
+                                            <i data-lucide="lock" class="w-4 h-4"></i>
+                                        </span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="<%= (user.role === 'ADMIN' || user.role === 'GERENTE') ? 6 : 5 %>" class="px-4 py-12 text-center text-gray-500">
+                                <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-3 opacity-20"></i>
+                                <p>Nenhum pedido encontrado para o filtro selecionado.</p>
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

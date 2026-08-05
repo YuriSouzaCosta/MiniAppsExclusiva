@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Requisições entre Lojas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="/css/requisicoes.css" />
+</head>
+
+<body class="req-body">
+    <div class="req-header">
+        <a href="/" class="btn btn-light border"><i class="bi bi-arrow-left"></i></a>
+        <div class="req-titulo">
+            <h1>Requisições entre Lojas</h1>
+            <p class="req-sub">Todas as requisições, de todas as lojas</p>
+        </div>
+        <% if (podeSeparar) { %>
+            <a href="/requisicoes/separacao" class="btn btn-outline-dark" title="Fila de separação">
+                <i class="bi bi-box-seam"></i>
+                <span class="d-none d-sm-inline">Fila de separação</span>
+            </a>
+        <% } %>
+        <a href="/requisicoes/nova" class="btn req-btn-principal">
+            <i class="bi bi-plus-lg"></i>
+            <span class="d-none d-sm-inline">Nova requisição</span>
+            <span class="d-sm-none">Nova</span>
+        </a>
+    </div>
+
+    <div class="req-conteudo">
+        <div class="req-abas" id="abas">
+            <button class="req-aba ativa" data-status="">Todas <span class="contador">0</span></button>
+            <button class="req-aba" data-status="ABERTA">Abertas <span class="contador">0</span></button>
+            <button class="req-aba" data-status="EM_SEPARACAO">Em separação <span class="contador">0</span></button>
+            <button class="req-aba" data-status="FINALIZADA">Finalizadas <span class="contador">0</span></button>
+            <button class="req-aba" data-status="RECEBIDA">Recebidas <span class="contador">0</span></button>
+        </div>
+
+        <div class="req-grade" id="lista"></div>
+        <div class="req-vazio d-none" id="vazio">
+            <i class="bi bi-inbox"></i>
+            Nenhuma requisição por aqui ainda.
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/requisicoes/lista.js"></script>
+    <script>
+        iniciarLista({ escopo: 'minhas' });
+    </script>
+</body>
+
+</html>

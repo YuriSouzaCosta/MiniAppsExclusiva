@@ -3,6 +3,7 @@ const apiBase = window.location.port
     : `${window.location.protocol}//${window.location.hostname}`;
 
 
+
 // Global variables
 let marcasDisponiveis = []; // Variável para armazenar todas as marcas
 let pagDisponiveis = []; // Variável para armazenar todas as formas de pagamento
@@ -112,6 +113,7 @@ function filtrarMarcas() {
 
     if (valorDigitado.length === 0) {
         dropdown.classList.remove("show");
+        dropdown.style.display = "none";
         return;
     }
 
@@ -122,6 +124,7 @@ function filtrarMarcas() {
         loadingItem.textContent = "Carregando marcas...";
         dropdown.appendChild(loadingItem);
         dropdown.classList.add("show");
+        dropdown.style.display = "block";
         return;
     }
 
@@ -132,6 +135,7 @@ function filtrarMarcas() {
 
     if (filtradas.length === 0) {
         dropdown.classList.remove("show");
+        dropdown.style.display = "none";
         return;
     }
 
@@ -144,11 +148,13 @@ function filtrarMarcas() {
             event.preventDefault();
             input.value = marca;
             dropdown.classList.remove("show");
+            dropdown.style.display = "none";
         };
         dropdown.appendChild(item);
     });
 
     dropdown.classList.add("show");
+    dropdown.style.display = "block";
 }
 
 
@@ -207,6 +213,7 @@ function filtrarFornecedor(inputId, dropdownId) {
         item.textContent = `${dado.NOME || ''} (${dado.CNPJ || ''})`;
         item.onclick = function (event) {
             event.preventDefault();
+            event.stopPropagation();
             input.value = dado.NOME || '';
             input.dataset.codparc = dado.CODPARC; // Store the supplier code as data attribute
             dropdown.classList.remove("show");
@@ -269,6 +276,7 @@ function filtrarFormaPagamento(inputId, dropdownId) {
         item.textContent = dado.DESCRTIPVENDA || '';
         item.onclick = function (event) {
             event.preventDefault();
+            event.stopPropagation();
             input.value = dado.DESCRTIPVENDA || '';
             input.dataset.codtipvenda = dado.CODTIPVENDA;
             dropdown.classList.remove("show");
@@ -282,17 +290,21 @@ function filtrarFormaPagamento(inputId, dropdownId) {
 }
 
 document.addEventListener("click", function (event) {
-    // Get all dropdown elements on the page
-    const dropdowns = document.querySelectorAll(".dropdown-menu.show");
+    // Close all open dropdowns (both .dropdown-menu.show and .dropdown-menu-custom visible)
+    const dropdowns = document.querySelectorAll(".dropdown-menu.show, .dropdown-menu-custom");
 
     dropdowns.forEach(dropdown => {
-        // Find the corresponding input (remove 'Lista' from the ID)
-        const inputId = dropdown.id.replace('Lista', '');
-        const input = document.getElementById(inputId);
+        // Check if dropdown is actually visible
+        if (dropdown.style.display === 'none' || dropdown.style.display === '') return;
+
+        // Find the corresponding input (the previous sibling or nearby input)
+        const parent = dropdown.parentElement;
+        const input = parent ? parent.querySelector('input') : null;
 
         if (input && dropdown) {
             if (!input.contains(event.target) && !dropdown.contains(event.target)) {
                 dropdown.classList.remove("show");
+                dropdown.style.display = 'none';
             }
         }
     });
@@ -406,9 +418,30 @@ function carregarDadosPedido(id) {
 
 
 async function apagarPedido(id_pedido) {
-    if (id_pedido && confirm("Deseja realmente apagar o pedido?")) {
+    if (!id_pedido) return;
+
+    const result = await Swal.fire({
+        title: 'Tem certeza?',
+        text: "Deseja realmente apagar este pedido? Esta ação não pode ser desfeita!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, apagar!',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
         try {
-            console.log(id_pedido);
+            // Show loading state
+            Swal.fire({
+                title: 'Apagando...',
+                text: 'Por favor, aguarde.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
             // Faz a requisição para excluir o pedido
             const response = await fetch(`${apiBase}/fecharPedido?id_pedido=${id_pedido}`, {
@@ -421,14 +454,144 @@ async function apagarPedido(id_pedido) {
             }
 
             // Exibe mensagem de sucesso
-            alert("Pedido apagado com sucesso!");
+            await Swal.fire({
+                icon: 'success',
+                title: 'Apagado!',
+                text: 'Pedido apagado com sucesso.',
+                timer: 2000,
+                showConfirmButton: false
+            });
 
             // Recarrega a lista de pedidos após a exclusão
-            await carregarPedidos(); // Aguarda a conclusão de carregarPedidos
+            if (typeof carregarPedidos === 'function') {
+                await carregarPedidos();
+            } else if (typeof carregaPedidosFeitos === 'function') {
+                await carregaPedidosFeitos();
+            } else {
+                window.location.reload();
+            }
+
         } catch (error) {
             console.error("Erro ao apagar o pedido:", error.message);
-            alert("Erro ao apagar o pedido. Tente novamente.");
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro!',
+                text: 'Erro ao apagar o pedido. Tente novamente.'
+            });
         }
+    }
+}
+
+// Function to save/finalize a pedido with supplier and payment method
+async function salvarPedidoSystem(fornecedorId, formaPagId, numeroPedido) {
+    console.log('Dados recebidos:', { formaPagId, fornecedorId, numeroPedido });
+
+    const formaPagElement = document.getElementById(formaPagId);
+    const fornecedorElement = document.getElementById(fornecedorId);
+
+    if (!formaPagElement || !fornecedorElement) {
+        const errorMsg = 'Elementos não encontrados no DOM';
+        console.error(errorMsg, formaPagId, fornecedorId);
+        Swal.fire({
+            title: 'Erro!',
+            text: errorMsg,
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    const idPagamento = formaPagElement.value;
+    const idFornecedor = fornecedorElement.value;
+    const cod_pagamento = formaPagElement.dataset.codtipvenda;
+    const cod_fornecedor = fornecedorElement.dataset.codparc;
+
+    // Validação dos campos obrigatórios
+    if (!idPagamento || !idFornecedor || !cod_pagamento || !cod_fornecedor) {
+        const errorMsg = 'Todos os campos são obrigatórios';
+        console.error(errorMsg);
+        Swal.fire({
+            title: 'Atenção!',
+            text: 'Por favor, preencha o fornecedor e a forma de pagamento antes de finalizar.',
+            icon: 'warning',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    const data = {
+        idPagamento: idPagamento,
+        idFornecedor: idFornecedor,
+        cod_pagamento: cod_pagamento,
+        cod_fornecedor: cod_fornecedor,
+        numero_pedido: numeroPedido
+    };
+
+    console.log('Dados enviados:', data);
+
+    try {
+        // Mostrar loader
+        Swal.fire({
+            title: 'Finalizando Pedido...',
+            text: 'Por favor, aguarde',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        const response = await fetch(`${apiBase}/finalizarPedidoFinal`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Erro ao finalizar pedido');
+        }
+
+        console.log('Resposta do servidor:', result);
+
+        // Montar mensagem completa com resposta da procedure
+        let mensagemSucesso = '✅ Pedido finalizado com sucesso!';
+        if (result.mensagemProcedure) {
+            mensagemSucesso += `\n\nStatus da geração: ${result.mensagemProcedure}`;
+        }
+
+        Swal.fire({
+            title: 'Sucesso!',
+            html: mensagemSucesso.replace(/\n/g, '<br>'),
+            icon: 'success',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#28a745'
+        });
+
+        // Recarregar a lista de pedidos após 2 segundos
+        setTimeout(() => {
+            carregaPedidosFeitos();
+        }, 2000);
+
+    } catch (error) {
+        console.error('Erro ao finalizar pedido:', error);
+
+        let errorMessage = '❌ Erro ao finalizar pedido';
+        if (error.message.includes('ORA-') || error.message.includes('Oracle')) {
+            errorMessage += '\nErro no banco de dados: ' + error.message;
+        } else {
+            errorMessage += ': ' + error.message;
+        }
+
+        Swal.fire({
+            title: 'Erro!',
+            html: errorMessage.replace(/\n/g, '<br>'),
+            icon: 'error',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#dc3545'
+        });
     }
 }
 
@@ -475,7 +638,7 @@ async function carregaPedidosFeitos() {
                     card.innerHTML = `
                         <div class="card-header-custom">
                             <span class="pedido-numero">Pedido #${pedido.NUMERO_PEDIDO}</span>
-                            <span class="pedido-loja">${pedido.GRUPO}</span>
+                            <span class="pedido-loja">${pedido.GRUPO || ''}</span>
                             <span class="badge-feito">${pedido.ANDAMENTO}</span>
                         </div>
                         <div class="info-grid">
@@ -497,7 +660,7 @@ async function carregaPedidosFeitos() {
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Valor Total</span>
-                                <span class="info-value">R$ ${(pedido.VLRTOTAL || 0).toFixed(2)}</span>
+                                <span class="info-value">R$ ${parseFloat(pedido.VLRTOTAL || 0).toFixed(2)}</span>
                             </div>
                         </div>
 
@@ -520,8 +683,8 @@ async function carregaPedidosFeitos() {
                         </div>
 
                         <div class="actions-section">
-                            <button type="button" class="btn-action btn-success-custom" onClick="salvarPedidoSystem('${fornecedorId}', '${formaPagId}', '${pedido.NUMERO_PEDIDO}')">
-                                <i class="bi bi-check-lg"></i> Finalizar
+                            <button type="button" class="btn-action btn-success-custom" onClick="abrirModalPreLancamento('${fornecedorId}', '${formaPagId}', '${pedido.NUMERO_PEDIDO}')">
+                                <i class="bi bi-check-lg"></i> Revisar & Lançar
                             </button>
                             <button type="button" class="btn-action btn-primary-custom" onClick="carregarDadosPedido(${pedido.NUMERO_PEDIDO})">
                                 <i class="bi bi-pencil"></i> Editar
@@ -600,7 +763,7 @@ async function carregaPedidosFeitos() {
                         </td>
                         <td>${(pedido.VLRTOTAL || 0).toFixed(2)}</td>
                         <td>
-                            <button type="button" class="btn btn-success" onClick="salvarPedidoSystem('${fornecedorId}', '${formaPagId}', '${pedido.NUMERO_PEDIDO}')">    
+                            <button type="button" class="btn btn-success" onClick="abrirModalPreLancamento('${fornecedorId}', '${formaPagId}', '${pedido.NUMERO_PEDIDO}')">    
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right-square-fill" viewBox="0 0 16 16">
                                     <path d="M0 14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2a2 2 0 0 0-2 2zm4.5-6.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5a.5.5 0 0 1 0-1"></path>
                                 </svg>
@@ -634,17 +797,13 @@ async function carregaPedidosFeitos() {
                         filtrarFormaPagamento(formaPagId, pagListaId);
                     });
                 });
-
-                // Initialize dropdowns if data is already loaded
-                if (fornecedoresCarregados) {
-                    initializeFornecedorDropdowns();
-                }
-
-                if (pagamentosCarregados) {
-                    initializeFormaPagDropdowns();
-                }
             } else {
                 console.error("Nenhum container (tabela ou cards) encontrado para renderizar os pedidos.");
+            }
+
+            // Initialize search and filter listeners (ensure it's called for both cases)
+            if (pedidosContainer || tabelaBody) {
+                initializeEventListeners();
             }
 
         } catch (error) {
@@ -654,140 +813,310 @@ async function carregaPedidosFeitos() {
     }
 }
 
+// Function to filter orders by supplier name, brand, and store
+function filtrarPedidosPorFornecedor() {
+    const searchInput = document.getElementById('searchSupplier');
+    const storeFilter = document.getElementById('storeFilter');
 
+    if (!searchInput) return;
 
-// Function to initialize payment method dropdowns
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    const selectedStore = storeFilter ? storeFilter.value.toUpperCase() : '';
+    const pedidosCards = document.querySelectorAll('.pedido-card');
+    let visibleCount = 0;
 
-function initializeFormaPagDropdowns() {
-    // Find all payment method input fields
-    const formaPagInputs = document.querySelectorAll("[id^='formaPag_']");
+    pedidosCards.forEach((card, index) => {
+        // Find the supplier input field within this card
+        const fornecedorInput = card.querySelector('[id^="fornecedor_"]');
 
-    formaPagInputs.forEach(input => {
-        input.addEventListener("input", function () {
-            const dropdownId = input.id.replace('formaPag_', 'pagLista_');
-            filtrarFormaPagamento(input.id, dropdownId);
+        // Find the store/group label within this card
+        const lojaElement = card.querySelector('.pedido-loja');
+
+        // Find the brand (marca) within this card
+        const infoItems = card.querySelectorAll('.info-item');
+        let marcaValue = '';
+        infoItems.forEach(item => {
+            const label = item.querySelector('.info-label');
+            if (label && label.textContent.trim().toLowerCase() === 'marca') {
+                const value = item.querySelector('.info-value');
+                if (value) marcaValue = value.textContent.toLowerCase();
+            }
         });
+
+        if (!fornecedorInput) {
+            card.style.display = 'none';
+            return;
+        }
+
+        const fornecedorValue = fornecedorInput.value.toLowerCase();
+        const lojaValue = lojaElement ? lojaElement.textContent.toUpperCase().trim() : '';
+
+        // Check supplier match OR brand match
+        const supplierMatch = searchTerm === '' ||
+            fornecedorValue.includes(searchTerm) ||
+            marcaValue.includes(searchTerm);
+
+        // Check store match
+        const storeMatch = selectedStore === '' || lojaValue.includes(selectedStore);
+
+        console.log(`Checking card ${index}: Group="${lojaValue}", Filter="${selectedStore}" => Match=${storeMatch}`);
+
+        // Show card if both filters match
+        if (supplierMatch && storeMatch) {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
     });
 
+    console.log(`Filter complete. Visible: ${visibleCount}/${pedidosCards.length}`);
+
+    // Show/hide empty state
+    const emptyState = document.getElementById('emptyState');
+    const pedidosContainer = document.getElementById('pedidosContainer');
+
+    if (visibleCount === 0 && pedidosCards.length > 0) {
+        if (emptyState) {
+            emptyState.style.display = 'block';
+            emptyState.querySelector('h3').textContent = 'Nenhum pedido encontrado';
+
+            let filterMsg = 'Nenhum pedido corresponde aos filtros aplicados';
+            if (searchTerm && selectedStore) {
+                filterMsg = `Nenhum pedido encontrado para "${searchInput.value}" na loja ${selectedStore}`;
+            } else if (searchTerm) {
+                filterMsg = `Nenhum pedido corresponde à busca "${searchInput.value}"`;
+            } else if (selectedStore) {
+                filterMsg = `Nenhum pedido encontrado para a loja ${selectedStore}`;
+            }
+
+            emptyState.querySelector('p').textContent = filterMsg;
+        }
+        if (pedidosContainer) pedidosContainer.style.display = 'none';
+    } else {
+        if (emptyState) emptyState.style.display = 'none';
+        if (pedidosContainer) pedidosContainer.style.display = 'block';
+    }
 }
-// Function to initialize supplier dropdowns after loading data
-function initializeFornecedorDropdowns() {
-    // Find all supplier input fields
-    const fornecedorInputs = document.querySelectorAll("[id^='fornecedor_']");
 
-    fornecedorInputs.forEach(input => {
-        input.addEventListener("input", function () {
-            const dropdownId = input.id.replace('fornecedor_', 'fornecedorLista_');
-            filtrarFornecedor(input.id, dropdownId);
-        });
-    });
-}
+// Initialize event listeners for search and filters
+function initializeEventListeners() {
+    const searchInput = document.getElementById('searchSupplier');
+    const clearButton = document.getElementById('clearSearch');
+    const storeFilter = document.getElementById('storeFilter');
+    const reportButton = document.getElementById('btnGenerateReport');
 
+    console.log("Initializing event listeners (v3)...");
 
-async function salvarPedidoSystem(fornecedorId, formaPagId, numeroPedido) {
-    console.log('Dados recebidos:', { formaPagId, fornecedorId, numeroPedido });
-
-    const formaPagElement = document.getElementById(formaPagId);
-    const fornecedorElement = document.getElementById(fornecedorId);
-
-    if (!formaPagElement || !fornecedorElement) {
-        const errorMsg = 'Elementos não encontrados no DOM';
-        console.error(errorMsg, formaPagId, fornecedorId);
-        exibirModal(errorMsg, 'error');
-        return;
+    if (searchInput) {
+        searchInput.oninput = function () {
+            console.log("Search input changed");
+            filtrarPedidosPorFornecedor();
+        };
+        searchInput.onkeypress = function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                filtrarPedidosPorFornecedor();
+            }
+        };
     }
 
-    const idPagamento = formaPagElement.value;
-    const idFornecedor = fornecedorElement.value;
-    const cod_pagamento = formaPagElement.dataset.codtipvenda;
-    const cod_fornecedor = fornecedorElement.dataset.codparc;
-
-    // Validação dos campos obrigatórios
-    if (!idPagamento || !idFornecedor || !cod_pagamento || !cod_fornecedor) {
-        const errorMsg = 'Todos os campos são obrigatórios';
-        console.error(errorMsg);
-        exibirModal(errorMsg, 'error');
-        return;
+    if (clearButton) {
+        clearButton.onclick = function () {
+            console.log("Clear button clicked");
+            if (searchInput) {
+                searchInput.value = '';
+                if (storeFilter) storeFilter.value = '';
+                filtrarPedidosPorFornecedor();
+                searchInput.focus();
+            }
+        };
     }
 
-    const data = {
-        idPagamento: idPagamento,
-        idFornecedor: idFornecedor,
-        cod_pagamento: cod_pagamento,
-        cod_fornecedor: cod_fornecedor,
-        numero_pedido: numeroPedido
-    };
+    if (storeFilter) {
+        storeFilter.onchange = function () {
+            console.log("Store filter changed to:", storeFilter.value);
+            filtrarPedidosPorFornecedor();
+        };
+    }
 
-    console.log('Dados enviados:', data);
+    if (reportButton) {
+        reportButton.onclick = function () {
+            console.log("Generate report clicked");
+            gerarRelatorioPedidosAbertos();
+        };
+    }
+}
 
+function gerarRelatorioPedidosAbertos() {
     try {
-        // Mostrar loader enquanto processa
-        showLoader(true);
+        // Get all visible pedido cards
+        const pedidosCards = Array.from(document.querySelectorAll('.pedido-card')).filter(card => card.style.display !== 'none');
 
-        const response = await fetch('/finalizarPedidoFinal', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
+        if (pedidosCards.length === 0) {
+            Swal.fire({
+                title: 'Nenhum Pedido',
+                text: 'Não há pedidos visíveis para gerar o relatório.',
+                icon: 'info',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+
+        // Extract data from cards
+        const pedidos = pedidosCards.map(card => {
+            const numero = card.querySelector('.pedido-numero').textContent.replace('Pedido #', '').trim();
+            const marca = card.querySelector('.info-item:nth-child(1) .info-value').textContent.trim();
+            const dataPedido = card.querySelector('.info-item:nth-child(2) .info-value').textContent.trim();
+            const faturamento = card.querySelector('.info-item:nth-child(3) .info-value').textContent.trim();
+            const status = card.querySelector('.badge-feito').textContent.trim();
+            const loja = card.querySelector('.pedido-loja').textContent.trim();
+
+            // Try to get the selected supplier if any
+            const fornecedorInput = card.querySelector('input[id^="fornecedor_"]');
+            const fornecedor = fornecedorInput ? fornecedorInput.value : '';
+
+            return {
+                NUMERO_PEDIDO: numero,
+                MARCA: marca,
+                GRUPO: loja,
+                DATA_PEDIDO: dataPedido,
+                DATAFATURAMENTO: faturamento,
+                ANDAMENTO: status,
+                FORNECEDOR_SELECIONADO: fornecedor
+            };
         });
 
-        const result = await response.json();
+        // Get filter description for report header
+        const searchInput = document.getElementById('searchSupplier');
+        const storeFilter = document.getElementById('storeFilter');
+        let filterDescription = '';
 
-        if (!response.ok) {
-            throw new Error(result.error || 'Erro ao finalizar pedido');
+        if (searchInput && searchInput.value) {
+            filterDescription += `Busca: "${searchInput.value}"`;
+        }
+        if (storeFilter && storeFilter.value) {
+            if (filterDescription) filterDescription += ' | ';
+            filterDescription += `Loja: ${storeFilter.value}`;
+        }
+        if (!filterDescription) {
+            filterDescription = 'Todos os pedidos visíveis';
         }
 
-        console.log('Resposta do servidor:', result);
+        // Generate report HTML
+        let reportHTML = `
+            <div style="font-family: 'Inter', sans-serif; padding: 20px;">
+                <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #500001; padding-bottom: 20px;">
+                    <h2 style="color: #500001; margin: 0 0 10px 0; font-size: 24px;">
+                        📋 Relatório de Pedidos em Aberto
+                    </h2>
+                    <p style="color: #666; margin: 5px 0; font-size: 14px;">
+                        Gerado em: ${new Date().toLocaleString('pt-BR')}
+                    </p>
+                    <p style="color: #4a5568; margin: 5px 0; font-weight: 600; font-size: 14px;">
+                        ${filterDescription}
+                    </p>
+                </div>
 
-        // Montar mensagem completa com resposta da procedure
-        let mensagemSucesso = '✅ Pedido finalizado com sucesso!';
-        if (result.mensagemProcedure) {
-            mensagemSucesso += `\n\nStatus da geração: ${result.mensagemProcedure}`;
-        }
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                    <thead>
+                        <tr style="background: linear-gradient(135deg, #500001 0%, #8F1111 100%); color: white;">
+                            <th style="padding: 12px; text-align: left; border-radius: 8px 0 0 8px;">Pedido</th>
+                            <th style="padding: 12px; text-align: left;">Marca</th>
+                            <th style="padding: 12px; text-align: left;">Loja</th>
+                            <th style="padding: 12px; text-align: left;">Fornecedor Definido</th>
+                            <th style="padding: 12px; text-align: left;">Data Pedido</th>
+                            <th style="padding: 12px; text-align: left;">Faturamento</th>
+                            <th style="padding: 12px; text-align: center; border-radius: 0 8px 8px 0;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
 
-        exibirModal(mensagemSucesso, 'success');
+        pedidos.forEach((pedido, index) => {
+            const bgColor = index % 2 === 0 ? '#f8fafc' : 'white';
+            reportHTML += `
+                <tr style="background-color: ${bgColor}; border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 12px; font-weight: bold; color: #2d3748;">#${pedido.NUMERO_PEDIDO}</td>
+                    <td style="padding: 12px; color: #4a5568;">${pedido.MARCA}</td>
+                    <td style="padding: 12px; color: #4a5568;">${pedido.GRUPO}</td>
+                    <td style="padding: 12px; color: #4a5568;">${pedido.FORNECEDOR_SELECIONADO || '<span style="color: #cbd5e0;">-</span>'}</td>
+                    <td style="padding: 12px; color: #4a5568;">${pedido.DATA_PEDIDO}</td>
+                    <td style="padding: 12px; color: #4a5568;">${pedido.DATAFATURAMENTO}</td>
+                    <td style="padding: 12px; text-align: center;">
+                        <span style="background: #ebf8ff; color: #3182ce; padding: 4px 10px; border-radius: 20px; font-weight: 600; font-size: 11px; text-transform: uppercase;">
+                            ${pedido.ANDAMENTO}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        });
 
-        // Recarregar a lista de pedidos após 3 segundos
-        setTimeout(() => {
-            carregaPedidosFeitos();
-        }, 3000);
+        reportHTML += `
+                    </tbody>
+                </table>
+                <div style="margin-top: 30px; text-align: right; color: #4a5568; font-size: 14px; font-weight: 600;">
+                    Total de registros: ${pedidos.length}
+                </div>
+            </div>
+        `;
+
+        // Show report in modal
+        Swal.fire({
+            title: '',
+            html: reportHTML,
+            width: '1000px',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fa fa-print"></i> Imprimir',
+            cancelButtonText: 'Fechar',
+            confirmButtonColor: '#500001',
+            cancelButtonColor: '#718096',
+            customClass: {
+                popup: 'swal-wide'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Print the report
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Relatório de Pedidos</title>
+                        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+                        <style>
+                            body { font-family: 'Inter', sans-serif; -webkit-print-color-adjust: exact; }
+                            @media print {
+                                button { display: none; }
+                                body { padding: 0; margin: 0; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        ${reportHTML}
+                        <div style="text-align: center; margin-top: 20px;">
+                            <button onclick="window.print()" style="padding: 12px 24px; background: #500001; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px;">
+                                Imprimir Agora
+                            </button>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+            }
+        });
 
     } catch (error) {
-        console.error('Erro ao finalizar pedido:', error);
-
-        let errorMessage = '❌ Erro ao finalizar pedido';
-        if (error.message.includes('ORA-') || error.message.includes('Oracle')) {
-            errorMessage += '\nErro no banco de dados: ' + error.message;
-        } else {
-            errorMessage += ': ' + error.message;
-        }
-
-        exibirModal(errorMessage, 'error');
-    } finally {
-        // Esconder loader
-        showLoader(false);
+        console.error('Erro ao gerar relatório:', error);
+        Swal.fire({
+            title: 'Erro!',
+            text: 'Erro ao gerar relatório: ' + error.message,
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
     }
 }
 
-// Função para exibir/ocultar loader
-function showLoader(show) {
-    const loader = document.getElementById('loader');
-    if (loader) {
-        loader.style.display = show ? 'block' : 'none';
-    }
-}
-
-// Função para exibir o modal com a mensagem usando SweetAlert2
-function exibirModal(mensagem, tipo) {
-    Swal.fire({
-        title: tipo === 'success' ? 'Sucesso!' : 'Erro!',
-        html: mensagem.replace(/\n/g, '<br>'),
-        icon: tipo === 'success' ? 'success' : 'error',
-        confirmButtonText: 'OK',
-        confirmButtonColor: tipo === 'success' ? '#28a745' : '#dc3545'
-    });
-}
 
 async function carregaPedidosFeitosFinalizados() {
     try {
@@ -870,21 +1199,25 @@ async function exportarPDF(id_pedido) {
             const dadosPedido = await response.json();
             if (!dadosPedido || dadosPedido.length === 0) throw new Error("Nenhum item encontrado");
 
-            // Configurar Empresa
+            // Configurar Empresa (codemp/cnpj só existem como globais na tela
+            // Fazer Pedidos; nas demais telas usa o CODEMP vindo do pedido)
             let empresaNome = "Empresa Desconhecida";
             let cnpj = "";
-            const codEmpresa = parseInt(dadosPedido[0].CODEMP || 0);
-
+            const codEmpresa = parseInt((typeof codemp !== 'undefined' && codemp) || dadosPedido[0].CODEMP || 0);
             switch (codEmpresa) {
-                case 1: empresaNome = "Exclusiva Utilidades e Embalagens LTDA"; cnpj = "04.023.539/0001-17"; break;
-                case 2: empresaNome = "SG Utilidades"; cnpj = "02.444.585/0001-64"; break;
-                case 3: empresaNome = "Exclusiva Util Equipamentos LTDA"; cnpj = "09.666.638/0001-30"; break;
-                case 4: empresaNome = "Exclusiva Prime 85 LTDA"; cnpj = "21.518.354/0001-00"; break;
-                case 5: empresaNome = "Seg Center Comercial LTDA"; cnpj = "24.486.321/0002-97"; break;
-                case 6: empresaNome = "Seg Center Comercial LTDA"; cnpj = "24.486.321/0001-06"; break;
-                case 7: empresaNome = "Asg Distribuição LTDA"; cnpj = "49.318.824/0001-01"; break;
+                case 1: empresaNome = "Exclusiva Utilidades"; cnpj = "04.023.539/0001-17"; break;
+                case 2: empresaNome = "SG_Utilidades"; cnpj = "02.444.585/0001-64"; break;
+                case 3: empresaNome = "Util Equipamentos"; cnpj = "09.666.638/0001-30"; break;
+                case 4: empresaNome = "Prime 85"; cnpj = "21.518.354/0001-00"; break;
+                case 5: empresaNome = "SegCenter Comercial"; cnpj = "24.486.321/0002-97"; break;
+                case 6: empresaNome = "SegCenter Comercial"; cnpj = "24.486.321/0001-06"; break;
+                case 7: empresaNome = "AsgDistribuição"; cnpj = "49.318.824/0001-01"; break;
             }
 
+
+            if (!window.jspdf) {
+                throw new Error("Biblioteca jsPDF não encontrada. Verifique sua conexão com a internet ou instale a biblioteca.");
+            }
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
@@ -933,10 +1266,11 @@ function gerarConteudoPDF(doc, empresaNome, cnpj, dadosPedido, id_pedido, resolv
     doc.setTextColor(100);
     doc.text(`CNPJ: ${cnpj}`, 14, 40);
 
-    // Tabela
+    // Tabela (itens em ordem alfabética pela descrição do produto)
     const colunas = ["REF", "PRODUTO", "QTD"];
     const linhas = dadosPedido
         .filter(item => parseFloat(item.QTD_PEDIR) > 0)
+        .sort((a, b) => String(a.DESCRPROD || '').localeCompare(String(b.DESCRPROD || ''), 'pt-BR'))
         .map(item => [
             item.REFFORN || item.REFERENCIA,
             item.DESCRPROD,
@@ -978,8 +1312,21 @@ function gerarConteudoPDF(doc, empresaNome, cnpj, dadosPedido, id_pedido, resolv
         doc.text(`Página ${i} de ${pageCount}`, 195, 290, { align: "right" });
         doc.text(`Gerado em ${new Date().toLocaleString()}`, 14, 290, { align: "left" });
     }
+    let marca_pedido = dadosPedido[0].MARCA;
+    // Capturar a marca do primeiro item (assumindo que é a mesma para o pedido)
+    if (typeof marca_pedido === 'string' && marca_pedido.length > 0) {
+        marca_pedido =
+            marca_pedido.charAt(0).toUpperCase() +
+            marca_pedido.slice(1).toLowerCase();
+    } else {
+        marca_pedido = "";
+    }
 
-    doc.save(`Pedido_${id_pedido}_${empresaNome.split(' ')[0]}.pdf`);
+    const nomeArquivo = marca_pedido
+        ? `Pedido_${id_pedido}_${empresaNome.split(' ')[0]}_${marca_pedido}.pdf`
+        : `Pedido_${id_pedido}_${empresaNome.split(' ')[0]}.pdf`;
+
+    doc.save(nomeArquivo);
 
     // Mostrar mensagem de sucesso
     Swal.fire({
