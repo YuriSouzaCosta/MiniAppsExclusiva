@@ -36,11 +36,15 @@ const faturamentoRoutes = require('./routes/faturamentoRoutes');
 const acompanhamentoNotasRoutes = require('./routes/acompanhamentoNotasRoutes');
 const acompanhamentoNotasLiteRoutes = require('./routes/acompanhamentoNotasLiteRoutes');
 const acompanhamentoFinanceiroRoutes = require('./routes/acompanhamentoFinanceiroRoutes');
+const receitaDespesaRoutes = require('./routes/receitaDespesaRoutes');
+const entradaSaidaRoutes = require('./routes/entradaSaidaRoutes');
 const baixaBoletosRoutes = require('./routes/baixaBoletosRoutes');
+const gerenciamentoUsuariosRoutes = require('./routes/gerenciamentoUsuariosRoutes');
 const consultaProduto = require('./controllers/consultaController');
 
 // Import Middleware
 const authMiddleware = require('./middleware/authMiddleware');
+const { enforceScreenAccess } = require('./config/screenPermissions');
 
 // proteger todas as rotas abaixo
 app.use('/', authRoutes);
@@ -54,6 +58,9 @@ app.use((req, res, next) => {
   }
   return authMiddleware.ensureAuth(req, res, next);
 });
+
+// Regras configuradas pelos administradores na Central de Usuários.
+app.use(enforceScreenAccess);
 
 // rota principal (menu/index) após login
 app.get('/', (req, res) => {
@@ -92,7 +99,10 @@ app.use('/faturamento', faturamentoRoutes);
 app.use('/acompanhamento-notas', acompanhamentoNotasRoutes);
 app.use('/acompanhamento-notas-lite', acompanhamentoNotasLiteRoutes);
 app.use('/acompanhamento-financeiro', acompanhamentoFinanceiroRoutes);
+app.use('/receita-despesa', receitaDespesaRoutes);
+app.use('/entrada-saida', entradaSaidaRoutes);
 app.use('/baixa-boletos', baixaBoletosRoutes);
+app.use('/gerenciamento-usuarios', gerenciamentoUsuariosRoutes);
 app.use('/', homeRoutes);
 app.use('/', coletorRoutes);
 app.use('/pdv', require('./routes/pdvRoutes'));

@@ -7,6 +7,11 @@ RUN apt-get update && apt-get install -y \
     unzip \
     wget \
     python3 \
+    python3-pip \
+    tesseract-ocr \
+    tesseract-ocr-por \
+    libgl1 \
+    libgomp1 \
     make \
     g++ \
     && rm -rf /var/lib/apt/lists/*
@@ -36,6 +41,9 @@ RUN npm install
 
 # Copy the rest of the application code
 COPY . .
+
+# Dependências Python do OCR e do processamento de PDFs/imagens.
+RUN python3 -m pip install --no-cache-dir -r python/requirements.txt
 
 # Expose the port the app runs on
 EXPOSE 3000

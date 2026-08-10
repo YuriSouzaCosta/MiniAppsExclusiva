@@ -153,8 +153,21 @@
         </div>
       </div>
 
-      <!-- ===== Produtos e preços ===== -->
+      <!-- ===== Administração ===== -->
       <% if (user.role === 'ADMIN') { %>
+      <div class="cat-sec">
+        <div class="cat-head"><i class="fas fa-user-shield"></i><span class="cat-name">Administração</span><span class="cat-count">1</span></div>
+        <div class="row g-3">
+          <div class="col-12 col-sm-6 col-lg-4 app-item" data-key="gerenciamento-usuarios">
+            <div class="app-card">
+              <a href="/gerenciamento-usuarios" class="app-link"><span class="app-tile"><i class="fas fa-users-gear"></i></span><span class="app-text"><span class="app-title">Gerenciamento de Usuários</span><span class="app-desc">Defina perfis e permissões</span></span></a>
+              <button class="fav-btn" type="button" data-key="gerenciamento-usuarios" aria-label="Favoritar"><i class="far fa-star"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Produtos e preços ===== -->
       <div class="cat-sec">
         <div class="cat-head"><i class="fas fa-tags"></i><span class="cat-name">Produtos e preços</span><span class="cat-count">0</span></div>
         <div class="row g-3">
@@ -217,6 +230,27 @@
           </div>
         </div>
       </div>
+
+      <!-- ===== Relatórios ===== -->
+      <% if (user.role === 'ADMIN') { %>
+      <div class="cat-sec">
+        <div class="cat-head"><i class="fas fa-chart-column"></i><span class="cat-name">Relatórios</span><span class="cat-count">0</span></div>
+        <div class="row g-3">
+          <div class="col-12 col-sm-6 col-lg-4 app-item" data-key="receita-despesa">
+            <div class="app-card">
+              <a href="/receita-despesa" class="app-link"><span class="app-tile"><i class="fas fa-chart-pie"></i></span><span class="app-text"><span class="app-title">Receita x Despesa</span><span class="app-desc">Resultado consolidado por empresa</span></span></a>
+              <button class="fav-btn" type="button" data-key="receita-despesa" aria-label="Favoritar"><i class="far fa-star"></i></button>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6 col-lg-4 app-item" data-key="entrada-saida">
+            <div class="app-card">
+              <a href="/entrada-saida" class="app-link"><span class="app-tile"><i class="fas fa-right-left"></i></span><span class="app-text"><span class="app-title">Entrada x Saída</span><span class="app-desc">Movimento fiscal por empresa</span></span></a>
+              <button class="fav-btn" type="button" data-key="entrada-saida" aria-label="Favoritar"><i class="far fa-star"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <% } %>
 
       <!-- ===== Financeiro ===== -->
       <% if (user.role === 'ADMIN' || user.role === 'ASS_COMPRA') { %>
