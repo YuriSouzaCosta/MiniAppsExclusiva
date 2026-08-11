@@ -5,6 +5,7 @@ const { ensureAuth, requireRole } = require('../middleware/authMiddleware');
 
 router.use(ensureAuth, requireRole('ADMIN'));
 router.get('/', controller.index);
+router.post('/salvar-todos', controller.updateRolesBatch);
 router.post('/:codusu/role', controller.updateRole);
 router.get('/telas', controller.screens);
 router.post('/telas/:screenKey', controller.updateScreenRoles);

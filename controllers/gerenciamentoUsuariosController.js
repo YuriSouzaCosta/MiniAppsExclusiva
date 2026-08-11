@@ -33,6 +33,34 @@ async function updateRole(req, res) {
   }
 }
 
+async function updateRolesBatch(req, res) {
+  const submitted = req.body.roles && typeof req.body.roles === 'object' ? req.body.roles : {};
+  const entries = Object.entries(submitted).map(([codusu, role]) => [Number(codusu), String(role || '').trim()]);
+  if (!entries.length || entries.some(([codusu]) => !Number.isInteger(codusu))) {
+    return res.redirect('/gerenciamento-usuarios?error=dados-invalidos');
+  }
+  let conn;
+  try {
+    const validRoles = await db.simpleExecute(`SELECT VALOR FROM TDDOPC WHERE NUCAMPO = :fieldId`, { fieldId: ROLE_FIELD_ID });
+    const allowed = new Set(validRoles.rows.map(row => String(row.VALOR).trim()));
+    if (entries.some(([, role]) => role && !allowed.has(role))) {
+      return res.redirect('/gerenciamento-usuarios?error=perfil-invalido');
+    }
+    conn = await db.getConnection();
+    for (const [codusu, role] of entries) {
+      await conn.execute('UPDATE TSIUSU SET AD_ROLE=:role WHERE CODUSU=:codusu', { role: role || null, codusu });
+    }
+    await conn.commit();
+    return res.redirect('/gerenciamento-usuarios?success=perfis-atualizados');
+  } catch (error) {
+    if (conn) await conn.rollback();
+    console.error('Erro ao atualizar perfis em lote:', error);
+    return res.redirect('/gerenciamento-usuarios?error=erro-ao-salvar');
+  } finally {
+    if (conn) await conn.close();
+  }
+}
+
 async function screens(req, res) {
   try {
     const [rolesResult, rules] = await Promise.all([
@@ -73,4 +101,4 @@ async function updateScreenRoles(req, res) {
   }
 }
 
-module.exports = { index, updateRole, screens, updateScreenRoles };
+module.exports = { index, updateRole, updateRolesBatch, screens, updateScreenRoles };

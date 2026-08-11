@@ -1,5 +1,38 @@
 {
-  "generated_at": "2026-08-10T13:53:57.913249+00:00",
-  "nodes": {},
+  "generated_at": "2026-08-11T12:54:59.792445+00:00",
+  "nodes": {
+    "app": {
+      "code_fingerprint": "92d65051ffbbb6b474639ca96f6d11b5d01ba2e20b80e6128dc1ac62a59d3fab",
+      "label": "app.js",
+      "last": "2026-08-11T12:13:29.388019+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-11T12:13:29.388019+00:00",
+          "outcome": "useful",
+          "q": "crie um painel de administração de categorias do painel principal"
+        }
+      ],
+      "score": 0.999334243,
+      "source_file": "app.js",
+      "status": "tentative",
+      "uses": 1
+    },
+    "controllers_acompanhamentonotascontroller": {
+      "code_fingerprint": "d4153f6c0105fc81f32a00a4c0179ec62355e3b8cf66c0843669b3faadf93fc5",
+      "label": "acompanhamentoNotasController.js",
+      "last": "2026-08-10T13:56:40.598394+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-10T13:56:40.598394+00:00",
+          "outcome": "useful",
+          "q": "as entrada que são as notas devem puxar tudo que estiver importado para o portal de importação xml memso que não esteja lançada ainda , pq eu preciso saber a entrada real que teve e não o que tava somente lançado"
+        }
+      ],
+      "score": 0.978127505,
+      "source_file": "controllers/acompanhamentoNotasController.js",
+      "status": "tentative",
+      "uses": 1
+    }
+  },
   "version": 1
 }

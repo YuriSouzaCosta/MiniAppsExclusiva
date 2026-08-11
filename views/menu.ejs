@@ -93,6 +93,24 @@
 
     <div id="catSecs">
 
+      <% menuCategories.filter(category => category.apps.length).forEach(category => { %>
+      <div class="cat-sec" data-category="<%= category.key %>">
+        <div class="cat-head"><i class="fas <%= category.icon %>"></i><span class="cat-name"><%= category.name %></span><span class="cat-count"><%= category.apps.length %></span></div>
+        <div class="row g-3">
+          <% category.apps.forEach(app => { %>
+          <div class="col-12 col-sm-6 col-lg-4 app-item" data-key="<%= app.key %>">
+            <div class="app-card">
+              <a href="<%= app.href %>" class="app-link"><span class="app-tile"><i class="fas <%= app.icon %>"></i></span><span class="app-text"><span class="app-title"><%= app.title %></span><span class="app-desc"><%= app.description %></span></span></a>
+              <button class="fav-btn" type="button" data-key="<%= app.key %>" aria-label="Favoritar"><i class="far fa-star"></i></button>
+            </div>
+          </div>
+          <% }) %>
+        </div>
+      </div>
+      <% }) %>
+
+      <% if (false) { %>
+
       <!-- ===== Vendas e PDV ===== -->
       <div class="cat-sec">
         <div class="cat-head"><i class="fas fa-cash-register"></i><span class="cat-name">Vendas e PDV</span><span class="cat-count">0</span></div>
@@ -273,6 +291,8 @@
           </div>
         </div>
       </div>
+      <% } %>
+
       <% } %>
 
     </div>
