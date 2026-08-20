@@ -1,14 +1,8 @@
 const path = require('path');
 const db = require('../config/db/oracle');
-const bling = require('../services/blingClient');
 
 const EMPRESAS_RELATORIO = [1, 2, 3, 4, 5, 6, 7];
 const TOPS_SAIDA_FISCAL = [3101, 3104, 3106, 3199, 3200, 3202, 3204];
-const EMPRESAS_COM_BLING = new Set([4, 5]);
-const EMPRESA_BLING_CONFIGURADA = bling.CODEMP;
-const EMPRESAS_COM_BLING_PENDENTE = new Set(
-  [...EMPRESAS_COM_BLING].filter(codemp => codemp !== EMPRESA_BLING_CONFIGURADA)
-);
 
 function paginaIndex(req, res) {
   res.sendFile(path.join(__dirname, '..', 'views', 'entradaSaida', 'index.html'));
@@ -20,11 +14,6 @@ function apiContexto(req, res) {
 
 function dataValida(valor, padrao) {
   return typeof valor === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(valor) ? valor : padrao;
-}
-
-function diaIso(valor) {
-  if (valor instanceof Date) return valor.toISOString().slice(0, 10);
-  return String(valor || '').slice(0, 10);
 }
 
 async function apiResumo(req, res) {
@@ -88,62 +77,27 @@ async function apiResumo(req, res) {
        GROUP BY mov.CODEMP, NVL(emp.NOMEFANTASIA, emp.RAZAOSOCIAL), mov.DIA
        ORDER BY mov.DIA, mov.CODEMP`;
 
-    const [resultado, consultaBling] = await Promise.all([
-      db.simpleExecute(sql, { dtIni, dtFin }),
-      bling.listIssuedNotes(dtIni, dtFin)
-        .then(notas => ({ disponivel: true, notas }))
-        .catch(error => {
-          console.warn('Bling indisponível no Entrada x Saída:', error.message || error);
-          return { disponivel: false, notas: [], erro: 'Bling indisponível no momento' };
-        })
-    ]);
-    const notasBling = consultaBling.notas;
+    const resultado = await db.simpleExecute(sql, { dtIni, dtFin });
     const linhas = (resultado.rows || []).map(row => ({
       codemp: Number(row.CODEMP),
       empresa: row.EMPRESA || `Empresa ${row.CODEMP}`,
       dia: row.DIA,
       entrada: Number(row.ENTRADA) || 0,
       saidaSankhya: Number(row.SAIDA) || 0,
-      saidaBling: 0,
       qtdEntrada: Number(row.QTD_ENTRADA) || 0,
-      qtdSaida: Number(row.QTD_SAIDA) || 0,
-      qtdSaidaBling: 0,
-      blingPendente: EMPRESAS_COM_BLING_PENDENTE.has(Number(row.CODEMP))
+      qtdSaida: Number(row.QTD_SAIDA) || 0
     }));
-
-    const porEmpresaDia = new Map(linhas.map(linha => [`${linha.codemp}|${diaIso(linha.dia)}`, linha]));
-    for (const nota of notasBling) {
-      const key = `${EMPRESA_BLING_CONFIGURADA}|${nota.date}`;
-      let linha = porEmpresaDia.get(key);
-      if (!linha) {
-        linha = {
-          codemp: EMPRESA_BLING_CONFIGURADA, empresa: 'Seg Center Comercial', dia: nota.date,
-          entrada: 0, saidaSankhya: 0, saidaBling: 0,
-          qtdEntrada: 0, qtdSaida: 0, qtdSaidaBling: 0, blingPendente: false
-        };
-        linhas.push(linha);
-        porEmpresaDia.set(key, linha);
-      }
-      linha.saidaBling += nota.value;
-      linha.qtdSaidaBling += 1;
-    }
     linhas.sort((a, b) => String(a.dia).localeCompare(String(b.dia)) || a.codemp - b.codemp);
 
     res.json({
       ok: true,
       filtros: { dt_ini: dtIni, dt_fin: dtFin },
       atualizadoEm: new Date().toISOString(),
-      blingDisponivel: consultaBling.disponivel,
-      avisos: consultaBling.disponivel ? [] : [consultaBling.erro],
       escopo: {
         fase: 'SANKHYA',
         abaPowerBi: 'Fiscal',
         combinarOrigens: false,
         empresas: EMPRESAS_RELATORIO,
-        empresasComBling: [...EMPRESAS_COM_BLING],
-        empresasComBlingPendente: [...EMPRESAS_COM_BLING_PENDENTE],
-        empresaBlingConfigurada: EMPRESA_BLING_CONFIGURADA,
-        criterioBling: 'NF-e com situação 5 (Emitida), por data de emissão',
         fonteEntrada: 'TGFIXN.VLRNOTA',
         criterioEntrada: 'NF-e importada no Portal de Importação de XML, por data de emissão',
         topsSaidaFiscal: TOPS_SAIDA_FISCAL
