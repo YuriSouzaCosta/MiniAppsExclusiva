@@ -36,11 +36,19 @@ const faturamentoRoutes = require('./routes/faturamentoRoutes');
 const acompanhamentoNotasRoutes = require('./routes/acompanhamentoNotasRoutes');
 const acompanhamentoNotasLiteRoutes = require('./routes/acompanhamentoNotasLiteRoutes');
 const acompanhamentoFinanceiroRoutes = require('./routes/acompanhamentoFinanceiroRoutes');
+const receitaDespesaRoutes = require('./routes/receitaDespesaRoutes');
+const entradaSaidaRoutes = require('./routes/entradaSaidaRoutes');
+const markupRoutes = require('./routes/markupRoutes');
+const dreRoutes = require('./routes/dreRoutes');
 const baixaBoletosRoutes = require('./routes/baixaBoletosRoutes');
+const gerenciamentoUsuariosRoutes = require('./routes/gerenciamentoUsuariosRoutes');
+const gerenciamentoCategoriasRoutes = require('./routes/gerenciamentoCategoriasRoutes');
+const { loadMenu } = require('./config/menuCatalog');
 const consultaProduto = require('./controllers/consultaController');
 
 // Import Middleware
 const authMiddleware = require('./middleware/authMiddleware');
+const { enforceScreenAccess } = require('./config/screenPermissions');
 
 // proteger todas as rotas abaixo
 app.use('/', authRoutes);
@@ -55,8 +63,11 @@ app.use((req, res, next) => {
   return authMiddleware.ensureAuth(req, res, next);
 });
 
+// Regras configuradas pelos administradores na Central de Usuários.
+app.use(enforceScreenAccess);
+
 // rota principal (menu/index) após login
-app.get('/', (req, res) => {
+app.get('/', async (req, res, next) => {
   const baseUrl = `${req.protocol}://${req.get('host')}`;
   let minhaVariavel;
 
@@ -73,7 +84,12 @@ app.get('/', (req, res) => {
 
   console.log('minhaVariavel definida como:', minhaVariavel);
 
-  res.render('menu', { user: req.user, minhaVariavel });
+  try {
+    const menu = await loadMenu(req.user.role);
+    res.render('menu', { user: req.user, minhaVariavel, menuCategories: menu.categories });
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.use('/', coletorRoutes);
@@ -92,7 +108,13 @@ app.use('/faturamento', faturamentoRoutes);
 app.use('/acompanhamento-notas', acompanhamentoNotasRoutes);
 app.use('/acompanhamento-notas-lite', acompanhamentoNotasLiteRoutes);
 app.use('/acompanhamento-financeiro', acompanhamentoFinanceiroRoutes);
+app.use('/receita-despesa', receitaDespesaRoutes);
+app.use('/entrada-saida', entradaSaidaRoutes);
+app.use('/markup', markupRoutes);
+app.use('/dre', dreRoutes);
 app.use('/baixa-boletos', baixaBoletosRoutes);
+app.use('/gerenciamento-usuarios', gerenciamentoUsuariosRoutes);
+app.use('/gerenciamento-categorias', gerenciamentoCategoriasRoutes);
 app.use('/', homeRoutes);
 app.use('/', coletorRoutes);
 app.use('/pdv', require('./routes/pdvRoutes'));

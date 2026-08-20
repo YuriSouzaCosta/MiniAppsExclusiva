@@ -39,6 +39,7 @@ import sys
 import json
 import re
 import os
+import shutil
 import io
 
 # ============================================================
@@ -430,15 +431,15 @@ def detectar_tipo(texto, barcode, linha):
 # ============================================================
 
 def _configurar_tesseract():
-    """Aponta para o executável do Tesseract no Windows, se necessário."""
-    if os.name == 'nt':
-        import pytesseract
-        caminho = os.environ.get(
-            'TESSERACT_CMD',
-            r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-        )
-        if os.path.exists(caminho):
-            pytesseract.pytesseract.tesseract_cmd = caminho
+    """Configura o executável do Tesseract em Windows ou Linux."""
+    import pytesseract
+
+    # Linux usa o binário do PATH; TESSERACT_CMD permite sobrescrever em
+    # qualquer sistema. No Windows, mantém o local padrão da instalação.
+    padrao = r'C:\Program Files\Tesseract-OCR\tesseract.exe' if os.name == 'nt' else 'tesseract'
+    caminho = os.environ.get('TESSERACT_CMD') or shutil.which(padrao)
+    if caminho:
+        pytesseract.pytesseract.tesseract_cmd = caminho
 
 
 def ocr_image(img):

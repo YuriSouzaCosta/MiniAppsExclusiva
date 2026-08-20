@@ -1,0 +1,118 @@
+{
+  "generated_at": "2026-08-20T19:21:43.048735+00:00",
+  "nodes": {
+    "app": {
+      "code_fingerprint": "52d9821dd93a56f15666d882bdad27eee76853a7bb238fa2bec7af7c65639661",
+      "label": "app.js",
+      "last": "2026-08-20T19:04:19.415317+00:00",
+      "neg": 1,
+      "provenance": [
+        {
+          "date": "2026-08-20T19:04:19.415317+00:00",
+          "outcome": "corrected",
+          "q": "do relatorio de entrada x saida remova o modulo do bling esta pesando muito , deixa sem consultar por hora"
+        },
+        {
+          "date": "2026-08-13T14:38:55.616701+00:00",
+          "outcome": "useful",
+          "q": "Criar caminho e tela inicial do relatório DRE"
+        },
+        {
+          "date": "2026-08-11T14:11:33.312922+00:00",
+          "outcome": "useful",
+          "q": "Adaptar o relatório de Markup do PBIX para a aplicação com visual moderno nas cores da logo"
+        },
+        {
+          "date": "2026-08-11T13:54:24.653645+00:00",
+          "outcome": "useful",
+          "q": "Painel Entrada x Saída não consulta nem mostra os valores do Bling no período"
+        },
+        {
+          "date": "2026-08-11T12:13:29.388019+00:00",
+          "outcome": "useful",
+          "q": "crie um painel de administração de categorias do painel principal"
+        }
+      ],
+      "score": 2.270003831,
+      "source_file": "app.js",
+      "status": "contested",
+      "uses": 4,
+      "verdict": "useful"
+    },
+    "controllers_acompanhamentonotascontroller": {
+      "code_fingerprint": "d4153f6c0105fc81f32a00a4c0179ec62355e3b8cf66c0843669b3faadf93fc5",
+      "label": "acompanhamentoNotasController.js",
+      "last": "2026-08-10T13:56:40.598394+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-10T13:56:40.598394+00:00",
+          "outcome": "useful",
+          "q": "as entrada que são as notas devem puxar tudo que estiver importado para o portal de importação xml memso que não esteja lançada ainda , pq eu preciso saber a entrada real que teve e não o que tava somente lançado"
+        }
+      ],
+      "score": 0.789571912,
+      "source_file": "controllers/acompanhamentoNotasController.js",
+      "status": "tentative",
+      "uses": 1
+    },
+    "controllers_faturamentocontroller": {
+      "code_fingerprint": "0de35b33da03ec54e2119eeb98ce77f18d953eb65620548435e823afde945e70",
+      "label": "faturamentoController.js",
+      "last": "2026-08-11T18:53:09.912276+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-11T18:53:09.912276+00:00",
+          "outcome": "useful",
+          "q": "Nas TOPs de venda, reconhecer somente a parte da nota além do crédito de cliente"
+        },
+        {
+          "date": "2026-08-11T18:31:57.590636+00:00",
+          "outcome": "useful",
+          "q": "Separar TOPs de venda e devolução no Faturamento por Vendedor"
+        },
+        {
+          "date": "2026-08-11T18:23:13.002449+00:00",
+          "outcome": "useful",
+          "q": "Corrigir valores do Faturamento por Vendedor com as exclusões comerciais do Markup"
+        }
+      ],
+      "score": 2.434974885,
+      "source_file": "controllers/faturamentoController.js",
+      "status": "preferred",
+      "uses": 3
+    },
+    "estrutura_6_2_menu_home": {
+      "code_fingerprint": "2813e26258c6540588525366661fef548549f413e78f040753120dee45ec0cc9",
+      "label": "6.2 Menu / Home (`/`)",
+      "last": "2026-08-20T19:15:16.595615+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-20T19:15:16.595615+00:00",
+          "outcome": "useful",
+          "q": "faça todas as telas serem responsivas ainda temos monitores com resolução menor que hd aqui na empresa"
+        }
+      ],
+      "score": 0.999896661,
+      "source_file": "ESTRUTURA.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "estrutura_views_customizadas": {
+      "code_fingerprint": "2813e26258c6540588525366661fef548549f413e78f040753120dee45ec0cc9",
+      "label": "Views customizadas",
+      "last": "2026-08-20T19:15:16.595615+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-20T19:15:16.595615+00:00",
+          "outcome": "useful",
+          "q": "faça todas as telas serem responsivas ainda temos monitores com resolução menor que hd aqui na empresa"
+        }
+      ],
+      "score": 0.999896661,
+      "source_file": "ESTRUTURA.md",
+      "status": "tentative",
+      "uses": 1
+    }
+  },
+  "version": 1
+}
