@@ -12,6 +12,7 @@ const SCREENS = [
   { key: 'receita-despesa', label: 'Receita x Despesa', prefix: '/receita-despesa' },
   { key: 'entrada-saida', label: 'Entrada x Saída', prefix: '/entrada-saida' },
   { key: 'markup', label: 'Markup', prefix: '/markup' },
+  { key: 'dre', label: 'DRE', prefix: '/dre' },
   { key: 'baixa-boletos', label: 'Baixa de Boletos', prefix: '/baixa-boletos' },
   { key: 'controle-cartao', label: 'Controle de Cartões', prefix: '/controle-cartao' },
   { key: 'calculadora-custo', label: 'Calculadora de Custo', prefix: '/calculadora-custo' },

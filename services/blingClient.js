@@ -6,11 +6,12 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env.bling'), quiet
 
 const API_BASE = 'https://api.bling.com.br/Api/v3';
 const TOKEN_URL = `${API_BASE}/oauth/token`;
-const CODEMP = 2;
+const CODEMP = 5;
 const STATUS_EMITIDA = 5;
 const STATE_DIR = path.join(__dirname, '..', '.secrets');
 const STATE_FILE = path.join(STATE_DIR, 'bling-2-token.enc');
 const detailCache = new Map();
+const REQUEST_TIMEOUT_MS = 8000;
 
 let tokenState;
 let refreshPromise;
@@ -84,7 +85,8 @@ async function performTokenRefresh() {
       Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
       'Content-Type': 'application/x-www-form-urlencoded', Accept: '1.0', 'enable-jwt': '1'
     },
-    body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: state.refreshToken })
+    body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: state.refreshToken }),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(`Falha ao renovar token do Bling (HTTP ${response.status}).`);
@@ -114,7 +116,8 @@ async function request(endpoint, params, retry = true) {
   Object.entries(params || {}).forEach(([key, value]) => url.searchParams.set(key, value));
   await waitForRateSlot();
   const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${await accessToken()}`, Accept: 'application/json', 'enable-jwt': '1' }
+    headers: { Authorization: `Bearer ${await accessToken()}`, Accept: 'application/json', 'enable-jwt': '1' },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
   });
   if (response.status === 401 && retry) {
     await refreshAccessToken();

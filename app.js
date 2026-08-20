@@ -39,6 +39,7 @@ const acompanhamentoFinanceiroRoutes = require('./routes/acompanhamentoFinanceir
 const receitaDespesaRoutes = require('./routes/receitaDespesaRoutes');
 const entradaSaidaRoutes = require('./routes/entradaSaidaRoutes');
 const markupRoutes = require('./routes/markupRoutes');
+const dreRoutes = require('./routes/dreRoutes');
 const baixaBoletosRoutes = require('./routes/baixaBoletosRoutes');
 const gerenciamentoUsuariosRoutes = require('./routes/gerenciamentoUsuariosRoutes');
 const gerenciamentoCategoriasRoutes = require('./routes/gerenciamentoCategoriasRoutes');
@@ -110,6 +111,7 @@ app.use('/acompanhamento-financeiro', acompanhamentoFinanceiroRoutes);
 app.use('/receita-despesa', receitaDespesaRoutes);
 app.use('/entrada-saida', entradaSaidaRoutes);
 app.use('/markup', markupRoutes);
+app.use('/dre', dreRoutes);
 app.use('/baixa-boletos', baixaBoletosRoutes);
 app.use('/gerenciamento-usuarios', gerenciamentoUsuariosRoutes);
 app.use('/gerenciamento-categorias', gerenciamentoCategoriasRoutes);

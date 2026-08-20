@@ -1,7 +1,21 @@
 const path = require('path');
 const db = require('../config/db/oracle');
 
-const TOPS = [3101, 3104, 3105, 3106, 3199, 3200, 3202, 3204];
+const TOPS_VENDA = [3105, 3106, 3199];
+const TOPS_DEVOLUCAO = [3202, 3200, 3204, 3201];
+const CREDITO_CLIENTE = [16, 69, 93];
+const movimentoMarkup = alias => `((${alias}.TIPMOV='V' AND ${alias}.CODTIPOPER IN (${TOPS_VENDA.join(',')})) OR
+  (${alias}.TIPMOV='D' AND ${alias}.CODTIPOPER IN (${TOPS_DEVOLUCAO.join(',')})))`;
+const tipoNegociacao = alias => `NVL((
+  SELECT MAX(TPV.DESCRTIPVENDA) KEEP (DENSE_RANK LAST ORDER BY TPV.DHALTER)
+    FROM TGFTPV TPV
+   WHERE TPV.CODTIPVENDA = ${alias}.CODTIPVENDA
+), ' ')`;
+const filtroTipoNegociacao = alias => {
+  const descricao = `UPPER(${tipoNegociacao(alias)})`;
+  return `${descricao} NOT LIKE '%BONIF%'
+    AND NOT (${descricao} LIKE '%VALE%' AND ${descricao} LIKE '%FUNCION%')`;
+};
 const validDate = (value, fallback) => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : fallback;
 const numberList = value => String(value || '').split(',').map(x => x.trim()).filter(x => /^\d+$/.test(x)).map(Number);
 const round = (value, decimals = 2) => Math.round((Number(value) || 0) * 10 ** decimals) / 10 ** decimals;
@@ -58,19 +72,38 @@ async function resumo(req, res) {
     if (!empresas.length) return res.status(400).json({ ok: false, erro: 'Selecione ao menos uma empresa.' });
     const binds = { dtIni, dtFin }, empSql = inClause(empresas, 'emp', binds);
     const vendSql = vendedores.length ? inClause(vendedores, 'vend', binds) : '';
-    const base = `WITH BASE_ITENS AS (
-      SELECT C.NUNOTA, C.CODEMP, TRUNC(C.DTNEG) DIA, I.CODPROD,
+    const base = `WITH CREDITOS AS (
+      SELECT NUNOTA, SUM(NVL(VLRDESDOB,0)) CREDITO
+        FROM TGFFIN WHERE CODTIPTIT IN (${CREDITO_CLIENTE.join(',')}) GROUP BY NUNOTA
+    ), ITENS_RAW AS (
+      SELECT C.NUNOTA, C.CODEMP, TRUNC(C.DTNEG) DIA, C.TIPMOV, I.CODPROD,
              NVL(I.CODVEND,C.CODVEND) CODVEND,
              NVL(V.APELIDO,'Vendedor '||NVL(I.CODVEND,C.CODVEND)) APELIDO,
-             CASE WHEN C.TIPMOV='D' THEN -1 ELSE 1 END SINAL,
-             NVL(I.VLRTOT,0) BRUTO_ITEM, NVL(I.VLRDESC,0) DESCONTO_ITEM,
+             NVL(C.VLRNOTA,0) VLRNOTA, NVL(CR.CREDITO,0) CREDITO,
+             GREATEST(NVL(I.VLRTOT,0)-NVL(I.VLRDESC,0),0) VALOR_ITEM,
+             SUM(GREATEST(NVL(I.VLRTOT,0)-NVL(I.VLRDESC,0),0)) OVER (PARTITION BY C.NUNOTA) TOTAL_ITENS,
+             COUNT(*) OVER (PARTITION BY C.NUNOTA) QTD_ITENS,
              NVL(I.QTDNEG,0) QTDNEG, NVL(I.CUSTO,0) CUSTO_ORIGINAL
         FROM TGFCAB C JOIN TGFITE I ON I.NUNOTA=C.NUNOTA
+        LEFT JOIN CREDITOS CR ON CR.NUNOTA=C.NUNOTA
         LEFT JOIN TGFVEN V ON V.CODVEND=NVL(I.CODVEND,C.CODVEND)
-       WHERE C.STATUSNOTA='L' AND C.TIPMOV IN ('V','D') AND C.CODTIPOPER IN (${TOPS.join(',')})
+       WHERE C.STATUSNOTA='L' AND ${movimentoMarkup('C')}
+         AND ${filtroTipoNegociacao('C')}
          AND C.CODEMP IN (${empSql})
          AND TRUNC(C.DTNEG) BETWEEN TO_DATE(:dtIni,'YYYY-MM-DD') AND TO_DATE(:dtFin,'YYYY-MM-DD')
-         ${vendSql ? `AND NVL(I.CODVEND,C.CODVEND) IN (${vendSql})` : ''}
+    ), BASE_ITENS AS (
+      SELECT R.*,
+             CASE WHEN R.TIPMOV='D' THEN -1 ELSE 1 END SINAL,
+             CASE WHEN R.TOTAL_ITENS>0 THEN R.VALOR_ITEM/R.TOTAL_ITENS ELSE 1/R.QTD_ITENS END RATEIO,
+             CASE WHEN R.TIPMOV='V' THEN R.VLRNOTA ELSE 0 END
+               * CASE WHEN R.TOTAL_ITENS>0 THEN R.VALOR_ITEM/R.TOTAL_ITENS ELSE 1/R.QTD_ITENS END BRUTO_ITEM,
+             CASE WHEN R.TIPMOV='V' THEN GREATEST(R.VLRNOTA-R.CREDITO,0) ELSE -R.VLRNOTA END
+               * CASE WHEN R.TOTAL_ITENS>0 THEN R.VALOR_ITEM/R.TOTAL_ITENS ELSE 1/R.QTD_ITENS END LIQUIDO_ITEM,
+             CASE WHEN R.TIPMOV='V' THEN LEAST(R.VLRNOTA,R.CREDITO) ELSE 0 END
+               * CASE WHEN R.TOTAL_ITENS>0 THEN R.VALOR_ITEM/R.TOTAL_ITENS ELSE 1/R.QTD_ITENS END DESCONTO_ITEM
+        FROM ITENS_RAW R
+       WHERE 1=1
+         ${vendSql ? `AND R.CODVEND IN (${vendSql})` : ''}
     ), PRODUTOS_SEM_CUSTO AS (
       SELECT DISTINCT CODEMP, CODPROD FROM BASE_ITENS WHERE CUSTO_ORIGINAL=0
     ), VENDAS_HISTORICAS AS (
@@ -81,7 +114,8 @@ async function resumo(req, res) {
         FROM PRODUTOS_SEM_CUSTO P
         JOIN TGFCAB C ON C.CODEMP=P.CODEMP
         JOIN TGFITE I ON I.NUNOTA=C.NUNOTA AND I.CODPROD=P.CODPROD
-       WHERE C.STATUSNOTA='L' AND C.TIPMOV='V' AND C.CODTIPOPER IN (${TOPS.join(',')})
+       WHERE C.STATUSNOTA='L' AND C.TIPMOV='V' AND C.CODTIPOPER IN (${TOPS_VENDA.join(',')})
+         AND ${filtroTipoNegociacao('C')}
          AND TRUNC(C.DTNEG)<=TO_DATE(:dtFin,'YYYY-MM-DD')
          AND NVL(I.QTDNEG,0)>0 AND NVL(I.VLRTOT,0)-NVL(I.VLRDESC,0)>0
     ), ULTIMA_VENDA AS (
@@ -95,8 +129,8 @@ async function resumo(req, res) {
         FROM BASE_ITENS B LEFT JOIN ULTIMA_VENDA U
           ON U.CODEMP=B.CODEMP AND U.CODPROD=B.CODPROD
     )`;
-    const aggregate = fields => `SELECT ${fields}, SUM(SINAL*BRUTO_ITEM) BRUTO,
-      SUM(SINAL*(BRUTO_ITEM-DESCONTO_ITEM)) LIQUIDO, SUM(SINAL*DESCONTO_ITEM) DESCONTO,
+    const aggregate = fields => `SELECT ${fields}, SUM(BRUTO_ITEM) BRUTO,
+      SUM(LIQUIDO_ITEM) LIQUIDO, SUM(DESCONTO_ITEM) DESCONTO,
       SUM(SINAL*CUSTO_ITEM) CUSTO, COUNT(DISTINCT NUNOTA) NOTAS,
       SUM(CASE WHEN SINAL=1 THEN CUSTO_ESTIMADO ELSE 0 END) ITENS_CUSTO_ESTIMADO,
       SUM(CASE WHEN SINAL=1 THEN SEM_CUSTO ELSE 0 END) ITENS_SEM_CUSTO FROM MOV`;

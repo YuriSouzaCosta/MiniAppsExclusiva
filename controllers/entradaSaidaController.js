@@ -4,8 +4,11 @@ const bling = require('../services/blingClient');
 
 const EMPRESAS_RELATORIO = [1, 2, 3, 4, 5, 6, 7];
 const TOPS_SAIDA_FISCAL = [3101, 3104, 3106, 3199, 3200, 3202, 3204];
-const EMPRESAS_COM_BLING_PENDENTE = new Set([5]);
-const EMPRESA_BLING_CONFIGURADA = 2;
+const EMPRESAS_COM_BLING = new Set([4, 5]);
+const EMPRESA_BLING_CONFIGURADA = bling.CODEMP;
+const EMPRESAS_COM_BLING_PENDENTE = new Set(
+  [...EMPRESAS_COM_BLING].filter(codemp => codemp !== EMPRESA_BLING_CONFIGURADA)
+);
 
 function paginaIndex(req, res) {
   res.sendFile(path.join(__dirname, '..', 'views', 'entradaSaida', 'index.html'));
@@ -85,10 +88,16 @@ async function apiResumo(req, res) {
        GROUP BY mov.CODEMP, NVL(emp.NOMEFANTASIA, emp.RAZAOSOCIAL), mov.DIA
        ORDER BY mov.DIA, mov.CODEMP`;
 
-    const [resultado, notasBling] = await Promise.all([
+    const [resultado, consultaBling] = await Promise.all([
       db.simpleExecute(sql, { dtIni, dtFin }),
       bling.listIssuedNotes(dtIni, dtFin)
+        .then(notas => ({ disponivel: true, notas }))
+        .catch(error => {
+          console.warn('Bling indisponível no Entrada x Saída:', error.message || error);
+          return { disponivel: false, notas: [], erro: 'Bling indisponível no momento' };
+        })
     ]);
+    const notasBling = consultaBling.notas;
     const linhas = (resultado.rows || []).map(row => ({
       codemp: Number(row.CODEMP),
       empresa: row.EMPRESA || `Empresa ${row.CODEMP}`,
@@ -108,7 +117,7 @@ async function apiResumo(req, res) {
       let linha = porEmpresaDia.get(key);
       if (!linha) {
         linha = {
-          codemp: EMPRESA_BLING_CONFIGURADA, empresa: 'SG Utilidades', dia: nota.date,
+          codemp: EMPRESA_BLING_CONFIGURADA, empresa: 'Seg Center Comercial', dia: nota.date,
           entrada: 0, saidaSankhya: 0, saidaBling: 0,
           qtdEntrada: 0, qtdSaida: 0, qtdSaidaBling: 0, blingPendente: false
         };
@@ -124,11 +133,14 @@ async function apiResumo(req, res) {
       ok: true,
       filtros: { dt_ini: dtIni, dt_fin: dtFin },
       atualizadoEm: new Date().toISOString(),
+      blingDisponivel: consultaBling.disponivel,
+      avisos: consultaBling.disponivel ? [] : [consultaBling.erro],
       escopo: {
         fase: 'SANKHYA',
         abaPowerBi: 'Fiscal',
         combinarOrigens: false,
         empresas: EMPRESAS_RELATORIO,
+        empresasComBling: [...EMPRESAS_COM_BLING],
         empresasComBlingPendente: [...EMPRESAS_COM_BLING_PENDENTE],
         empresaBlingConfigurada: EMPRESA_BLING_CONFIGURADA,
         criterioBling: 'NF-e com situação 5 (Emitida), por data de emissão',

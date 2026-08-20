@@ -1,18 +1,36 @@
 // controllers/faturamentoController.js
 // Dashboard de Faturamento por Vendedor (ao vivo) + Painel TV/mobile.
 // Reusa o pool Oracle do projeto (config/db/oracle) e o login (ensureAuth na rota).
-// Definicao de faturamento identica a DRE: TOPs abaixo, TIPMOV V/D, STATUSNOTA='L',
-// devolucoes (D) entram negativas. NUNCA faz JOIN com TGFTOP (fan-out por DHALTER).
+// Definicao comercial: separa TOPs de venda e de devolucao, sempre com STATUSNOTA='L'.
+// Exclui bonificacao e vale funcionario pelo tipo de negociacao mais recente.
+// NUNCA faz JOIN direto com TGFTPV/TGFTOP (fan-out por DHALTER).
 const path = require('path');
 const fs = require('fs');
 const db = require('../config/db/oracle');
 
-const FAT_TOPS = [3101, 3104, 3105, 3106, 3199, 3200, 3202, 3204];
-const TOPS_SQL = FAT_TOPS.join(',');
+const TOPS_VENDA = [3105, 3106, 3199];
+const TOPS_DEVOLUCAO = [3202, 3200, 3204, 3201];
+const TOPS_VENDA_SQL = TOPS_VENDA.join(',');
+const TOPS_DEVOLUCAO_SQL = TOPS_DEVOLUCAO.join(',');
+const movimentoFaturamento = alias => `(
+  (${alias}.TIPMOV='V' AND ${alias}.CODTIPOPER IN (${TOPS_VENDA_SQL})) OR
+  (${alias}.TIPMOV='D' AND ${alias}.CODTIPOPER IN (${TOPS_DEVOLUCAO_SQL}))
+)`;
 // Tipos de titulo pagos com credito de devolucao/troca (TGFTIT) que NAO contam como
 // faturamento. Nas trocas conta so a parte paga. 16=CREDITO CLIENTE[D], 69=DEVOLUCOES, 93=[C].
 const CREDCLI_SQL = [16, 69, 93].join(',');
 const WATCH_MS = (parseInt(process.env.FAT_WATCH_SEG || '5', 10) || 5) * 1000;
+
+function tipoNegociacao(alias) {
+  return `NVL((SELECT MAX(TPV.DESCRTIPVENDA) KEEP (DENSE_RANK LAST ORDER BY TPV.DHALTER)
+                 FROM TGFTPV TPV
+                WHERE TPV.CODTIPVENDA=${alias}.CODTIPVENDA), ' ')`;
+}
+function filtroTipoNegociacao(alias) {
+  const descricao = `UPPER(${tipoNegociacao(alias)})`;
+  return `${descricao} NOT LIKE '%BONIF%'
+      AND NOT (${descricao} LIKE '%VALE%' AND ${descricao} LIKE '%FUNCION%')`;
+}
 
 // -------------------- helpers --------------------
 function validData(s, padrao = '2025-01-01') {
@@ -41,8 +59,8 @@ function r2(v) { return Math.round((Number(v) || 0) * 100) / 100; }
 async function qFaturamento(emps, di, df) {
   const binds = { di, df };
   const empIn = empClause(emps, binds);
-  // Rateio de vendas divididas: VLRNOTA distribuido entre os vendedores dos ITENS
-  // (TGFITE.CODVEND), proporcional ao valor liquido do item. Preserva SUM(VLRNOTA).
+  // Rateio entre vendedores da comissao. Em troca, a venda reconhece somente
+  // o que exceder os titulos financeiros de credito do cliente.
   const sql = `
     SELECT G.VEND CODVEND,
            NVL(VEN.APELIDO,'(sem vendedor)') APELIDO,
@@ -56,16 +74,17 @@ async function qFaturamento(emps, di, df) {
           FROM (
             SELECT CAB.NUNOTA, CAB.TIPMOV,
                    COALESCE(CCM.CODVEND, CAB.CODVEND) VEND,
-                   (CASE WHEN CAB.TIPMOV='V' THEN NVL(CAB.VLRNOTA,0)-NVL(CC.CREDCLI,0) ELSE NVL(CAB.VLRNOTA,0) END)
+                   (CASE WHEN CAB.TIPMOV='V' THEN GREATEST(NVL(CAB.VLRNOTA,0)-NVL(CC.CREDCLI,0),0)
+                         ELSE NVL(CAB.VLRNOTA,0) END)
                    * (CASE WHEN CCM.NUNOTA IS NULL THEN 1
                            ELSE CCM.PERCCOM / NULLIF(SUM(CCM.PERCCOM) OVER (PARTITION BY CAB.NUNOTA),0) END) FAT
               FROM TGFCAB CAB
               LEFT JOIN TGFCCM CCM ON CCM.NUNOTA = CAB.NUNOTA
               LEFT JOIN (SELECT NUNOTA, SUM(NVL(VLRDESDOB,0)) CREDCLI FROM TGFFIN
                           WHERE CODTIPTIT IN (${CREDCLI_SQL}) GROUP BY NUNOTA) CC ON CC.NUNOTA = CAB.NUNOTA
-             WHERE CAB.CODTIPOPER IN (${TOPS_SQL})
-               AND CAB.TIPMOV IN ('V','D')
+             WHERE ${movimentoFaturamento('CAB')}
                AND CAB.STATUSNOTA='L'
+               AND ${filtroTipoNegociacao('CAB')}
                AND CAB.CODEMP IN (${empIn})
                AND TRUNC(CAB.DTNEG) BETWEEN TO_DATE(:di,'YYYY-MM-DD') AND TO_DATE(:df,'YYYY-MM-DD')
           ) GROUP BY VEND
@@ -95,11 +114,18 @@ async function sentinela(emps, di, df) {
   const binds = { di, df };
   const empIn = empClause(emps, binds);
   const sql = `
-    SELECT COUNT(*) N, NVL(SUM(NVL(VLRNOTA,0)),0) S, NVL(MAX(NUNOTA),0) M
-      FROM TGFCAB
-     WHERE CODTIPOPER IN (${TOPS_SQL}) AND TIPMOV IN ('V','D') AND STATUSNOTA='L'
-       AND CODEMP IN (${empIn})
-       AND TRUNC(DTNEG) BETWEEN TO_DATE(:di,'YYYY-MM-DD') AND TO_DATE(:df,'YYYY-MM-DD')`;
+    SELECT COUNT(*) N,
+           NVL(SUM(CASE WHEN CAB.TIPMOV='V'
+                        THEN GREATEST(NVL(CAB.VLRNOTA,0)-NVL(CC.CREDCLI,0),0)
+                        ELSE -NVL(CAB.VLRNOTA,0) END),0) S,
+           NVL(MAX(CAB.NUNOTA),0) M
+      FROM TGFCAB CAB
+      LEFT JOIN (SELECT NUNOTA, SUM(NVL(VLRDESDOB,0)) CREDCLI FROM TGFFIN
+                  WHERE CODTIPTIT IN (${CREDCLI_SQL}) GROUP BY NUNOTA) CC ON CC.NUNOTA=CAB.NUNOTA
+     WHERE ${movimentoFaturamento('CAB')} AND CAB.STATUSNOTA='L'
+       AND ${filtroTipoNegociacao('CAB')}
+       AND CAB.CODEMP IN (${empIn})
+       AND TRUNC(CAB.DTNEG) BETWEEN TO_DATE(:di,'YYYY-MM-DD') AND TO_DATE(:df,'YYYY-MM-DD')`;
   const r = await db.simpleExecute(sql, binds);
   const row = (r.rows && r.rows[0]) || { N: 0, S: 0, M: 0 };
   return { N: Number(row.N) || 0, S: r2(row.S), M: Number(row.M) || 0 };
@@ -120,9 +146,10 @@ async function apiFiltros(req, res) {
       SELECT E.CODEMP, NVL(E.NOMEFANTASIA, E.RAZAOSOCIAL) NOME
         FROM TSIEMP E
        WHERE E.CODEMP IN (
-               SELECT DISTINCT CODEMP FROM TGFCAB
-                WHERE CODTIPOPER IN (${TOPS_SQL}) AND TIPMOV IN ('V','D')
-                  AND STATUSNOTA='L' AND DTNEG >= TO_DATE('2025-01-01','YYYY-MM-DD'))
+               SELECT DISTINCT CAB.CODEMP FROM TGFCAB CAB
+                WHERE ${movimentoFaturamento('CAB')}
+                  AND CAB.STATUSNOTA='L' AND ${filtroTipoNegociacao('CAB')}
+                  AND CAB.DTNEG >= TO_DATE('2025-01-01','YYYY-MM-DD'))
        ORDER BY E.CODEMP`;
     const r = await db.simpleExecute(sql, {});
     const empresas = (r.rows || []).map(x => ({
@@ -205,9 +232,13 @@ async function qHeatmap(emps, di, df) {
   const sql = `
     SELECT (TRUNC(CAB.DTNEG) - TRUNC(CAB.DTNEG,'IW')) DOW,
            TO_NUMBER(TO_CHAR(NVL(CAB.DTFATUR,CAB.DTALTER),'HH24')) HR,
-           COUNT(*) QT, ROUND(SUM(NVL(CAB.VLRNOTA,0)),2) VAL
+           COUNT(*) QT,
+           ROUND(SUM(GREATEST(NVL(CAB.VLRNOTA,0)-NVL(CC.CREDCLI,0),0)),2) VAL
       FROM TGFCAB CAB
-     WHERE CAB.CODTIPOPER IN (${TOPS_SQL}) AND CAB.TIPMOV='V' AND CAB.STATUSNOTA='L'
+      LEFT JOIN (SELECT NUNOTA, SUM(NVL(VLRDESDOB,0)) CREDCLI FROM TGFFIN
+                  WHERE CODTIPTIT IN (${CREDCLI_SQL}) GROUP BY NUNOTA) CC ON CC.NUNOTA=CAB.NUNOTA
+     WHERE CAB.CODTIPOPER IN (${TOPS_VENDA_SQL}) AND CAB.TIPMOV='V' AND CAB.STATUSNOTA='L'
+       AND ${filtroTipoNegociacao('CAB')}
        AND CAB.CODEMP IN (${empIn})
        AND TRUNC(CAB.DTNEG) BETWEEN TO_DATE(:di,'YYYY-MM-DD') AND TO_DATE(:df,'YYYY-MM-DD')
        AND NVL(CAB.DTFATUR,CAB.DTALTER) IS NOT NULL
@@ -229,14 +260,16 @@ async function qVendedorSerie(cod, emps, di, df) {
       FROM (
         SELECT TO_CHAR(CAB.DTNEG,'YYYY-MM-DD') DIA, CAB.TIPMOV, CAB.NUNOTA,
                COALESCE(CCM.CODVEND, CAB.CODVEND) VEND,
-               (CASE WHEN CAB.TIPMOV='V' THEN NVL(CAB.VLRNOTA,0)-NVL(CC.CREDCLI,0) ELSE NVL(CAB.VLRNOTA,0) END)
+               (CASE WHEN CAB.TIPMOV='V' THEN GREATEST(NVL(CAB.VLRNOTA,0)-NVL(CC.CREDCLI,0),0)
+                     ELSE NVL(CAB.VLRNOTA,0) END)
                * (CASE WHEN CCM.NUNOTA IS NULL THEN 1
                        ELSE CCM.PERCCOM / NULLIF(SUM(CCM.PERCCOM) OVER (PARTITION BY CAB.NUNOTA),0) END) FAT
           FROM TGFCAB CAB
           LEFT JOIN TGFCCM CCM ON CCM.NUNOTA = CAB.NUNOTA
           LEFT JOIN (SELECT NUNOTA, SUM(NVL(VLRDESDOB,0)) CREDCLI FROM TGFFIN
                       WHERE CODTIPTIT IN (${CREDCLI_SQL}) GROUP BY NUNOTA) CC ON CC.NUNOTA = CAB.NUNOTA
-         WHERE CAB.CODTIPOPER IN (${TOPS_SQL}) AND CAB.TIPMOV IN ('V','D') AND CAB.STATUSNOTA='L'
+         WHERE ${movimentoFaturamento('CAB')} AND CAB.STATUSNOTA='L'
+           AND ${filtroTipoNegociacao('CAB')}
            AND CAB.CODEMP IN (${empIn})
            AND TRUNC(CAB.DTNEG) BETWEEN TO_DATE(:di,'YYYY-MM-DD') AND TO_DATE(:df,'YYYY-MM-DD')
       )

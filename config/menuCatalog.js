@@ -30,6 +30,7 @@ const APPS = [
   { key: 'receita-despesa', category: 'relatorios', title: 'Receita x Despesa', description: 'Resultado consolidado por empresa', href: '/receita-despesa', icon: 'fa-chart-pie', roles: ['ADMIN'], order: 10 },
   { key: 'entrada-saida', category: 'relatorios', title: 'Entrada x Saída', description: 'Movimento fiscal por empresa', href: '/entrada-saida', icon: 'fa-right-left', roles: ['ADMIN'], order: 20 },
   { key: 'markup', category: 'relatorios', title: 'Markup', description: 'Rentabilidade, custo e desconto por vendedor', href: '/markup', icon: 'fa-chart-line', roles: ['ADMIN'], order: 30 },
+  { key: 'dre', category: 'relatorios', title: 'DRE', description: 'Demonstração mensal do resultado', href: '/dre', icon: 'fa-chart-column', roles: ['ADMIN'], order: 40 },
   { key: 'financeiro', category: 'financeiro', title: 'Acompanhamento Financeiro', description: 'Boletos e contas a pagar', href: '/acompanhamento-financeiro', icon: 'fa-file-invoice-dollar', roles: ['ADMIN'], order: 10 },
   { key: 'baixa-boletos', category: 'financeiro', title: 'Baixa de Boletos', description: 'Baixa por PDF de boleto', href: '/baixa-boletos', icon: 'fa-file-pdf', roles: ['ADMIN', 'ASS_COMPRA'], order: 20 }
 ];
