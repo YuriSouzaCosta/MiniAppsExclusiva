@@ -1,11 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const ctrl = require('../controllers/acompanhamentoFinanceiroController');
-const { ensureAuth, requireRole } = require('../middleware/authMiddleware');
+const { ensureAuth } = require('../middleware/authMiddleware');
 
-// protege com login e restringe para ADMIN
+// A role autorizada é definida centralmente em AD_TELAS_PERMISSOES.
 router.use(ensureAuth);
-router.use(requireRole('ADMIN'));
 
 router.get('/', ctrl.paginaIndex);          // pagina principal
 router.get('/api/dados', ctrl.apiDados);    // titulos a pagar (JSON)

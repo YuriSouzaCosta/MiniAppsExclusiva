@@ -128,7 +128,7 @@ async function request(endpoint, params, retry = true) {
     return request(endpoint, params, false);
   }
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(`Bling HTTP ${response.status}: ${body.error?.description || body.error?.message || 'erro na API'}`);
+  if (!response.ok) throw new Error(`Bling HTTP ${response.status}: ${(body.error && (body.error.description || body.error.message)) || 'erro na API'}`);
   return body.data;
 }
 

@@ -12,5 +12,6 @@ router.get('/api/finalizadas', ensureAuth, analiseTransferenciasController.busca
 router.get('/api/analise-periodo', ensureAuth, analiseTransferenciasController.buscarAnalisePorPeriodo);
 router.get('/api/analise-produto', ensureAuth, analiseTransferenciasController.buscarAnalisePorProduto);
 router.get('/api/analise-local', ensureAuth, analiseTransferenciasController.buscarAnalisePorLocal);
+router.get('/api/dashboard', ensureAuth, analiseTransferenciasController.dashboard);
 
 module.exports = router;

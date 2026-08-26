@@ -202,6 +202,8 @@ app.set('views', 'views');
 
 ## 5. Autenticação — `middleware/authMiddleware.js`
 
+As permissões de `AD_TELAS_PERMISSOES` controlam tanto os cards da Central de Acessos quanto as rotas e APIs. Uma tela ainda não configurada usa as roles padrão de `config/screenPermissions.js`; salvar a tela sem nenhuma role cria um bloqueio explícito para todos, exceto `ADMIN`.
+
 | Função | O que faz |
 |---|---|
 | `authenticate(user, pass)` | Busca em `TSIUSU` (NOMEUSU, AD_SENHA, AD_ROLE); compara **senha em texto puro** (campo custom do Sankhya — sem hash); resolve o nome legível da role em `TDDOPC` (`NUCAMPO = 9999990154`). Retorna `{username, role, roleName}`. |
@@ -322,10 +324,11 @@ Legenda: 🔓 público (sem login) · 🔒 exige login · 👑 só ADMIN
 | GET | `/transferencias/api/puxarTransferencias` | `puxarTransferencias` | 🔒 Transferências pendentes (`VW_MIRROR_TRANS_YSC`, `AD_TRANSF_YSC='S'`) |
 
 ### 6.12 Análise de Transferências (`/analise-transferencias`) — `analiseTransferenciasRoutes`
-> ⚠️ **Preliminar:** consulta uma tabela `TRANSFERENCIAS` (não-Sankhya), tem TODOs e devolve `[]` em erro.
+> Dashboard consolidado baseado em `TGFCAB` + `TGFITE`, filtrando as TOPs `7000` e `7001`, somente itens com `SEQUENCIA > 0`, custo gravado em `TGFITE.CUSTO`, sem o fan-out da view antiga por local e desconsiderando transferências dentro do mesmo grupo empresarial. Inclui conferência por nota, produto, quantidade, custo unitário e custo total.
 | Método | Rota | Controller | Descrição |
 |---|---|---|---|
 | GET | `/analise-transferencias/` | `index` | 🔒 Renderiza `analise-transferencias/index.ejs` |
+| GET | `/analise-transferencias/api/dashboard` | `dashboard` | 🔒 Fluxos das TOPs 7000/7001 por grupos Exclusiva (1/3), Prime (2/4/7), Site (5) e Decora (6), com saldo pelo custo |
 | GET | `/analise-transferencias/api/pendentes` | `buscarTransferenciasPendentes` | 🔒 STATUS='PENDENTE' |
 | GET | `/analise-transferencias/api/finalizadas` | `buscarTransferenciasFinalizadas` | 🔒 STATUS='FINALIZADA' paginado (`ROW_NUMBER`) |
 | GET | `/analise-transferencias/api/analise-periodo` | `buscarAnalisePorPeriodo` | 🔒 Agrega por dia (dataInicio/dataFim) |
@@ -373,12 +376,22 @@ Legenda: 🔓 público (sem login) · 🔒 exige login · 👑 só ADMIN
 | GET | `/faturamento/` | `paginaIndex` | 🔒 `sendFile` `faturamento/index.html` (análise por vendedor) |
 | GET | `/faturamento/painel` | `paginaPainel` | 🔒 `sendFile` `painel.html` (painel TV/mobile) |
 | GET | `/faturamento/vendedor` | `paginaVendedor` | 🔒 `sendFile` `vendedor.html` |
+| GET | `/faturamento/marcas` | `paginaMarcas` | 🔒 Faturamento por marca com filtros múltiplos de empresa, marca, linha, vendedor e produto |
 | GET | `/faturamento/api/filtros` | `apiFiltros` | 🔒 Empresas com faturamento (`TSIEMP` + subquery `TGFCAB`) |
 | GET | `/faturamento/api/dados` | `apiDados` | 🔒 Faturamento por vendedor (bruto, devolução, líquido) com **rateio de vendas divididas** (`TGFCCM.PERCCOM`) |
 | GET | `/faturamento/api/painel` | `apiPainel` | 🔒 Igual ao `apiDados` + mesmo período do ano anterior (YoY) |
 | GET | `/faturamento/api/stream` | `apiStream` | 🔒 **SSE**: notifica o painel quando o faturamento muda (sentinela `TGFCAB`, polling 5s) |
 | GET | `/faturamento/api/heatmap` | `apiHeatmap` | 🔒 Heatmap dia-da-semana × hora |
 | GET | `/faturamento/api/vendedor` | `apiVendedor` | 🔒 Totais + série diária de um vendedor |
+| GET | `/faturamento/api/marcas` | `apiMarcas` | 🔒 Relatório por marca/linha, detalhado por vendedor e com filtro de CODPROD |
+
+### 6.15.1 Compras por Marca (`/compras-marcas`)
+
+| Método | Rota | Handler | Descrição |
+|---|---|---|---|
+| GET | `/compras-marcas/` | `pagina` | 🔒 Relatório de compras por marca e linha |
+| GET | `/compras-marcas/api/filtros` | `apiFiltros` | 🔒 Empresas com compras liberadas |
+| GET | `/compras-marcas/api/dados` | `apiDados` | 🔒 Compras TOP 5/6 com filtros múltiplos e detalhamento por fornecedor |
 | GET | `/faturamento/api/metas` | `apiMetas` | 🔒 Lê `data/metas.json` |
 | POST | `/faturamento/api/meta` | `apiMetaSet` | 🔒 Salva/remove meta em `data/metas.json` |
 

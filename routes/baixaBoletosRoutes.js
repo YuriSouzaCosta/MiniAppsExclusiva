@@ -5,7 +5,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const ctrl = require('../controllers/baixaBoletosController');
-const { ensureAuth, requireRole } = require('../middleware/authMiddleware');
+const { ensureAuth } = require('../middleware/authMiddleware');
 
 // ----- Configuração Multer: upload de PDFs de boleto -----
 const storageBoletos = multer.diskStorage({
@@ -31,9 +31,8 @@ const uploadBoletos = multer({
   }
 });
 
-// protege todas as rotas com login e restringe para ADMIN + Compras (ASS_COMPRA)
+// A role autorizada é definida centralmente em AD_TELAS_PERMISSOES.
 router.use(ensureAuth);
-router.use(requireRole('ADMIN', 'ASS_COMPRA'));
 
 // Página
 router.get('/', ctrl.pagina);

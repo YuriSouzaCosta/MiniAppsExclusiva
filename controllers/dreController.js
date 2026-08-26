@@ -7,10 +7,11 @@ const CREDITO_CLIENTE = [16, 69, 93];
 const NATUREZAS_IMPOSTOS = [5090000, 5110000, 5120000];
 const NATUREZAS_COMISSOES = [4010000, 4020000, 4050000];
 const NATUREZAS_CUSTOS_VARIAVEIS = [
-  2010000, 2030000, 4030300, 400000, 3031500, 3031600, 3040100,
+  2030000, 4030300, 3032000, 3031500, 3031600, 3040100,
   3031700, 3040400, 3050200, 3040500, 3040300, 2040000, 6050000,
   3050400, 3050100
 ];
+const NATUREZAS_EXCLUIDAS_RESIDUO = [2010000];
 const NATUREZAS_PESSOAL = [
   3010100, 3010500, 3010400, 3010200, 3010300, 3011800, 3010800,
   3010700, 5060000, 3011000, 3011300, 2050000, 3011400, 3021300,
@@ -28,11 +29,12 @@ const NATUREZAS_TERCEIROS = [
   3031300
 ];
 const NATUREZAS_FINANCEIRAS = [3060500, 3060900, 6010000, 1020400];
+const NATUREZAS_PRO_LABORE = [3012200];
 const NATUREZAS_MAPEADAS_FORA_ADMINISTRATIVAS = [
   ...NATUREZAS_IMPOSTOS, ...NATUREZAS_COMISSOES, ...NATUREZAS_CUSTOS_VARIAVEIS,
   ...NATUREZAS_PESSOAL, ...NATUREZAS_UTILIDADES, ...NATUREZAS_ALUGUEL,
   ...NATUREZAS_TAXAS, ...NATUREZAS_MARKETING, ...NATUREZAS_TERCEIROS,
-  ...NATUREZAS_FINANCEIRAS
+  ...NATUREZAS_FINANCEIRAS, ...NATUREZAS_PRO_LABORE, ...NATUREZAS_EXCLUIDAS_RESIDUO
 ];
 const EMPRESAS = new Set([1, 2, 3, 4, 5, 6, 7]);
 const TODAS_EMPRESAS = [1, 2, 3, 4, 5, 6, 7];
@@ -47,7 +49,8 @@ const CATEGORIAS = {
   marketing: { label: 'Marketing', naturezas: NATUREZAS_MARKETING },
   administrativas: { label: 'Despesas Administrativas', naturezas: NATUREZAS_ADMINISTRATIVAS, residual: true },
   terceiros: { label: 'Serviços de Terceiros', naturezas: NATUREZAS_TERCEIROS },
-  financeiras: { label: 'Despesas Financeiras', naturezas: NATUREZAS_FINANCEIRAS }
+  financeiras: { label: 'Despesas Financeiras', naturezas: NATUREZAS_FINANCEIRAS },
+  pro_labore: { label: 'Pró-labore', naturezas: NATUREZAS_PRO_LABORE }
 };
 
 function pagina(req, res) {
@@ -55,7 +58,7 @@ function pagina(req, res) {
 }
 
 function usuarioYuris(req) {
-  return String(req.user?.username || '').trim().toUpperCase() === 'YURIS';
+  return String((req.user && req.user.username) || '').trim().toUpperCase() === 'YURIS';
 }
 
 function grupoExclusivaSelecionado(empresas) {
@@ -120,6 +123,41 @@ async function resumo(req, res) {
            OR (C.TIPMOV='D' AND C.CODTIPOPER IN (${TOPS_DEVOLUCAO.join(',')})))
          AND ${descricao} NOT LIKE '%BONIF%'
          AND NOT (${descricao} LIKE '%VALE%' AND ${descricao} LIKE '%FUNCION%')
+    ), ITENS_RAW AS (
+      SELECT C.NUNOTA, C.CODEMP, C.TIPMOV, I.CODPROD,
+             NVL(I.QTDNEG,0) QTDNEG, NVL(I.CUSTO,0) CUSTO_ORIGINAL
+        FROM TGFCAB C
+        JOIN TGFITE I ON I.NUNOTA=C.NUNOTA
+       WHERE C.STATUSNOTA='L' AND C.CODEMP IN (${empSql})
+         AND TRUNC(C.DTNEG)>=TO_DATE(:competencia||'-01','YYYY-MM-DD')
+         AND TRUNC(C.DTNEG)<ADD_MONTHS(TO_DATE(:competencia||'-01','YYYY-MM-DD'),1)
+         AND ((C.TIPMOV='V' AND C.CODTIPOPER IN (${TOPS_VENDA.join(',')}))
+           OR (C.TIPMOV='D' AND C.CODTIPOPER IN (${TOPS_DEVOLUCAO.join(',')})))
+         AND NVL(C.CODTIPVENDA,-1) NOT IN (68,83)
+    ), PRODUTOS_SEM_CUSTO AS (
+      SELECT DISTINCT CODEMP, CODPROD FROM ITENS_RAW WHERE CUSTO_ORIGINAL=0
+    ), VENDAS_HISTORICAS AS (
+      SELECT C.CODEMP, I.CODPROD,
+             (NVL(I.VLRTOT,0)-NVL(I.VLRDESC,0))/NULLIF(I.QTDNEG,0) PRECO_LIQ_UNIT,
+             ROW_NUMBER() OVER (PARTITION BY C.CODEMP,I.CODPROD
+               ORDER BY C.DTNEG DESC,C.NUNOTA DESC,I.SEQUENCIA DESC) RN
+        FROM PRODUTOS_SEM_CUSTO P
+        JOIN TGFCAB C ON C.CODEMP=P.CODEMP
+        JOIN TGFITE I ON I.NUNOTA=C.NUNOTA AND I.CODPROD=P.CODPROD
+       WHERE C.STATUSNOTA='L' AND C.TIPMOV='V'
+         AND C.CODTIPOPER IN (${TOPS_VENDA.join(',')})
+         AND NVL(C.CODTIPVENDA,-1) NOT IN (68,83)
+         AND TRUNC(C.DTNEG)<ADD_MONTHS(TO_DATE(:competencia||'-01','YYYY-MM-DD'),1)
+         AND NVL(I.QTDNEG,0)>0
+         AND NVL(I.VLRTOT,0)-NVL(I.VLRDESC,0)>0
+    ), ULTIMA_VENDA AS (
+      SELECT CODEMP,CODPROD,PRECO_LIQ_UNIT FROM VENDAS_HISTORICAS WHERE RN=1
+    ), CUSTO_MERCADORIA AS (
+      SELECT NVL(SUM(CASE WHEN R.TIPMOV='D' THEN -1 ELSE 1 END * R.QTDNEG
+             * CASE WHEN R.CUSTO_ORIGINAL<>0 THEN R.CUSTO_ORIGINAL
+                    ELSE NVL(U.PRECO_LIQ_UNIT,0)*0.5 END),0) VALOR
+        FROM ITENS_RAW R
+        LEFT JOIN ULTIMA_VENDA U ON U.CODEMP=R.CODEMP AND U.CODPROD=R.CODPROD
     ), IMPOSTOS AS (
       SELECT NVL(SUM(NVL(F.VLRDESDOB,0)),0) VALOR FROM TGFFIN F
        WHERE F.RECDESP=-1 AND F.CODNAT IN (${NATUREZAS_IMPOSTOS.join(',')})
@@ -189,30 +227,50 @@ async function resumo(req, res) {
          AND F.CODEMP IN (${empSql})
          AND TRUNC(F.DTVENC)>=TO_DATE(:competencia||'-01','YYYY-MM-DD')
          AND TRUNC(F.DTVENC)<ADD_MONTHS(TO_DATE(:competencia||'-01','YYYY-MM-DD'),1)
+    ), PRO_LABORE AS (
+      SELECT NVL(SUM(NVL(F.VLRDESDOB,0)),0) VALOR FROM TGFFIN F
+       WHERE F.RECDESP=-1 AND F.CODNAT IN (${NATUREZAS_PRO_LABORE.join(',')})
+         AND F.CODEMP IN (${empSql})
+         AND TRUNC(F.DTVENC)>=TO_DATE(:competencia||'-01','YYYY-MM-DD')
+         AND TRUNC(F.DTVENC)<ADD_MONTHS(TO_DATE(:competencia||'-01','YYYY-MM-DD'),1)
     ) SELECT NVL(SUM(CASE WHEN TIPMOV='V' THEN VLRNOTA ELSE 0 END),0) RECEITA_BRUTA,
              NVL(SUM(CASE WHEN TIPMOV='V' THEN GREATEST(VLRNOTA-CREDITO,0) ELSE -VLRNOTA END),0) RECEITA_LIQUIDA,
              NVL(SUM(CASE WHEN TIPMOV='V' THEN LEAST(VLRNOTA,CREDITO) ELSE 0 END),0) CREDITO_ABATIDO,
              NVL(SUM(CASE WHEN TIPMOV='D' THEN VLRNOTA ELSE 0 END),0) DEVOLUCOES,
              COUNT(DISTINCT NUNOTA) NOTAS, MAX(I.VALOR) IMPOSTOS, MAX(CO.VALOR) COMISSOES,
-             MAX(CV.VALOR) CUSTOS_VARIAVEIS, MAX(PE.VALOR) PESSOAL,
+             MAX(CV.VALOR) CUSTOS_VARIAVEIS_NATUREZAS,
+             MAX(CM.VALOR) CUSTO_MERCADORIA,
+             MAX(CV.VALOR)+MAX(CM.VALOR) CUSTOS_VARIAVEIS,
+             MAX(PE.VALOR) PESSOAL,
              MAX(UT.VALOR) UTILIDADES, MAX(AL.VALOR) ALUGUEL,
              MAX(TX.VALOR) TAXAS, MAX(MK.VALOR) MARKETING,
              MAX(AD.VALOR) ADMINISTRATIVAS, MAX(TE.VALOR) TERCEIROS,
-             MAX(FI.VALOR) FINANCEIRAS
+             MAX(FI.VALOR) FINANCEIRAS, MAX(PR.VALOR) PRO_LABORE
         FROM MOV CROSS JOIN IMPOSTOS I CROSS JOIN COMISSOES CO
-        CROSS JOIN CUSTOS_VARIAVEIS CV CROSS JOIN PESSOAL PE CROSS JOIN UTILIDADES UT
+        CROSS JOIN CUSTOS_VARIAVEIS CV CROSS JOIN CUSTO_MERCADORIA CM
+        CROSS JOIN PESSOAL PE CROSS JOIN UTILIDADES UT
         CROSS JOIN ALUGUEL AL CROSS JOIN TAXAS TX CROSS JOIN MARKETING MK
-        CROSS JOIN ADMINISTRATIVAS AD CROSS JOIN TERCEIROS TE CROSS JOIN FINANCEIRAS FI`;
+        CROSS JOIN ADMINISTRATIVAS AD CROSS JOIN TERCEIROS TE CROSS JOIN FINANCEIRAS FI
+        CROSS JOIN PRO_LABORE PR`;
     const result = await db.simpleExecute(sql, binds);
     const row = result.rows[0] || {};
+    const receita = Number(row.RECEITA_LIQUIDA) || 0;
+    const impostos = Number(row.IMPOSTOS) || 0;
+    const comissoes = Number(row.COMISSOES) || 0;
+    const receitaAposDeducoes = receita - impostos - comissoes;
     res.json({ ok: true, competencia: req.query.competencia, empresas: unicas,
-      receitaBruta: Number(row.RECEITA_BRUTA) || 0,
-      receitaLiquida: Number(row.RECEITA_LIQUIDA) || 0,
+      receita,
+      // Mantidos para compatibilidade com a tela: a base agora é a receita líquida
+      // das notas, seguida pelas deduções de impostos e comissões.
+      receitaBruta: receita,
+      receitaLiquida: receitaAposDeducoes,
       creditoAbatido: Number(row.CREDITO_ABATIDO) || 0,
       devolucoes: Number(row.DEVOLUCOES) || 0,
-      impostos: Number(row.IMPOSTOS) || 0,
-      comissoes: Number(row.COMISSOES) || 0,
+      impostos,
+      comissoes,
       custosVariaveis: Number(row.CUSTOS_VARIAVEIS) || 0,
+      custosVariaveisNaturezas: Number(row.CUSTOS_VARIAVEIS_NATUREZAS) || 0,
+      custoMercadoria: Number(row.CUSTO_MERCADORIA) || 0,
       pessoal: Number(row.PESSOAL) || 0,
       utilidades: Number(row.UTILIDADES) || 0,
       aluguel: Number(row.ALUGUEL) || 0,
@@ -221,6 +279,7 @@ async function resumo(req, res) {
       administrativas: Number(row.ADMINISTRATIVAS) || 0,
       terceiros: Number(row.TERCEIROS) || 0,
       financeiras: Number(row.FINANCEIRAS) || 0,
+      proLabore: Number(row.PRO_LABORE) || 0,
       notas: Number(row.NOTAS) || 0, atualizadoEm: new Date().toISOString() });
   } catch (error) {
     console.error('dre resumo:', error);

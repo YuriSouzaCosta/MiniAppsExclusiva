@@ -10,6 +10,7 @@ router.use(ensureAuth);
 router.get('/', faturamentoController.paginaIndex);            // pagina detalhada (analise)
 router.get('/painel', faturamentoController.paginaPainel);      // painel TV / mobile
 router.get('/vendedor', faturamentoController.paginaVendedor);  // tela de analise do vendedor
+router.get('/marcas', faturamentoController.paginaMarcas);
 
 // API
 router.get('/api/filtros', faturamentoController.apiFiltros);
@@ -18,6 +19,7 @@ router.get('/api/painel', faturamentoController.apiPainel);  // painel: atual + 
 router.get('/api/stream', faturamentoController.apiStream);  // SSE (auto-atualizacao por push)
 router.get('/api/heatmap', faturamentoController.apiHeatmap);   // mapa dia x hora
 router.get('/api/vendedor', faturamentoController.apiVendedor); // totais + serie do vendedor
+router.get('/api/marcas', faturamentoController.apiMarcas);      // vendedor x marca e marca x linha
 router.get('/api/metas', faturamentoController.apiMetas);       // metas (JSON)
 router.post('/api/meta', faturamentoController.apiMetaSet);     // salva meta (JSON)
 

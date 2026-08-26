@@ -1,4 +1,5 @@
 const db = require('./db/oracle');
+const { loadRules, screenForPath } = require('./screenPermissions');
 
 const DEFAULT_CATEGORIES = [
   { key: 'vendas-pdv', name: 'Vendas e PDV', icon: 'fa-cash-register', order: 10 },
@@ -17,9 +18,10 @@ const APPS = [
   { key: 'consulta-vend', category: 'vendas-pdv', title: 'Consulta de Produtos', description: 'Preço e estoque', href: '/consulta-produtos/vendedor', icon: 'fa-search-dollar', roles: null, order: 30 },
   { key: 'requisicoes', category: 'estoque-lojas', title: 'Requisições entre Lojas', description: 'Pedidos entre lojas', href: '/requisicoes', icon: 'fa-clipboard-list', roles: null, order: 10 },
   { key: 'transferencias', category: 'estoque-lojas', title: 'Transferências', description: 'Transferir estoque', href: '/transferencias', icon: 'fa-exchange-alt', roles: ['ADMIN'], order: 20 },
-  { key: 'analise-transf', category: 'estoque-lojas', title: 'Análise de Transferências', description: 'Relatório de transferências', href: '/analise-transferencias', icon: 'fa-chart-line', roles: ['ADMIN'], order: 30 },
+  { key: 'analise-transf', category: 'relatorios', title: 'Transferências entre Lojas', description: 'Fluxos, saldos e itens transferidos', href: '/analise-transferencias', icon: 'fa-arrow-right-arrow-left', roles: ['ADMIN'], order: 70 },
   { key: 'coletor', category: 'estoque-lojas', title: 'Coletor', description: 'Leitor de código de barras', href: '/coletor', icon: 'fa-barcode', roles: null, order: 40 },
   { key: 'gerenciamento-usuarios', category: 'administracao', title: 'Gerenciamento de Usuários', description: 'Defina perfis e permissões', href: '/gerenciamento-usuarios', icon: 'fa-users-gear', roles: ['ADMIN'], order: 10 },
+  { key: 'permissoes-telas', category: 'administracao', title: 'Permissões por Tela', description: 'Defina as telas liberadas para cada role', href: '/permissoes-telas', icon: 'fa-display', roles: ['ADMIN'], order: 15 },
   { key: 'gerenciamento-categorias', category: 'administracao', title: 'Categorias do Painel', description: 'Organize as categorias e acessos', href: '/gerenciamento-categorias', icon: 'fa-folder-tree', roles: ['ADMIN'], order: 20 },
   { key: 'consulta-custo', category: 'produtos-precos', title: 'Consulta de Produtos C/ Custo', description: 'Preço, custo e margem', href: '/consulta-produtos', icon: 'fa-tags', roles: ['ADMIN'], order: 10 },
   { key: 'calc-custo', category: 'produtos-precos', title: 'Calculadora de Custo', description: 'Simula o custo do produto', href: '/calculadora-custo', icon: 'fa-calculator', roles: ['ADMIN'], order: 20 },
@@ -31,6 +33,8 @@ const APPS = [
   { key: 'entrada-saida', category: 'relatorios', title: 'Entrada x Saída', description: 'Movimento fiscal por empresa', href: '/entrada-saida', icon: 'fa-right-left', roles: ['ADMIN'], order: 20 },
   { key: 'markup', category: 'relatorios', title: 'Markup', description: 'Rentabilidade, custo e desconto por vendedor', href: '/markup', icon: 'fa-chart-line', roles: ['ADMIN'], order: 30 },
   { key: 'dre', category: 'relatorios', title: 'DRE', description: 'Demonstração mensal do resultado', href: '/dre', icon: 'fa-chart-column', roles: ['ADMIN'], order: 40 },
+  { key: 'faturamento-marcas', category: 'relatorios', title: 'Faturamento por Marca', description: 'Vendas por marca, linha e vendedor', href: '/faturamento/marcas', icon: 'fa-layer-group', roles: ['ADMIN'], order: 50 },
+  { key: 'compras-marcas', category: 'relatorios', title: 'Compras por Marca', description: 'Compras por marca, linha e fornecedor', href: '/compras-marcas', icon: 'fa-cart-flatbed', roles: ['ADMIN'], order: 60 },
   { key: 'financeiro', category: 'financeiro', title: 'Acompanhamento Financeiro', description: 'Boletos e contas a pagar', href: '/acompanhamento-financeiro', icon: 'fa-file-invoice-dollar', roles: ['ADMIN'], order: 10 },
   { key: 'baixa-boletos', category: 'financeiro', title: 'Baixa de Boletos', description: 'Baixa por PDF de boleto', href: '/baixa-boletos', icon: 'fa-file-pdf', roles: ['ADMIN', 'ASS_COMPRA'], order: 20 }
 ];
@@ -42,6 +46,7 @@ function defaults() {
 async function loadMenu(role, includeInactive = false) {
   let categories = defaults();
   let assignments = new Map();
+  let screenRules = null;
   let installed = true;
   try {
     const [catResult, appResult] = await Promise.all([
@@ -60,9 +65,20 @@ async function loadMenu(role, includeInactive = false) {
     installed = false;
   }
 
+  try {
+    screenRules = await loadRules();
+  } catch (error) {
+    if (error.errorNum !== 942) throw error;
+  }
+
   const categoryMap = new Map(categories.map(category => [category.key, category]));
+  const normalizedRole = String(role || '').trim();
   for (const app of APPS) {
-    if (app.roles && !app.roles.includes(role) && !includeInactive) continue;
+    const screen = screenForPath(String(app.href || '').split('?')[0]);
+    const hasConfiguredRules = screenRules && screen && screenRules.has(screen.key);
+    const allowedByScreen = normalizedRole === 'ADMIN' || !hasConfiguredRules || screenRules.get(screen.key).has(normalizedRole);
+    const allowedByDefault = normalizedRole === 'ADMIN' || !app.roles || app.roles.includes(normalizedRole);
+    if (!includeInactive && !(hasConfiguredRules ? allowedByScreen : allowedByDefault)) continue;
     const assignment = assignments.get(app.key);
     if (assignment && !assignment.active && !includeInactive) continue;
     const category = categoryMap.get(assignment ? assignment.category : app.category);

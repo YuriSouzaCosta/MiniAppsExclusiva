@@ -42,7 +42,12 @@ function validData(s, padrao = '2025-01-01') {
 }
 function parseEmps(raw) {
   if (!raw) return [];
-  return String(raw).split(',').map(x => x.trim()).filter(x => /^\d+$/.test(x)).map(Number);
+  return (Array.isArray(raw) ? raw : String(raw).split(','))
+    .map(x => String(x).trim()).filter(x => /^\d+$/.test(x)).map(Number);
+}
+function parseTextos(raw) {
+  if (!raw) return [];
+  return (Array.isArray(raw) ? raw : [raw]).map(x => String(x).trim()).filter(Boolean);
 }
 function anoAnterior(d) {
   let [y, m, dd] = d.split('-');
@@ -138,6 +143,9 @@ function paginaIndex(req, res) {
 function paginaPainel(req, res) {
   res.sendFile(path.join(__dirname, '..', 'views', 'faturamento', 'painel.html'));
 }
+function paginaMarcas(req, res) {
+  res.sendFile(path.join(__dirname, '..', 'views', 'faturamento', 'marcas.html'));
+}
 
 // -------------------- API --------------------
 async function apiFiltros(req, res) {
@@ -187,6 +195,88 @@ async function apiPainel(req, res) {
     });
   } catch (e) {
     console.error('faturamento apiPainel:', e);
+    res.status(500).json({ erro: String(e.message || e) });
+  }
+}
+
+// ==================== Faturamento por marca / linha ====================
+// O valor da nota (ja descontado o credito de troca) e rateado pelos itens pelo
+// valor liquido do item. Assim os agrupamentos fecham com o faturamento de venda.
+async function qFaturamentoMarcas(emps, di, df, marcas, linhas, vendedoresFiltro, produtos) {
+  const binds = { di, df };
+  const empIn = empClause(emps, binds);
+  const base = `WITH CREDITOS AS (
+      SELECT NUNOTA, SUM(NVL(VLRDESDOB,0)) CREDITO
+        FROM TGFFIN WHERE CODTIPTIT IN (${CREDCLI_SQL}) GROUP BY NUNOTA
+    ), ITENS_RAW AS (
+      SELECT CAB.NUNOTA, NVL(ITE.CODVEND,CAB.CODVEND) CODVEND,
+             NVL(VEN.APELIDO,'(sem vendedor)') APELIDO,
+             ITE.CODPROD, PRO.DESCRPROD, NVL(ITE.QTDNEG,0) QTDNEG,
+             NVL(MAR.DESCRICAO,NVL(PRO.MARCA,'(sem marca)')) MARCA,
+             NVL(TRIM(PRO.AD_LINHA),'(sem linha)') LINHA,
+             GREATEST(NVL(ITE.VLRTOT,0)-NVL(ITE.VLRDESC,0),0) VALOR_ITEM,
+             SUM(GREATEST(NVL(ITE.VLRTOT,0)-NVL(ITE.VLRDESC,0),0)) OVER (PARTITION BY CAB.NUNOTA) TOTAL_ITENS,
+             COUNT(*) OVER (PARTITION BY CAB.NUNOTA) QTD_LINHAS,
+             GREATEST(NVL(CAB.VLRNOTA,0)-NVL(CR.CREDITO,0),0) VLR_VENDA
+        FROM TGFCAB CAB
+        JOIN TGFITE ITE ON ITE.NUNOTA=CAB.NUNOTA
+        JOIN TGFPRO PRO ON PRO.CODPROD=ITE.CODPROD
+        LEFT JOIN TGFMAR MAR ON MAR.CODIGO=PRO.CODMARCA
+        LEFT JOIN TGFVEN VEN ON VEN.CODVEND=NVL(ITE.CODVEND,CAB.CODVEND)
+        LEFT JOIN CREDITOS CR ON CR.NUNOTA=CAB.NUNOTA
+       WHERE CAB.TIPMOV='V' AND CAB.CODTIPOPER IN (${TOPS_VENDA_SQL})
+         AND CAB.STATUSNOTA='L' AND ${filtroTipoNegociacao('CAB')}
+         AND CAB.CODEMP IN (${empIn})
+         AND TRUNC(CAB.DTNEG) BETWEEN TO_DATE(:di,'YYYY-MM-DD') AND TO_DATE(:df,'YYYY-MM-DD')
+    ), MOV AS (
+      SELECT R.*,
+             R.VLR_VENDA * CASE WHEN R.TOTAL_ITENS>0 THEN R.VALOR_ITEM/R.TOTAL_ITENS
+                                ELSE 1/R.QTD_LINHAS END VALOR_VENDA
+        FROM ITENS_RAW R
+    )`;
+  const metricas = `ROUND(SUM(VALOR_VENDA),2) VALOR_VENDA,
+      SUM(QTDNEG) TOTAL_ITENS, COUNT(DISTINCT CODPROD) ITENS_UNICOS,
+      COUNT(DISTINCT NUNOTA) TOTAL_VENDAS`;
+  const allBinds = { ...binds };
+  const addFiltro = (lista, campo, prefixo, alvo) => {
+    if (!lista.length) return '';
+    return ` AND ${campo} IN (${lista.map((valor, i) => {
+      const chave = `${prefixo}${i}`; alvo[chave] = valor; return `:${chave}`;
+    }).join(',')})`;
+  };
+  let filtro = 'WHERE 1=1';
+  filtro += addFiltro(marcas, 'MARCA', 'mar', binds);
+  filtro += addFiltro(linhas, 'LINHA', 'lin', binds);
+  filtro += addFiltro(vendedoresFiltro, 'CODVEND', 'ven', binds);
+  filtro += addFiltro(produtos, 'CODPROD', 'pro', binds);
+  const [vendedores, opcoes, total] = await Promise.all([
+    db.simpleExecute(`${base} SELECT CODVEND,APELIDO,${metricas} FROM MOV ${filtro}
+      GROUP BY CODVEND,APELIDO ORDER BY VALOR_VENDA DESC`, binds),
+    db.simpleExecute(`${base} SELECT DISTINCT MARCA,LINHA,CODPROD,DESCRPROD,CODVEND,APELIDO
+      FROM MOV ORDER BY MARCA,LINHA,DESCRPROD,APELIDO`, allBinds),
+    db.simpleExecute(`${base} SELECT ${metricas} FROM MOV ${filtro}`, binds)
+  ]);
+  const met = row => ({
+    valor_venda: r2(row.VALOR_VENDA), total_itens: Number(row.TOTAL_ITENS) || 0,
+    itens_unicos: Number(row.ITENS_UNICOS) || 0, total_vendas: Number(row.TOTAL_VENDAS) || 0
+  });
+  return {
+    vendedores: (vendedores.rows || []).map(x => ({ codvend: Number(x.CODVEND), apelido: x.APELIDO, ...met(x) })),
+    opcoes: (opcoes.rows || []).map(x => ({ marca: x.MARCA, linha: x.LINHA, codprod: Number(x.CODPROD), descrprod: x.DESCRPROD, codvend: Number(x.CODVEND), apelido: x.APELIDO })),
+    totais: met((total.rows && total.rows[0]) || {})
+  };
+}
+
+async function apiMarcas(req, res) {
+  try {
+    const emps = parseEmps(req.query.emp);
+    if (!emps.length) return res.status(400).json({ erro: 'Selecione ao menos uma empresa.' });
+    const di = validData(req.query.dt_ini), df = validData(req.query.dt_fin);
+    const marcas = parseTextos(req.query.marca), linhas = parseTextos(req.query.linha);
+    const vendedores = parseEmps(req.query.vend), produtos = parseEmps(req.query.codprod);
+    res.json({ ...(await qFaturamentoMarcas(emps, di, df, marcas, linhas, vendedores, produtos)), dt_ini: di, dt_fin: df, emps, marcas, linhas, vendedores_filtro: vendedores, produtos });
+  } catch (e) {
+    console.error('faturamento apiMarcas:', e);
     res.status(500).json({ erro: String(e.message || e) });
   }
 }
@@ -347,7 +437,7 @@ function apiMetaSet(req, res) {
 }
 
 module.exports = {
-  paginaIndex, paginaPainel, paginaVendedor,
+  paginaIndex, paginaPainel, paginaVendedor, paginaMarcas,
   apiFiltros, apiDados, apiPainel, apiStream,
-  apiHeatmap, apiVendedor, apiMetas, apiMetaSet
+  apiHeatmap, apiVendedor, apiMarcas, apiMetas, apiMetaSet
 };

@@ -1,5 +1,5 @@
 const db = require('../config/db/oracle');
-const { SCREENS, loadRules } = require('../config/screenPermissions');
+const { SCREENS, NO_ROLES, loadRules } = require('../config/screenPermissions');
 
 const ROLE_FIELD_ID = 9999990154;
 
@@ -79,23 +79,23 @@ async function screens(req, res) {
 async function updateScreenRoles(req, res) {
   const screen = SCREENS.find(item => item.key === req.params.screenKey);
   const roles = [...new Set((Array.isArray(req.body.roles) ? req.body.roles : [req.body.roles]).filter(Boolean).map(String))];
-  if (!screen) return res.redirect('/gerenciamento-usuarios/telas?error=tela-invalida');
+  if (!screen) return res.redirect('/permissoes-telas?error=tela-invalida');
   let conn;
   try {
     const validRoles = await db.simpleExecute(`SELECT VALOR FROM TDDOPC WHERE NUCAMPO = :fieldId`, { fieldId: ROLE_FIELD_ID });
     const allowed = new Set(validRoles.rows.map(row => String(row.VALOR).trim()));
-    if (roles.some(role => !allowed.has(role))) return res.redirect('/gerenciamento-usuarios/telas?error=perfil-invalido');
+    if (roles.some(role => !allowed.has(role))) return res.redirect('/permissoes-telas?error=perfil-invalido');
     conn = await db.getConnection();
     await conn.execute('DELETE FROM AD_TELAS_PERMISSOES WHERE TELA = :screenKey', { screenKey: screen.key });
-    for (const role of roles) {
+    for (const role of roles.length ? roles : [NO_ROLES]) {
       await conn.execute('INSERT INTO AD_TELAS_PERMISSOES (TELA, CODROLE) VALUES (:screenKey, :role)', { screenKey: screen.key, role });
     }
     await conn.commit();
-    return res.redirect('/gerenciamento-usuarios/telas?success=permissoes-atualizadas');
+    return res.redirect('/permissoes-telas?success=permissoes-atualizadas');
   } catch (error) {
     if (conn) await conn.rollback();
     console.error('Erro ao salvar permissões por tela:', error);
-    return res.redirect('/gerenciamento-usuarios/telas?error=erro-ao-salvar');
+    return res.redirect('/permissoes-telas?error=erro-ao-salvar');
   } finally {
     if (conn) await conn.close();
   }

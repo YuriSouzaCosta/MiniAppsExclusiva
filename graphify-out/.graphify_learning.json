@@ -1,12 +1,22 @@
 {
-  "generated_at": "2026-08-20T19:21:43.048735+00:00",
+  "generated_at": "2026-08-25T19:33:04.880206+00:00",
   "nodes": {
     "app": {
-      "code_fingerprint": "52d9821dd93a56f15666d882bdad27eee76853a7bb238fa2bec7af7c65639661",
+      "code_fingerprint": "4001c3a3695afee3832ca10501f9be54cef7d446f92d6947cfedc8b805031047",
       "label": "app.js",
-      "last": "2026-08-20T19:04:19.415317+00:00",
+      "last": "2026-08-25T18:16:24.655844+00:00",
       "neg": 1,
       "provenance": [
+        {
+          "date": "2026-08-25T18:16:24.655844+00:00",
+          "outcome": "useful",
+          "q": "Automatizar deploy do localhost por SFTP para /var/www/PROJETO com PM2 sem Docker"
+        },
+        {
+          "date": "2026-08-25T18:10:01.536141+00:00",
+          "outcome": "useful",
+          "q": "Criar relatorio de compra por marca semelhante ao faturamento por marca"
+        },
         {
           "date": "2026-08-20T19:04:19.415317+00:00",
           "outcome": "corrected",
@@ -21,22 +31,12 @@
           "date": "2026-08-11T14:11:33.312922+00:00",
           "outcome": "useful",
           "q": "Adaptar o relatório de Markup do PBIX para a aplicação com visual moderno nas cores da logo"
-        },
-        {
-          "date": "2026-08-11T13:54:24.653645+00:00",
-          "outcome": "useful",
-          "q": "Painel Entrada x Saída não consulta nem mostra os valores do Bling no período"
-        },
-        {
-          "date": "2026-08-11T12:13:29.388019+00:00",
-          "outcome": "useful",
-          "q": "crie um painel de administração de categorias do painel principal"
         }
       ],
-      "score": 2.270003831,
+      "score": 4.019413621,
       "source_file": "app.js",
       "status": "contested",
-      "uses": 4,
+      "uses": 6,
       "verdict": "useful"
     },
     "controllers_acompanhamentonotascontroller": {
@@ -50,16 +50,21 @@
           "q": "as entrada que são as notas devem puxar tudo que estiver importado para o portal de importação xml memso que não esteja lançada ainda , pq eu preciso saber a entrada real que teve e não o que tava somente lançado"
         }
       ],
-      "score": 0.789571912,
+      "score": 0.703300357,
       "source_file": "controllers/acompanhamentoNotasController.js",
       "status": "tentative",
       "uses": 1
     },
     "controllers_faturamentocontroller": {
-      "code_fingerprint": "0de35b33da03ec54e2119eeb98ce77f18d953eb65620548435e823afde945e70",
+      "code_fingerprint": "1b04f41dfb63da96c21cf547b30495f2ac487424db9ae24a19d2226a0d007e6c",
       "label": "faturamentoController.js",
-      "last": "2026-08-11T18:53:09.912276+00:00",
+      "last": "2026-08-25T17:40:06.575210+00:00",
       "provenance": [
+        {
+          "date": "2026-08-25T17:40:06.575210+00:00",
+          "outcome": "useful",
+          "q": "Criar dois relatorios: faturamento por vendedor e marca; e marca agrupada por linha, com valor, itens, produtos unicos e vendas."
+        },
         {
           "date": "2026-08-11T18:53:09.912276+00:00",
           "outcome": "useful",
@@ -76,13 +81,13 @@
           "q": "Corrigir valores do Faturamento por Vendedor com as exclusões comerciais do Markup"
         }
       ],
-      "score": 2.434974885,
+      "score": 3.167109502,
       "source_file": "controllers/faturamentoController.js",
       "status": "preferred",
-      "uses": 3
+      "uses": 4
     },
     "estrutura_6_2_menu_home": {
-      "code_fingerprint": "2813e26258c6540588525366661fef548549f413e78f040753120dee45ec0cc9",
+      "code_fingerprint": "a521c37b85a1ede0bd83bdaf82dac8cf8508f6406daa52448a6ebe5a4747dcc3",
       "label": "6.2 Menu / Home (`/`)",
       "last": "2026-08-20T19:15:16.595615+00:00",
       "provenance": [
@@ -92,13 +97,13 @@
           "q": "faça todas as telas serem responsivas ainda temos monitores com resolução menor que hd aqui na empresa"
         }
       ],
-      "score": 0.999896661,
+      "score": 0.890644244,
       "source_file": "ESTRUTURA.md",
       "status": "tentative",
       "uses": 1
     },
     "estrutura_views_customizadas": {
-      "code_fingerprint": "2813e26258c6540588525366661fef548549f413e78f040753120dee45ec0cc9",
+      "code_fingerprint": "a521c37b85a1ede0bd83bdaf82dac8cf8508f6406daa52448a6ebe5a4747dcc3",
       "label": "Views customizadas",
       "last": "2026-08-20T19:15:16.595615+00:00",
       "provenance": [
@@ -108,8 +113,40 @@
           "q": "faça todas as telas serem responsivas ainda temos monitores com resolução menor que hd aqui na empresa"
         }
       ],
-      "score": 0.999896661,
+      "score": 0.890644244,
       "source_file": "ESTRUTURA.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "package": {
+      "code_fingerprint": "90b7212848ed72feb9ffade2a6f255bfb17421ea927e9def6d8907c763a16f73",
+      "label": "package.json",
+      "last": "2026-08-25T18:16:24.655844+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-25T18:16:24.655844+00:00",
+          "outcome": "useful",
+          "q": "Automatizar deploy do localhost por SFTP para /var/www/PROJETO com PM2 sem Docker"
+        }
+      ],
+      "score": 0.998770574,
+      "source_file": "package.json",
+      "status": "tentative",
+      "uses": 1
+    },
+    "routes_faturamentoroutes": {
+      "code_fingerprint": "2e2a96ea4fbf204c7928d3ffaa228643650326c9b7b735903fa2fd360c8344d8",
+      "label": "faturamentoRoutes.js",
+      "last": "2026-08-25T17:40:06.575210+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-25T17:40:06.575210+00:00",
+          "outcome": "useful",
+          "q": "Criar dois relatorios: faturamento por vendedor e marca; e marca agrupada por linha, com valor, itens, produtos unicos e vendas."
+        }
+      ],
+      "score": 0.998189002,
+      "source_file": "routes/faturamentoRoutes.js",
       "status": "tentative",
       "uses": 1
     }

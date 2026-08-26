@@ -1046,7 +1046,7 @@ async function reprocessarPedido(req, res) {
             { numPedido: novoPedidoId },
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
-        const nunotaGerado = nunotaResult.rows[0]?.NUNOTA;
+        const nunotaGerado = nunotaResult.rows[0] && nunotaResult.rows[0].NUNOTA;
 
         // 5. Ajustar TGFITE e TGFCAB
         if (nunotaGerado) {
