@@ -9,7 +9,7 @@ exports.getProdutoByCodigo = async (req, res) => {
       `SELECT nome, preco, referencia
          FROM VW_PRODUTOS_BLC
         WHERE codigo_barra = :codigo_barra`,
-      { codigo_barra }
+      { codigo_barra: String(codigo_barra) }
     );
     if (result.rows && result.rows.length > 0) {
       const row = result.rows[0];
@@ -29,16 +29,19 @@ exports.postContagem = async (req, res) => {
     return res.status(400).json({ error: "Todos os campos são obrigatórios" });
   }
   try {
+    // Converte explicitamente para tipos primitivos para evitar problemas com oracledb
+    const params = {
+      codigo_barra: String(codigo_barra),
+      quantidade: Number(quantidade),
+      usuario: String(usuario),
+      id: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT }
+    };
+
     const result = await db.simpleExecute(
       `INSERT INTO AD_CONTAGENS (codigo_barra, quantidade, usuario)
          VALUES (:codigo_barra, :quantidade, :usuario)
          RETURNING id INTO :id`,
-      {
-        codigo_barra,
-        quantidade,
-        usuario,
-        id: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT }
-      },
+      params,
       { autoCommit: true }
     );
     const novoId = result.outBinds.id[0];

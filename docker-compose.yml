@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    container_name: projeto-docker
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+      - .env.bling
+    volumes:
+      - ./data:/usr/src/app/data   # metas.json persiste entre rebuilds
+      - ./.secrets:/usr/src/app/.secrets # tokens OAuth renovados persistem entre rebuilds
+    security_opt:
+      - apparmor=unconfined

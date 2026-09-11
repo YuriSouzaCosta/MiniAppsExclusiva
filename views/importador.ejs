@@ -4,7 +4,8 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Importador</title>
-	</head>
+	  <link rel="stylesheet" href="/css/responsive-global.css">
+</head>
 	<body>
 		<label for="arquivo">Upload de Arquivo Excel:</label>
 		<input type="file" id="arquivo" accept=".xlsx" />
@@ -23,7 +24,10 @@
 				formData.append("arquivo", arquivo);
 
 				try {
-					const response = await fetch("http://localhost:3000/importar", {
+					const apiBase = window.location.port 
+					? `${window.location.protocol}//${window.location.hostname}:${window.location.port}` 
+					: `${window.location.protocol}//${window.location.hostname}`;
+				const response = await fetch(`${apiBase}/importar`, {
 						method: "POST",
 						body: formData,
 					});

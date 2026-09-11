@@ -1,4 +1,6 @@
-const apiBase = `${window.location.protocol}//${window.location.hostname}:3000`;
+const apiBase = window.location.port
+	? `${window.location.protocol}//${window.location.hostname}:${window.location.port}`
+	: `${window.location.protocol}//${window.location.hostname}`;
 
 async function carregarPendencias() {
 	try {
@@ -33,13 +35,11 @@ async function carregarPendencias() {
         <td>${pendencia.AVARIA}</td>
         <td>${pendencia.DESCRICAO}</td>
         <td>
-          <textarea class="form-control solucao-textarea" data-id="${
-					pendencia.ID_CODE
+          <textarea class="form-control solucao-textarea" data-id="${pendencia.ID_CODE
 				}" placeholder="Descreva como resolver"></textarea>
         </td>
         <td>
-          <button class="btn btn-success finalizar-btn" data-id="${
-					pendencia.ID_CODE
+          <button class="btn btn-success finalizar-btn" data-id="${pendencia.ID_CODE
 				}">
             Finalizar
           </button>

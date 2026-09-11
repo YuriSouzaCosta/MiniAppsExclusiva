@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Painel de Pedidos - Pedido de Compras</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/responsive.css" />
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #f8fafc; }
+        .kanban-board {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+            overflow-x: auto;
+            padding-bottom: 2rem;
+            min-height: 70vh;
+        }
+        .kanban-column {
+            flex: 1;
+            min-width: 320px;
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            border: 1px solid #e2e8f0;
+        }
+        .kanban-header {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .kanban-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.25rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 5px solid #cbd5e1;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .kanban-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        .card-prazo { border-left-color: #10b981; }
+        .card-atrasado { border-left-color: #f59e0b; }
+        .card-critico { border-left-color: #ef4444; }
+        
+        .pedido-num { font-size: 0.85rem; color: #64748b; font-weight: 600; margin-bottom: 0.5rem; }
+        .pedido-title { font-size: 0.95rem; font-weight: 700; color: #1e293b; margin-bottom: 0.25rem; line-height: 1.2;}
+        .pedido-subtitle { font-size: 0.85rem; color: #475569; margin-bottom: 1rem; }
+        .pedido-footer { display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #f1f5f9; padding-top: 1rem; }
+        .pedido-valor { font-weight: 700; color: #0f172a; font-size: 1.1rem;}
+        .pedido-data-container { text-align: right; }
+        .pedido-data { display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 0.35rem 0.6rem; border-radius: 6px; margin-bottom: 0.2rem;}
+        .pedido-delay-desc { font-size: 0.7rem; color: #64748b; font-weight: 500;}
+
+        .badge-prazo { background: #d1fae5; color: #065f46; }
+        .badge-atrasado { background: #fef3c7; color: #92400e; }
+        .badge-critico { background: #fee2e2; color: #991b1b; }
+        
+        .sidebar .nav-link {
+          color: #475569; font-weight: 500; padding: 10px 15px; border-radius: 8px; transition: all 0.3s ease; text-decoration: none; display: flex; align-items: center;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+          color: #ea580c; background: #fff7ed; font-weight: 600;
+        }
+        .sidebar .nav-link i { margin-right: 10px; font-size: 1.1rem; }
+    </style>
+  <link rel="stylesheet" href="/css/responsive-global.css">
+</head>
+<body>
+    <div class="layout">
+        <!-- Sidebar -->
+        <%- include('../partials/sidebar', { module: 'pedidos', activePage: 'painel' }) %>
+
+        <!-- Main Content -->
+        <div class="content">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 style="font-size: 1.7rem; color: #1e293b; margin-bottom: 0; font-weight: 700;">Painel de Atrasos</h1>
+                    <p style="color: #64748b; margin-bottom: 0;">Acompanhamento de prazos de entrega de Pedidos de Compras pendentes</p>
+                </div>
+            </div>
+
+            <div class="kanban-board" id="kanbanBoard">
+                <!-- Coluna Prazo -->
+                <div class="kanban-column">
+                    <div class="kanban-header text-success">
+                        <span><i class="bi bi-clock-history me-2"></i> Dentro do Prazo</span>
+                        <span class="badge bg-success rounded-pill" id="count-prazo">0</span>
+                    </div>
+                    <div id="col-prazo" class="d-flex flex-column gap-3"></div>
+                </div>
+
+                <!-- Coluna Atrasado -->
+                <div class="kanban-column">
+                    <div class="kanban-header text-warning" style="color: #d97706 !important;">
+                        <span><i class="bi bi-exclamation-triangle me-2"></i> Atrasado (1 a 7 dias)</span>
+                        <span class="badge bg-warning rounded-pill" id="count-atrasado">0</span>
+                    </div>
+                    <div id="col-atrasado" class="d-flex flex-column gap-3"></div>
+                </div>
+
+                <!-- Coluna Crítico -->
+                <div class="kanban-column">
+                    <div class="kanban-header text-danger">
+                        <span><i class="bi bi-fire me-2"></i> Crítico (> 7 dias)</span>
+                        <span class="badge bg-danger rounded-pill" id="count-critico">0</span>
+                    </div>
+                    <div id="col-critico" class="d-flex flex-column gap-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ver Itens -->
+    <div class="modal fade" id="modalVerItens" tabindex="-1" aria-labelledby="modalVerItensLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header bg-light">
+            <h5 class="modal-title" id="modalVerItensLabel" style="color: #1e293b;">
+                <i class="bi bi-box-seam me-2"></i> Itens da Nota Sankhya #<span id="spanItemsNunota"></span>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-0">
+             <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0 text-center align-middle" style="font-size: 0.95rem;">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Cód. Produto</th>
+                            <th>Referência</th>
+                            <th class="text-start">Descrição</th>
+                            <th>Quantidade</th>
+                            <th>Valor Un. (R$)</th>
+                            <th>Valor Total (R$)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyItensModal">
+                    </tbody>
+                </table>
+             </div>
+          </div>
+          <div class="modal-footer bg-light">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <form id="logoutForm" action="/logout" method="POST" style="display: none;"></form>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', carregarPainel);
+
+        async function carregarPainel() {
+            try {
+                const res = await fetch('/api/painel-dados');
+                const data = await res.json();
+                
+                if (data.success) {
+                    renderizarKanban(data.pedidos);
+                } else {
+                    console.error("Erro na resposta da API:", data);
+                    Swal.fire('Erro!', 'Não foi possível carregar o painel.', 'error');
+                }
+            } catch (err) {
+                console.error("Erro ao carregar dados do painel:", err);
+                Swal.fire('Erro!', 'Falha de comunicação com o servidor.', 'error');
+            }
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '--';
+            const date = new Date(dateStr);
+            // Ajuste para exibição local ignorando timezone se necessário, 
+            // assumindo que dateStr já contem a data limpa
+            return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); 
+        }
+
+        function renderizarKanban(pedidos) {
+            const colPrazo = document.getElementById('col-prazo');
+            const colAtrasado = document.getElementById('col-atrasado');
+            const colCritico = document.getElementById('col-critico');
+
+            colPrazo.innerHTML = '';
+            colAtrasado.innerHTML = '';
+            colCritico.innerHTML = '';
+
+            let countPrazo = 0;
+            let countAtrasado = 0;
+            let countCritico = 0;
+
+            pedidos.forEach(p => {
+                const card = document.createElement('div');
+                card.className = `kanban-card`;
+
+                let badgeClass = '';
+                let borderClass = '';
+                let labelExtra = '';
+
+                if (p.CLASSIFICACAO === 'PRAZO') {
+                    badgeClass = 'badge-prazo';
+                    borderClass = 'card-prazo';
+                    labelExtra = p.DIAS_ATRASO < 0 ? `Em ${Math.abs(p.DIAS_ATRASO)} dia(s)` : 'Hoje';
+                    countPrazo++;
+                } else if (p.CLASSIFICACAO === 'ATRASADO') {
+                    badgeClass = 'badge-atrasado';
+                    borderClass = 'card-atrasado';
+                    labelExtra = `${p.DIAS_ATRASO} dia(s) atrás`;
+                    countAtrasado++;
+                } else {
+                    badgeClass = 'badge-critico';
+                    borderClass = 'card-critico';
+                    labelExtra = `${p.DIAS_ATRASO} dia(s) atrás`;
+                    countCritico++;
+                }
+
+                card.classList.add(borderClass);
+
+                card.innerHTML = `
+                    <div class="pedido-num d-flex justify-content-between">
+                        <span>NUNOTA: ${p.NUNOTA} ${p.NUMNOTA ? '| NOTA: ' + p.NUMNOTA : ''}</span>
+                        <span><i class="bi bi-calendar3"></i> Em. ${formatDate(p.DTNEG)}</span>
+                    </div>
+                    <div class="pedido-title"><i class="bi bi-person me-1"></i> ${p.PARCEIRO || 'PARCEIRO NÃO INFORMADO'}</div>
+                    <div class="pedido-subtitle"><i class="bi bi-building me-1"></i> ${p.EMPRESA || 'EMPRESA NÃO INFORMADA'}</div>
+                    
+                    <div class="pedido-footer">
+                        <div class="pedido-valor">${formatCurrency(p.VLRNOTA)}</div>
+                        <div class="pedido-data-container">
+                            <span class="pedido-data ${badgeClass}">
+                                <i class="bi bi-calendar-event me-1"></i> ${formatDate(p.DTPREVENT)}
+                            </span>
+                            <div class="pedido-delay-desc">${labelExtra}</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary w-100 mt-3" onclick="abrirModalItens('${p.NUNOTA}')">
+                        <i class="bi bi-eye"></i> Visualizar Itens
+                    </button>
+                `;
+
+                if (p.CLASSIFICACAO === 'PRAZO') colPrazo.appendChild(card);
+                else if (p.CLASSIFICACAO === 'ATRASADO') colAtrasado.appendChild(card);
+                else colCritico.appendChild(card);
+            });
+
+            document.getElementById('count-prazo').innerText = countPrazo;
+            document.getElementById('count-atrasado').innerText = countAtrasado;
+            document.getElementById('count-critico').innerText = countCritico;
+            
+            if (countPrazo === 0) colPrazo.innerHTML = '<div class="text-center text-muted mt-3" style="font-size:0.85rem">Nenhum pedido no prazo</div>';
+            if (countAtrasado === 0) colAtrasado.innerHTML = '<div class="text-center text-muted mt-3" style="font-size:0.85rem">Nenhum pedido em atraso recente</div>';
+            if (countCritico === 0) colCritico.innerHTML = '<div class="text-center text-muted mt-3" style="font-size:0.85rem">Nenhum pedido crítico</div>';
+        }
+
+        async function abrirModalItens(nunota) {
+            document.getElementById('spanItemsNunota').innerText = nunota;
+            document.getElementById('tbodyItensModal').innerHTML = '<tr><td colspan="6" class="py-4">Buscando itens no Sankhya...</td></tr>';
+            
+            const modal = new bootstrap.Modal(document.getElementById('modalVerItens'));
+            modal.show();
+
+            try {
+                const res = await fetch(`/carregarItensSankhya?nunota=${nunota}`);
+                const items = await res.json();
+
+                const tbody = document.getElementById('tbodyItensModal');
+                tbody.innerHTML = '';
+                
+                if (!items || items.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="py-4 text-muted">Nenhum item encontrado.</td></tr>';
+                    return;
+                }
+
+                items.forEach(i => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${i.CODPROD}</td>
+                            <td>${i.REFERENCIA || '--'}</td>
+                            <td class="text-start" style="font-size: 0.9rem;">${i.DESCRPROD}</td>
+                            <td>${i.QTDNEG}</td>
+                            <td>${formatCurrency(i.VLRUNIT)}</td>
+                            <td class="fw-bold">${formatCurrency(i.VLRTOT)}</td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                console.error(err);
+                document.getElementById('tbodyItensModal').innerHTML = `<tr><td colspan="6" class="text-danger">Erro ao carregar itens.</td></tr>`;
+            }
+        }
+
+        // Logout functionality
+        document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Tem certeza?',
+                text: "Você será desconectado do sistema.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ea580c',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Sim, sair!',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('logoutForm').submit();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

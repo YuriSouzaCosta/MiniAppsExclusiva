@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Análise do Vendedor</title>
+<style>
+  :root{--bg:#f8fafc;--card:#fff;--ink:#1e293b;--muted:#64748b;--line:#e2e8f0;
+        --brand:#ea580c;--brand2:#c2410c;--pos:#16a34a;--neg:#c0392b;--gold:#f59e0b;
+        --shadow:0 1px 3px rgba(16,24,40,.06);}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;font-size:14px}
+  header{background:var(--card);border-bottom:1px solid var(--line);padding:14px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;font-weight:650}
+  header .logo{height:32px;width:auto;flex:0 0 auto}
+  header .vend{color:var(--brand);font-weight:700}
+  header a.volta{margin-left:auto;font-size:12.5px;color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:8px;padding:6px 12px}
+  header a.volta:hover{color:var(--ink)}
+  .wrap{max-width:1080px;margin:0 auto;padding:20px 24px 60px}
+  .filters{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);
+           padding:14px 16px;display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap}
+  .f label{display:block;font-size:11.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+  input[type=month],input[type=date]{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:inherit}
+  .empbox{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .empbox label{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--ink);text-transform:none;letter-spacing:0;font-weight:500;margin:0}
+  .empbox input{width:16px;height:16px;accent-color:var(--brand)}
+  .btn{cursor:pointer;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;background:var(--brand);color:#fff;font-family:inherit}
+  .btn:hover{background:#c2410c}
+  .per{color:var(--muted);font-size:12.5px;margin-top:10px}
+  .cards{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:14px;margin:18px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:16px}
+  .card .lab{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+  .card .val{font-size:24px;font-weight:800;margin-top:5px;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+  .card .yoy{margin-top:8px;font-size:13px;font-weight:700}
+  .card .yoy.up{color:var(--pos)} .card .yoy.down{color:var(--neg)}
+  .card .prev{font-size:12px;color:var(--muted);margin-top:4px}
+  .meta-edit{display:flex;gap:8px;align-items:center;margin-top:10px}
+  .meta-edit input{width:150px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit}
+  .meta-edit button{cursor:pointer;border:1px solid var(--brand);background:#fff;color:var(--brand);border-radius:7px;padding:7px 11px;font-size:12.5px;font-weight:600}
+  .meta-edit button:hover{background:var(--brand);color:#fff}
+  .prog{height:10px;background:#eef2f7;border-radius:6px;overflow:hidden;margin-top:10px}
+  .prog > div{height:100%;background:linear-gradient(90deg,var(--brand2),var(--brand));border-radius:6px;transition:width .5s}
+  .prog-lab{font-size:12px;font-weight:700;margin-top:6px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:16px 18px;margin-top:6px}
+  .panel h2{font-size:14px;margin:0 0 6px;font-weight:650}
+  .leg{display:flex;gap:18px;font-size:12px;color:var(--muted);margin:2px 0 10px}
+  .leg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  .msg{font-size:12.5px;color:var(--muted);padding:8px 0}
+  .err{color:var(--neg)}
+  svg{width:100%;height:auto;display:block}
+  @media(max-width:820px){.cards{grid-template-columns:1fr 1fr}.card:first-child{grid-column:1/-1}}
+  @media(max-width:520px){.cards{grid-template-columns:1fr}}
+</style>
+  <link rel="stylesheet" href="/css/responsive-global.css">
+</head>
+<body>
+<header>
+  <img src="/images/logo.png" class="logo" alt="Exclusiva">
+  <h1>Análise do Vendedor — <span class="vend" id="hVend">…</span></h1>
+  <a class="volta" href="/faturamento">← voltar</a>
+  <a class="volta" href="/" style="margin-left:8px">🏠 Central de Acessos</a>
+</header>
+<div class="wrap">
+  <div class="filters">
+    <div class="f">
+      <label>Competência (26–25)</label>
+      <input type="month" id="comp">
+    </div>
+    <div class="f">
+      <label>Empresa(s)</label>
+      <div class="empbox" id="empBox"></div>
+    </div>
+    <button class="btn" id="btnGo">Atualizar</button>
+  </div>
+  <div class="per" id="per">—</div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="lab">Meta da competência × realizado</div>
+      <div class="val" id="mReal">–</div>
+      <div class="prog"><div id="mBar" style="width:0%"></div></div>
+      <div class="prog-lab" id="mPct">meta não definida</div>
+      <div class="meta-edit">
+        <input type="number" id="mInput" placeholder="valor da meta (R$)" step="0.01">
+        <button id="mSave">Salvar meta</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="lab">Faturamento (líquido)</div>
+      <div class="val" id="fVal">–</div>
+      <div class="yoy" id="fYoy"></div>
+      <div class="prev" id="fPrev"></div>
+    </div>
+    <div class="card">
+      <div class="lab">Nº de Vendas</div>
+      <div class="val" id="vVal">–</div>
+      <div class="yoy" id="vYoy"></div>
+      <div class="prev" id="vPrev"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Evolução no período</h2>
+    <div class="leg">
+      <span><i style="background:#ea580c"></i>Este ano (diário)</span>
+      <span><i style="background:#94a3b8"></i>Ano passado (mesmo período)</span>
+    </div>
+    <div id="chart"><div class="msg">carregando…</div></div>
+  </div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const fmtBRL=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtN=v=>v.toLocaleString('pt-BR');
+const brDate=s=>s.split('-').reverse().join('/');
+const qp=new URLSearchParams(location.search);
+const COD=qp.get('cod'); const EMP_PARAM=(qp.get('emp')||'').split(',').filter(Boolean);
+let META_ATUAL=null;
+
+function compWindow(ym){ const [y,m]=ym.split('-').map(Number);
+  let py=y,pm=m-1; if(pm<1){pm=12;py=y-1;}
+  return {di:`${py}-${String(pm).padStart(2,'0')}-26`, df:`${ym}-25`}; }
+function compAtual(){ const d=new Date(); let y=d.getFullYear(),m=d.getMonth()+1;
+  if(d.getDate()>=26){ m+=1; if(m>12){m=1;y+=1;} } return `${y}-${String(m).padStart(2,'0')}`; }
+function addDays(iso,k){ const [y,m,d]=iso.split('-').map(Number); const dt=new Date(Date.UTC(y,m-1,d));
+  dt.setUTCDate(dt.getUTCDate()+k); return dt.toISOString().slice(0,10); }
+const dmy=iso=>iso.slice(8,10)+'/'+iso.slice(5,7);
+
+function empsSel(){ const b=[...document.querySelectorAll('#empBox input:checked')].map(x=>x.value);
+  return b.length? b : [...document.querySelectorAll('#empBox input')].map(x=>x.value); }
+
+async function carregarFiltros(){
+  const r=await fetch('/faturamento/api/filtros'); const j=await r.json();
+  const set=EMP_PARAM.length? new Set(EMP_PARAM.map(String)):null;
+  $('#empBox').innerHTML=(j.empresas||[]).map(e=>{
+    const ck=set? set.has(String(e.codemp)):true;
+    return `<label><input type="checkbox" value="${e.codemp}" ${ck?'checked':''}>${e.codemp}</label>`;
+  }).join('');
+}
+
+function yoyEl(elId, atual, ant, money){
+  const el=$('#'+elId); const d=atual-ant; const pct=ant?(d/ant*100):(atual?100:0); const up=d>=0;
+  el.className='yoy '+(up?'up':'down');
+  el.innerHTML=`${up?'▲':'▼'} ${money?fmtBRL(Math.abs(d)):fmtN(Math.abs(d))} (${up?'+':'−'}${Math.abs(pct).toLocaleString('pt-BR',{maximumFractionDigits:1})}%)`;
+}
+
+async function carregar(){
+  const comp=$('#comp').value; const {di,df}=compWindow(comp); const emp=empsSel().join(',');
+  $('#per').textContent=`Período ${brDate(di)} a ${brDate(df)} · competência ${comp.split('-').reverse().join('/')}`;
+  $('#chart').innerHTML='<div class="msg">carregando…</div>';
+  try{
+    const r=await fetch(`/faturamento/api/vendedor?cod=${COD}&emp=${emp}&dt_ini=${di}&dt_fin=${df}`);
+    const j=await r.json();
+    if(j.erro){ $('#chart').innerHTML='<div class="msg err">Erro: '+j.erro+'</div>'; return; }
+    $('#hVend').textContent=j.apelido||('Vend '+COD);
+    document.title='Vendedor — '+(j.apelido||COD);
+    const a=j.atual.tot, p=j.anterior.tot;
+    $('#fVal').textContent=fmtBRL(a.liquido); yoyEl('fYoy',a.liquido,p.liquido,true);
+    $('#fPrev').innerHTML=`Ano passado: <b>${fmtBRL(p.liquido)}</b>`;
+    $('#vVal').textContent=fmtN(a.qtd_v); yoyEl('vYoy',a.qtd_v,p.qtd_v,false);
+    $('#vPrev').innerHTML=`Ano passado: <b>${fmtN(p.qtd_v)}</b>`;
+    await carregarMeta(comp, a.liquido);
+    drawChart(j.atual, j.anterior);
+  }catch(e){ $('#chart').innerHTML='<div class="msg err">Falha: '+e+'</div>'; }
+}
+
+async function carregarMeta(comp, realizado){
+  let metas={}; try{ metas=await (await fetch('/faturamento/api/metas')).json(); }catch(e){}
+  const meta=(metas[comp]&&metas[comp][String(COD)])||0;
+  META_ATUAL=meta;
+  $('#mReal').textContent=fmtBRL(realizado);
+  if(meta>0){
+    const pct=realizado/meta*100;
+    $('#mBar').style.width=Math.min(100,Math.max(0,pct)).toFixed(1)+'%';
+    $('#mPct').innerHTML=`${pct.toLocaleString('pt-BR',{maximumFractionDigits:1})}% da meta de <b>${fmtBRL(meta)}</b>`;
+    $('#mInput').value=meta;
+  } else {
+    $('#mBar').style.width='0%'; $('#mPct').textContent='meta não definida — informe abaixo'; $('#mInput').value='';
+  }
+}
+
+$('#mSave').addEventListener('click', async ()=>{
+  const comp=$('#comp').value; const v=parseFloat($('#mInput').value.replace(',','.'));
+  const valor=isNaN(v)?0:v;
+  try{
+    const r=await fetch('/faturamento/api/meta',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({cod:Number(COD),comp,valor})});
+    const j=await r.json();
+    if(j.erro){ alert('Erro ao salvar: '+j.erro); return; }
+    carregar();
+  }catch(e){ alert('Falha ao salvar: '+e); }
+});
+
+function drawChart(at, an){
+  const mapA={}; at.serie.forEach(s=>mapA[s.dia]=s.liq);
+  const mapP={}; an.serie.forEach(s=>mapP[s.dia]=s.liq);
+  const days=[]; let k=0;
+  while(true){ const cd=addDays(at.dt_ini,k); if(cd>at.dt_fin||k>400) break; days.push({cd,pd:addDays(an.dt_ini,k)}); k++; }
+  const cur=days.map(x=>mapA[x.cd]||0), ant=days.map(x=>mapP[x.pd]||0);
+  const maxV=Math.max(1,...cur,...ant);
+  const minV=Math.min(0,...cur,...ant);   // dias de devolução podem ser negativos
+  const W=900,H=300,padL=64,padR=14,padT=14,padB=42,n=days.length;
+  const X=i=> padL + (n<=1?0:(i/(n-1))*(W-padL-padR));
+  const Y=v=> H-padB-((v-minV)/((maxV-minV)||1))*(H-padT-padB);
+  const base=Y(0);
+  const areaPath=arr=>{ if(!arr.length) return '';
+    let d=`M ${X(0).toFixed(1)} ${base.toFixed(1)}`;
+    arr.forEach((v,i)=> d+=` L ${X(i).toFixed(1)} ${Y(v).toFixed(1)}`);
+    return d+` L ${X(arr.length-1).toFixed(1)} ${base.toFixed(1)} Z`; };
+  const linePath=arr=> arr.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
+  // gridlines + rotulos Y (min, 0, max)
+  const niveis=[...new Set([minV, minV/2, 0, maxV/2, maxV])];
+  const gl=niveis.map(v=>{ const y=Y(v);
+    return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="${v===0?'#d7dde7':'#eef1f6'}"/>`+
+           `<text x="${padL-8}" y="${(y+3).toFixed(1)}" font-size="10" fill="#94a3b8" text-anchor="end">${(v/1000).toLocaleString('pt-BR',{maximumFractionDigits:0})}k</text>`; }).join('');
+  // areas preenchidas sobrepostas: ano passado (slate) embaixo, este ano (laranja) por cima
+  const areaAnt=`<path d="${areaPath(ant)}" fill="rgba(148,163,184,.20)"/>`;
+  const areaCur=`<path d="${areaPath(cur)}" fill="rgba(234,88,12,.28)"/>`;
+  const lineAnt=`<polyline points="${linePath(ant)}" fill="none" stroke="#94a3b8" stroke-width="2"/>`;
+  const lineCur=`<polyline points="${linePath(cur)}" fill="none" stroke="#ea580c" stroke-width="2.5"/>`;
+  const dotsAnt=ant.map((v,i)=>`<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="2.3" fill="#94a3b8"><title>${dmy(days[i].pd)} (ano passado): ${fmtBRL(v)}</title></circle>`).join('');
+  const dotsCur=cur.map((v,i)=>`<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="2.6" fill="#ea580c"><title>${dmy(days[i].cd)}: ${fmtBRL(v)}</title></circle>`).join('');
+  // rotulos de valor SEMPRE visiveis (compacto; valor exato fica no tooltip)
+  const lab=v=>{ const a=Math.abs(v); return a>=1000 ? (v/1000).toLocaleString('pt-BR',{maximumFractionDigits:0})+'k' : String(Math.round(v)); };
+  const rot=(arr,dy,color)=> arr.map((v,i)=> v ? `<text x="${X(i).toFixed(1)}" y="${(Y(v)+dy).toFixed(1)}" font-size="9" font-weight="700" text-anchor="middle" fill="${color}" stroke="#fff" stroke-width="2.5" paint-order="stroke" style="stroke-linejoin:round">${lab(v)}</text>` : '').join('');
+  const lblAnt=rot(ant, 14, '#64748b');
+  const lblCur=rot(cur, -8, '#ea580c');
+  let xlab=''; const step=Math.max(1,Math.ceil(n/12));
+  days.forEach((x,i)=>{ if(i%step===0){ xlab+=`<text x="${X(i).toFixed(1)}" y="${H-padB+16}" font-size="10" fill="#94a3b8" text-anchor="middle">${dmy(x.cd)}</text>`; }});
+  $('#chart').innerHTML=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${gl}${areaAnt}${areaCur}${lineAnt}${lineCur}${dotsAnt}${dotsCur}${lblAnt}${lblCur}${xlab}</svg>`;
+}
+
+$('#comp').value=compAtual();
+$('#btnGo').addEventListener('click',carregar);
+$('#comp').addEventListener('change',carregar);
+carregarFiltros().then(carregar);
+</script>
+</body>
+</html>

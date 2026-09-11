@@ -1,0 +1,306 @@
+<%- include('partials/header', { pageTitle: 'Dashboard Gerencial' }) %>
+
+<div class="space-y-4 md:space-y-6 pb-24 md:pb-4">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <h2 class="text-3xl font-bold text-gray-900">Dashboard Gerencial</h2>
+        
+        <form action="/pdv/manager" method="GET" class="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+            <div class="flex items-center gap-2">
+                <div class="relative">
+                    <label for="startDate" class="block text-xs font-medium text-gray-500 mb-1">Data Inicial</label>
+                    <input type="date" 
+                           id="startDate"
+                           name="startDate" 
+                           value="<%= typeof startDateISO !== 'undefined' ? startDateISO : '' %>"
+                           class="pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm"
+                           required>
+                </div>
+                <div class="relative">
+                    <label for="endDate" class="block text-xs font-medium text-gray-500 mb-1">Data Final</label>
+                    <input type="date" 
+                           id="endDate"
+                           name="endDate" 
+                           value="<%= typeof endDateISO !== 'undefined' ? endDateISO : '' %>"
+                           class="pl-3 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm"
+                           required>
+                </div>
+            </div>
+
+            <% if (user.role === 'ADMIN') { %>
+            <div class="flex items-center gap-2">
+                <div class="relative">
+                    <label for="manager" class="block text-xs font-medium text-gray-500 mb-1">Gerente</label>
+                    <select name="manager" id="manager" class="pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm h-[38px]">
+                        <option value="">Todos os Gerentes</option>
+                        <% managers.forEach(m => { %>
+                            <option value="<%= m.CODVEND %>" <%= selectedManager == m.CODVEND ? 'selected' : '' %>>
+                                <%= m.APELIDO %>
+                            </option>
+                        <% }); %>
+                    </select>
+                </div>
+            </div>
+            <% } %>
+
+            <div class="flex items-center gap-2">
+                <div class="relative">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Empresas</label>
+                    <div class="relative" id="companyDropdown">
+                        <button type="button" 
+                                onclick="document.getElementById('companyOptions').classList.toggle('hidden')"
+                                class="bg-white relative w-full border border-gray-300 rounded-lg shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 sm:text-sm h-[38px] flex items-center justify-between min-w-[150px]">
+                            <span class="block truncate" id="selectedCompaniesText">Selecione...</span>
+                            <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                <i data-lucide="chevron-down" class="h-4 w-4 text-gray-400"></i>
+                            </span>
+                        </button>
+                        
+                        <div id="companyOptions" class="hidden absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm min-w-[200px]">
+                            <% for (let i = 1; i <= 7; i++) { %>
+                                <div class="relative flex items-start py-2 px-3 hover:bg-gray-50 cursor-pointer" onclick="toggleCompany('<%= i %>')">
+                                    <div class="min-w-0 flex-1 text-sm">
+                                        <label for="empresa-<%= i %>" class="font-medium text-gray-700 select-none cursor-pointer">
+                                            Empresa <%= i %>
+                                        </label>
+                                    </div>
+                                    <div class="ml-3 flex items-center h-5">
+                                        <input id="empresa-<%= i %>" 
+                                               type="checkbox" 
+                                               value="<%= i %>"
+                                               class="company-checkbox focus:ring-orange-500 h-4 w-4 text-orange-600 border-gray-300 rounded"
+                                               <%= (typeof req !== 'undefined' && req.query.empresas || '').split(',').includes(String(i)) ? 'checked' : '' %>
+                                               onclick="event.stopPropagation(); updateSelectedCompanies()">
+                                    </div>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                    <input type="hidden" name="empresas" id="empresasInput" value="<%= typeof req !== 'undefined' ? req.query.empresas : '' %>">
+                </div>
+            </div>
+            <script>
+                function toggleCompany(id) {
+                    const checkbox = document.getElementById('empresa-' + id);
+                    checkbox.checked = !checkbox.checked;
+                    updateSelectedCompanies();
+                }
+
+                function updateSelectedCompanies() {
+                    const checkboxes = document.querySelectorAll('.company-checkbox:checked');
+                    const selectedValues = Array.from(checkboxes).map(cb => cb.value);
+                    const selectedText = selectedValues.length > 0 
+                        ? (selectedValues.length === 1 ? '1 Empresa' : selectedValues.length + ' Empresas') 
+                        : 'Todas';
+                    
+                    document.getElementById('selectedCompaniesText').textContent = selectedText;
+                    document.getElementById('empresasInput').value = selectedValues.join(',');
+                }
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(event) {
+                    const dropdown = document.getElementById('companyDropdown');
+                    const options = document.getElementById('companyOptions');
+                    if (dropdown && !dropdown.contains(event.target)) {
+                        options.classList.add('hidden');
+                    }
+                });
+
+                // Initialize text
+                document.addEventListener('DOMContentLoaded', updateSelectedCompanies);
+            </script>
+            <button type="submit" class="mb-[1px] inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
+                <i data-lucide="filter" class="w-4 h-4 mr-2"></i>
+                Filtrar
+            </button>
+            <% if ((typeof startDate !== 'undefined' && startDate) || (typeof endDate !== 'undefined' && endDate) || (typeof selectedManager !== 'undefined' && selectedManager)) { %>
+                <a href="/pdv/manager" class="mb-[1px] inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
+                    Limpar
+                </a>
+            <% } %>
+        </form>
+    </div>
+    
+    <!-- Metrics Cards - Horizontal Scroll on Mobile -->
+    <div class="-mx-4 px-4 md:mx-0 md:px-0">
+        <div class="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto hide-scrollbar pb-2 md:pb-0 snap-x snap-mandatory">
+            <div class="min-w-[75%] sm:min-w-[45%] md:min-w-0 snap-start rounded-xl border-2 border-gray-200 bg-white text-gray-950 shadow-sm">
+                <div class="flex flex-row items-center justify-between pb-2 p-4 md:p-6">
+                    <h3 class="tracking-tight text-sm font-semibold">Vendas Hoje</h3>
+                    <div class="bg-gray-100 p-2 rounded-xl">
+                        <i data-lucide="dollar-sign" class="h-5 w-5 text-gray-500"></i>
+                    </div>
+                </div>
+                <div class="p-4 md:p-6 pt-0">
+                    <div class="text-2xl md:text-3xl font-bold">R$ <%= metrics.dailySales.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></div>
+                    <p class="text-xs text-gray-500">+20.1% em relação a ontem</p>
+                </div>
+            </div>
+
+            <div class="min-w-[75%] sm:min-w-[45%] md:min-w-0 snap-start rounded-xl border-2 border-gray-200 bg-white text-gray-950 shadow-sm">
+                <div class="flex flex-row items-center justify-between pb-2 p-4 md:p-6">
+                    <h3 class="tracking-tight text-sm font-semibold">Pedidos</h3>
+                    <div class="bg-gray-100 p-2 rounded-xl">
+                        <i data-lucide="shopping-bag" class="h-5 w-5 text-gray-500"></i>
+                    </div>
+                </div>
+                <div class="p-4 md:p-6 pt-0">
+                    <div class="text-2xl md:text-3xl font-bold">+<%= metrics.orderCount %></div>
+                    <p class="text-xs text-gray-500">+180 novos pedidos</p>
+                </div>
+            </div>
+
+            <div class="min-w-[75%] sm:min-w-[45%] md:min-w-0 snap-start rounded-xl border-2 border-gray-200 bg-white text-gray-950 shadow-sm">
+                <div class="flex flex-row items-center justify-between pb-2 p-4 md:p-6">
+                    <h3 class="tracking-tight text-sm font-semibold">Ticket Médio</h3>
+                    <div class="bg-gray-100 p-2 rounded-xl">
+                        <i data-lucide="trending-up" class="h-5 w-5 text-gray-500"></i>
+                    </div>
+                </div>
+                <div class="p-4 md:p-6 pt-0">
+                    <div class="text-2xl md:text-3xl font-bold">R$ <%= metrics.avgTicket.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></div>
+                    <p class="text-xs text-gray-500">+19% este mês</p>
+                </div>
+            </div>
+
+            <div class="min-w-[75%] sm:min-w-[45%] md:min-w-0 snap-start rounded-xl border-2 border-gray-200 bg-white text-gray-950 shadow-sm">
+                <div class="flex flex-row items-center justify-between pb-2 p-4 md:p-6">
+                    <h3 class="tracking-tight text-sm font-semibold">Vendedores Ativos</h3>
+                    <div class="bg-gray-100 p-2 rounded-xl">
+                        <i data-lucide="users" class="h-5 w-5 text-gray-500"></i>
+                    </div>
+                </div>
+                <div class="p-4 md:p-6 pt-0">
+                    <div class="text-2xl md:text-3xl font-bold"><%= metrics.activeSellers %></div>
+                    <p class="text-xs text-gray-500">2 online agora</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart and Top Sellers - Stack on mobile -->
+    <div class="grid gap-4 lg:grid-cols-7">
+        <!-- Chart -->
+        <div class="lg:col-span-4 rounded-xl border-2 border-gray-200 bg-white text-gray-950 shadow-sm overflow-hidden">
+            <div class="flex items-center justify-between p-4 md:p-6 border-b border-gray-100">
+                <h3 class="font-semibold leading-none tracking-tight flex items-center gap-2">
+                    <i data-lucide="bar-chart-2" class="w-4 h-4 text-gray-400"></i>
+                    Performance de Vendas
+                </h3>
+            </div>
+            <div class="p-4 md:p-6">
+                <div class="h-[250px] md:h-[300px] w-full">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Sellers -->
+        <div class="lg:col-span-3 rounded-xl border-2 border-gray-200 bg-white text-gray-950 shadow-sm overflow-hidden">
+            <div class="flex items-center justify-between p-4 md:p-6 border-b border-gray-100">
+                <h3 class="font-semibold leading-none tracking-tight flex items-center gap-2">
+                    <i data-lucide="trophy" class="w-4 h-4 text-amber-500"></i>
+                    Top Vendedores
+                </h3>
+            </div>
+            <div class="divide-y divide-gray-100">
+                <% if (topSellers && topSellers.length > 0) { %>
+                    <% topSellers.forEach((seller, index) => { %>
+                        <a href="/pdv/sales?sellerId=<%= seller.CODVEND %>" class="touch-active flex items-center p-4 md:p-5 transition-colors">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mr-3 text-sm font-bold text-gray-600">
+                                <%= index + 1 %>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold text-gray-900 truncate"><%= seller.APELIDO || 'Vendedor ' + seller.CODVEND %></p>
+                                <p class="text-xs text-gray-500"><%= seller.QTD_VENDAS %> vendas</p>
+                            </div>
+                            <div class="text-right flex-shrink-0">
+                                <p class="font-bold text-gray-900">R$ <%= seller.TOTAL_VENDAS.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
+                            </div>
+                        </a>
+                    <% }); %>
+                <% } else { %>
+                    <div class="flex flex-col items-center justify-center py-12 text-gray-400">
+                        <i data-lucide="users" class="w-12 h-12 mb-3 opacity-50"></i>
+                        <p class="text-sm">Nenhuma venda no período</p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+<script>
+    const ctx = document.getElementById('salesChart');
+
+    Chart.register(ChartDataLabels);
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: <%- JSON.stringify(chartData.labels) %>,
+            datasets: [
+                {
+                    label: 'Valor (R$)',
+                    data: <%- JSON.stringify(chartData.values) %>,
+                    backgroundColor: '#ea580c',
+                    borderRadius: 4,
+                    yAxisID: 'y',
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    formatter: (value) => {
+                        return new Intl.NumberFormat('pt-BR', { 
+                            style: 'currency', 
+                            currency: 'BRL',
+                            maximumFractionDigits: 0 
+                        }).format(value);
+                    },
+                    font: {
+                        weight: 'bold',
+                        size: 11
+                    },
+                    color: '#c2410c'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Valor: ' + new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.y);
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    }
+                },
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Valor (R$)'
+                    },
+                    grid: {
+                        color: '#f3f4f6'
+                    },
+                    suggestedMax: Math.max(...<%- JSON.stringify(chartData.values) %>) * 1.15
+                }
+            }
+        }
+    });
+</script>
+<%- include('partials/footer') %>

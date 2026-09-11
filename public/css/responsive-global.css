@@ -1,0 +1,249 @@
+/* Camada responsiva comum para monitores menores que HD e dispositivos móveis. */
+html {
+  max-width: 100%;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img,
+svg,
+canvas,
+video {
+  max-width: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
+}
+
+.table-responsive,
+.tblwrap,
+.tbwrap,
+.table-container,
+.table-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal,
+.modal-dialog,
+.modal-content,
+[role="dialog"] {
+  max-width: 100%;
+}
+
+@media (max-width: 1279px) {
+  :root {
+    --responsive-page-gap: clamp(10px, 1.5vw, 20px);
+  }
+
+  body {
+    font-size: 14px;
+  }
+
+  main,
+  .main-content,
+  .content,
+  .page-content,
+  .wrap,
+  .container,
+  .container-fluid {
+    min-width: 0;
+    max-width: 100% !important;
+  }
+
+  .wrap,
+  .page-content {
+    padding-left: var(--responsive-page-gap) !important;
+    padding-right: var(--responsive-page-gap) !important;
+  }
+
+  .filters,
+  .filter-grid,
+  .filter-row,
+  .toolbar,
+  .actions,
+  .page-actions,
+  .panel-head,
+  .page-header {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .cards,
+  .kpis,
+  .companies,
+  .totals,
+  .summary,
+  .stats-grid,
+  .dashboard-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)) !important;
+  }
+
+  /* Valores financeiros e quantitativos devem permanecer dentro do card. */
+  .card .num,
+  .card .val,
+  .kpi .val,
+  .kpi strong,
+  .sum strong,
+  .total strong,
+  .stat-value,
+  .metric-value,
+  .card-value,
+  .valor-total-value {
+    min-width: 0;
+    max-width: 100%;
+    font-size: clamp(1.05rem, 2vw, 1.6rem) !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.03em;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    font-variant-numeric: tabular-nums;
+  }
+
+  table {
+    max-width: 100%;
+  }
+
+  .modal-dialog {
+    width: calc(100% - 24px) !important;
+    margin: 12px auto !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .sidebar + main,
+  .sidebar ~ .main-content,
+  .main-content {
+    max-width: 100% !important;
+  }
+
+  .filters,
+  .filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .row > [class*="col-"] {
+    min-width: 0;
+  }
+
+  .table:not(.calendar) {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 767px) {
+  body {
+    font-size: 13px;
+  }
+
+  main,
+  .main-content,
+  .content,
+  .page-content,
+  .wrap,
+  .container,
+  .container-fluid {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .filters,
+  .filter-grid,
+  .cards,
+  .kpis,
+  .companies,
+  .totals,
+  .summary,
+  .stats-grid,
+  .dashboard-grid,
+  .metrics {
+    grid-template-columns: 1fr !important;
+  }
+
+  .d-flex.justify-content-between,
+  .d-flex.align-items-center,
+  .top,
+  .toolbar,
+  .actions,
+  .page-actions,
+  .panel-head,
+  .page-header {
+    flex-wrap: wrap;
+  }
+
+  .btn,
+  button,
+  input,
+  select,
+  textarea {
+    min-height: 38px;
+  }
+
+  h1 {
+    font-size: clamp(1.35rem, 6vw, 1.8rem) !important;
+  }
+
+  h2 {
+    font-size: clamp(1.15rem, 5vw, 1.5rem) !important;
+  }
+
+  .card .num,
+  .card .val,
+  .kpi .val,
+  .kpi strong,
+  .sum strong,
+  .total strong,
+  .stat-value,
+  .metric-value,
+  .card-value,
+  .valor-total-value {
+    font-size: clamp(1rem, 5vw, 1.35rem) !important;
+  }
+}
+
+/* Monitores baixos, comuns em 1280x720 e notebooks corporativos. */
+@media (max-height: 760px) and (min-width: 768px) {
+  body {
+    font-size: 13px;
+  }
+
+  main,
+  .main-content,
+  .content,
+  .page-content,
+  .wrap {
+    padding-top: 12px !important;
+    padding-bottom: 24px !important;
+  }
+
+  .card,
+  .panel,
+  .company,
+  .kpi,
+  .stat-card {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .modal-dialog {
+    margin-top: 8px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .modal-content,
+  [role="dialog"] {
+    max-height: calc(100vh - 16px);
+    overflow-y: auto;
+  }
+}

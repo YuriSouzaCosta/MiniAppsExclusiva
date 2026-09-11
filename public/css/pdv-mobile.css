@@ -1,0 +1,696 @@
+/* ========================================
+   PDV Mobile-First Styles
+   Sistema de Ponto de Venda - Adaptação Mobile
+   ======================================== */
+
+/* ========================================
+   SAFE AREAS & BASE MOBILE
+   ======================================== */
+
+/* Safe area para dispositivos com notch (iPhone X+) */
+.safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+.safe-area-inset-top {
+    padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Prevenir zoom em inputs no iOS (fonte mínima 16px) */
+@media screen and (max-width: 768px) {
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="date"],
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* ========================================
+   TOUCH STATES - Substituindo Hover
+   ======================================== */
+
+/* Estado ativo para elementos tocáveis */
+.touch-active {
+    transition: transform 0.1s ease, opacity 0.1s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.touch-active:active {
+    transform: scale(0.97);
+    opacity: 0.85;
+}
+
+/* Botões com feedback tátil */
+@media (max-width: 768px) {
+    button:active,
+    .btn:active,
+    a.flex:active {
+        transform: scale(0.97);
+        opacity: 0.9;
+    }
+    
+    /* Remover hover effects no mobile */
+    button:hover,
+    .btn:hover {
+        /* Reset hover to prevent stuck states on touch */
+        filter: none;
+        transform: none;
+    }
+}
+
+/* ========================================
+   BOTTOM NAVIGATION
+   ======================================== */
+
+.pdv-bottom-nav {
+    padding-bottom: max(env(safe-area-inset-bottom, 8px), 8px);
+}
+
+.pdv-bottom-nav a {
+    min-height: 56px;
+    min-width: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.pdv-bottom-nav a:active {
+    background-color: rgba(234, 88, 12, 0.1);
+    transform: scale(0.95);
+}
+
+.pdv-bottom-nav a.active {
+    color: #ea580c;
+}
+
+/* Botão central destacado (Novo Pedido) */
+.pdv-fab-button {
+    position: relative;
+    margin-top: -24px;
+}
+
+.pdv-fab-button > div {
+    box-shadow: 0 4px 15px rgba(234, 88, 12, 0.4);
+    transition: all 0.2s ease;
+}
+
+.pdv-fab-button:active > div {
+    transform: scale(0.92);
+    box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
+}
+
+/* ========================================
+   PRODUCT CARDS
+   ======================================== */
+
+@media (max-width: 640px) {
+    .product-card-mobile {
+        min-height: 120px;
+        padding: 16px;
+    }
+    
+    .product-card-mobile:active {
+        border-color: #ea580c;
+        background-color: #fff4ec;
+        transform: scale(0.98);
+    }
+    
+    .product-card-mobile h4 {
+        font-size: 15px;
+        line-height: 1.3;
+    }
+    
+    .product-card-mobile .price {
+        font-size: 18px;
+    }
+}
+
+/* ========================================
+   CART MODAL FULLSCREEN (Mobile)
+   ======================================== */
+
+.cart-modal-mobile {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease-out;
+}
+
+.cart-modal-mobile.closing {
+    animation: slideDown 0.25s ease-in forwards;
+}
+
+.cart-modal-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 10;
+}
+
+.cart-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 120px;
+}
+
+.cart-modal-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    padding: 16px;
+    padding-bottom: max(env(safe-area-inset-bottom, 16px), 16px);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* ========================================
+   STICKY FOOTER (Total da Venda)
+   ======================================== */
+
+.pdv-sticky-footer {
+    position: fixed;
+    bottom: 60px; /* Altura da bottom nav */
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, white 80%, transparent);
+    padding: 16px 16px 8px 16px;
+    z-index: 40;
+}
+
+.pdv-sticky-footer::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: linear-gradient(to top, rgba(255,255,255,0.9), transparent);
+    pointer-events: none;
+}
+
+@media (min-width: 768px) {
+    .pdv-sticky-footer {
+        display: none;
+    }
+}
+
+/* ========================================
+   PAYMENT BUTTONS
+   ======================================== */
+
+@media (max-width: 640px) {
+    .payment-btn-mobile {
+        flex-direction: row !important;
+        justify-content: flex-start !important;
+        padding: 16px !important;
+        gap: 16px !important;
+        min-height: 64px;
+    }
+    
+    .payment-btn-mobile:active {
+        background-color: #f0fdf4;
+        border-color: #16a34a;
+    }
+    
+    .payment-btn-mobile .icon-wrapper {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f3f4f6;
+        border-radius: 12px;
+    }
+    
+    .payment-btn-mobile.selected .icon-wrapper {
+        background-color: #dcfce7;
+    }
+}
+
+/* ========================================
+   STEP INDICATORS
+   ======================================== */
+
+@media (max-width: 640px) {
+    .step-indicator-mobile {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .step-label-mobile {
+        font-size: 11px;
+        margin-top: 6px;
+    }
+}
+
+/* ========================================
+   INPUT IMPROVEMENTS
+   ======================================== */
+
+@media (max-width: 768px) {
+    .input-mobile-lg {
+        height: 56px !important;
+        font-size: 18px !important;
+        padding: 12px 16px !important;
+        border-radius: 12px !important;
+    }
+    
+    .input-mobile-lg::placeholder {
+        font-size: 16px;
+    }
+}
+
+/* ========================================
+   NUMERIC KEYPAD
+   ======================================== */
+
+.numeric-keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 16px;
+}
+
+.numeric-keypad button {
+    height: 56px;
+    font-size: 24px;
+    font-weight: 600;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: white;
+    color: #1f2937;
+    transition: all 0.1s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.numeric-keypad button:active {
+    background: #e5e7eb;
+    transform: scale(0.95);
+}
+
+.numeric-keypad .key-action {
+    background: #ea580c;
+    color: white;
+    border-color: #ea580c;
+}
+
+.numeric-keypad .key-action:active {
+    background: #c2410c;
+}
+
+.numeric-keypad .key-delete {
+    background: #fef2f2;
+    color: #dc2626;
+    border-color: #fecaca;
+}
+
+.numeric-keypad .key-delete:active {
+    background: #fee2e2;
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.2s ease-out;
+}
+
+.animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+}
+
+/* ========================================
+   SCROLLBAR HIDDEN (Horizontal Lists)
+   ======================================== */
+
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* Horizontal scroll container */
+.scroll-snap-x {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.scroll-snap-x > * {
+    scroll-snap-align: start;
+}
+
+/* ========================================
+   CART ITEM SWIPE TO DELETE
+   ======================================== */
+
+.cart-item-swipeable {
+    position: relative;
+    overflow: hidden;
+    background: white;
+}
+
+.cart-item-swipeable .delete-action {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 80px;
+    background: #dc2626;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translateX(100%);
+    transition: transform 0.2s ease;
+}
+
+.cart-item-swipeable.swiped .delete-action {
+    transform: translateX(0);
+}
+
+.cart-item-swipeable.swiped .item-content {
+    transform: translateX(-80px);
+}
+
+.cart-item-swipeable .item-content {
+    transition: transform 0.2s ease;
+    background: white;
+    position: relative;
+    z-index: 1;
+}
+
+/* ========================================
+   MODAL FULLSCREEN (Mobile)
+   ======================================== */
+
+@media (max-width: 640px) {
+    .modal-fullscreen-mobile {
+        position: fixed !important;
+        inset: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        border-radius: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+    
+    .modal-fullscreen-mobile > div {
+        max-width: 100% !important;
+        max-height: 100% !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+/* ========================================
+   QUANTITY CONTROLS
+   ======================================== */
+
+.qty-control-mobile {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.qty-control-mobile button {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    background: white;
+    font-size: 24px;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.qty-control-mobile button:active {
+    background: #f3f4f6;
+    transform: scale(0.95);
+}
+
+.qty-control-mobile input {
+    width: 80px;
+    height: 48px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: 600;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+}
+
+/* ========================================
+   SUCCESS/ERROR STATES
+   ======================================== */
+
+.feedback-success {
+    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    border-color: #22c55e;
+}
+
+.feedback-error {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    border-color: #ef4444;
+}
+
+/* Pulse animation for important actions */
+.pulse-attention {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 10px rgba(234, 88, 12, 0);
+    }
+}
+
+/* ========================================
+   LOADING STATES
+   ======================================== */
+
+.skeleton {
+    background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: 8px;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ========================================
+   FLOATING CART BUTTON (Enhanced)
+   ======================================== */
+
+@media (max-width: 1024px) {
+    .floating-cart-btn {
+        position: fixed;
+        bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+        right: 16px;
+        z-index: 45;
+        box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
+        transition: all 0.3s ease;
+    }
+    
+    .floating-cart-btn:active {
+        transform: scale(0.95);
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+    
+    .floating-cart-btn.has-items {
+        animation: pulse-cart 2s infinite;
+    }
+}
+
+@keyframes pulse-cart {
+    0%, 100% {
+        box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
+    }
+    50% {
+        box-shadow: 0 8px 40px rgba(59, 130, 246, 0.6);
+    }
+}
+
+/* ========================================
+   DASHBOARD CARDS (Mobile)
+   ======================================== */
+
+@media (max-width: 640px) {
+    .dashboard-card-mobile {
+        padding: 16px;
+    }
+    
+    .dashboard-card-mobile .value {
+        font-size: 24px;
+    }
+    
+    .dashboard-card-mobile .label {
+        font-size: 13px;
+    }
+    
+    /* Horizontal scroll for metrics */
+    .metrics-scroll {
+        display: flex;
+        overflow-x: auto;
+        gap: 12px;
+        padding-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+    }
+    
+    .metrics-scroll > * {
+        flex: 0 0 75%;
+        scroll-snap-align: start;
+    }
+    
+    .metrics-scroll::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+/* ========================================
+   FILTER DRAWER (Mobile)
+   ======================================== */
+
+.filter-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(320px, 85vw);
+    background: white;
+    z-index: 100;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-drawer.open {
+    transform: translateX(0);
+}
+
+.filter-drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.filter-drawer-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ========================================
+   UTILITIES
+   ======================================== */
+
+/* Disable text selection on interactive elements */
+.no-select {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Touch scroll optimization */
+.touch-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+/* Focus visible only for keyboard nav */
+.focus-visible-only:focus {
+    outline: none;
+}
+
+.focus-visible-only:focus-visible {
+    outline: 2px solid #ea580c;
+    outline-offset: 2px;
+}

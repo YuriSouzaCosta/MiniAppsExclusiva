@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log
+.git
+.env
+.env.bling
+.secrets
+.gitignore
+Dockerfile
+docker-compose.yml
+README.md
+task.md
+implementation_plan.md
+error_report.md
+estrutura.txt

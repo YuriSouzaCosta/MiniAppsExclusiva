@@ -1,0 +1,11 @@
+.transfer-detail-wrap { max-height: 620px; }
+.transfer-detail-table { min-width: 1120px; }
+.transfer-detail-table th:nth-last-child(-n+3),
+.transfer-detail-table td:nth-last-child(-n+3) { text-align: right; }
+.detail-sub {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 400;
+}

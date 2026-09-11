@@ -1,0 +1,221 @@
+<!doctype html><html lang="pt-br"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Acompanhamento de Notas (Lite)</title>
+<style>
+:root{--bg:#f8fafc;--card:#ffffff;--mut:#64748b;--ln:#e2e8f0;--tx:#1e293b;--ac:#ea580c;--red:#ef4444}
+*{box-sizing:border-box}body{margin:0;font:16px/1.5 system-ui,Segoe UI,Arial;background:var(--bg);color:var(--tx)}
+a{color:var(--ac);text-decoration:none}
+header{padding:20px 40px;border-bottom:1px solid var(--ln);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+h1{font-size:24px;margin:0}.sub{color:var(--mut);font-size:14px}
+.wrap{padding:26px 40px;max-width:none;margin:0}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+select,input{background:var(--card);color:var(--tx);border:1px solid var(--ln);border-radius:8px;padding:7px 10px;font-size:14px}
+.banner{display:none;align-items:center;gap:12px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-weight:600}
+.banner b{color:#7f1d1d}.banner .go{margin-left:auto;background:var(--red);color:#fff;border:0;border-radius:8px;padding:6px 12px;cursor:pointer;font-weight:700}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:26px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:20px}
+.card .lbl{color:var(--mut);font-size:13px;text-transform:uppercase;letter-spacing:.03em}
+.card .num{font-size:38px;font-weight:700;margin:6px 0 2px}.card .val{color:var(--mut);font-size:13px}
+.c-urg{border-color:#fca5a5}.c-urg .num{color:#dc2626}
+.c-fila .num{color:#d97706}.c-lanc .num{color:#059669}.c-cheg .num{color:#ea580c}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--ln);border-radius:12px;overflow:hidden;font-size:15px}
+th,td{padding:13px 18px;text-align:right;border-bottom:1px solid var(--ln);white-space:nowrap}
+th{color:var(--mut);font-size:12px;text-transform:uppercase;background:#f1f5f9;position:sticky;top:0}
+td.l,th.l{text-align:left}tr:hover td{background:#f8fafc}
+tr.urg td{background:#fef2f2}tr.urg:hover td{background:#fee2e2}tr.urg td:first-child{border-left:3px solid var(--red)}
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:600}
+.p-fila{background:#fef3c7;color:#92400e}
+.p-cheg{background:#ffedd5;color:#c2410c}.p-urg{background:#fee2e2;color:#b91c1c}
+.p-fin{background:#ccfbf1;color:#0f766e}
+.btn{cursor:pointer;border:1px solid var(--ln);background:#fff;color:var(--tx);border-radius:7px;padding:4px 10px;font-size:13px}
+.btn:hover{border-color:var(--ac)}
+.btn-exp{background:#065f46;border-color:#065f46;color:#fff}
+input[type=checkbox]{width:17px;height:17px;padding:0;accent-color:var(--ac);cursor:pointer;vertical-align:middle}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);align-items:center;justify-content:center;z-index:50}
+.modal{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:20px;width:min(600px,92vw)}
+.modal h3{margin:0 0 12px;font-size:17px}
+.modal textarea{width:100%;height:320px;background:#fff;color:var(--tx);border:1px solid var(--ln);border-radius:8px;padding:12px;font:14px/1.5 ui-monospace,Consolas,monospace;resize:vertical}
+.modal .row{display:flex;gap:10px;align-items:center;margin-top:12px}
+.muted{color:var(--mut)}.tbwrap{overflow:auto;max-height:76vh;border-radius:12px}
+.hot{color:#dc2626;font-weight:700}
+@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}}
+</style>  <link rel="stylesheet" href="/css/responsive-global.css">
+</head><body>
+<header>
+ <div><h1>📋 Acompanhamento de Notas (Lite) — Importadas A Lançar</h1>
+ <div class="sub">Somente notas importadas pendentes de lançamento (ao lançar sumirão automaticamente)</div></div>
+ <div class="sub"><a href="/">← Central de Acessos</a> · <span id="ts">carregando…</span></div>
+</header>
+<div class="wrap">
+ <div class="banner" id="banner">
+  🚨 <span><b id="b_n">0</b> nota(s) URGENTE(S) — emitidas há mais de <b id="b_p">10</b> dias e ainda sem chegada.</span>
+  <button class="go" onclick="verUrgentes()">Ver urgentes</button>
+ </div>
+ <div class="bar">
+  <label class="sub">Período (emissão):
+   <select id="dias"><option value="30">30 dias</option><option value="60" selected>60 dias</option>
+    <option value="90">90 dias</option><option value="365">1 ano</option></select></label>
+  <label class="sub">Empresa: <select id="femp"><option value="">todas</option></select></label>
+  <label class="sub">Status:
+   <select id="fst"><option value="">todos</option><option value="urgente">🚨 urgentes</option>
+    <option value="chegada">com chegada</option><option value="semchegada">sem chegada</option></select></label>
+  <input id="fbusca" placeholder="buscar fornecedor / nº nota" style="min-width:220px">
+  <button class="btn" onclick="carregar()">↻ Atualizar</button>
+  <button class="btn btn-exp" id="btnexp" onclick="exportar()">⧉ Exportar (nº - fornecedor)</button>
+ </div>
+ <div class="cards">
+  <div class="card c-urg"><div class="lbl">🚨 Urgentes</div><div class="num" id="k_urg">–</div><div class="val" id="k_valorurg"></div></div>
+  <div class="card"><div class="lbl">Total Pendentes</div><div class="num" id="k_total">–</div><div class="val" id="k_valor"></div></div>
+  <div class="card c-cheg"><div class="lbl">Com Chegada</div><div class="num" id="k_cheg">–</div><div class="val">manual / financeiro</div></div>
+  <div class="card c-fila"><div class="lbl">Sem Chegada</div><div class="num" id="k_semcheg">–</div><div class="val">aguardando</div></div>
+ </div>
+ <div class="tbwrap"><table><thead><tr>
+  <th class="l" style="width:36px"><input type="checkbox" id="chkall" onclick="toggleAll(this)" title="marcar todas visíveis"></th>
+  <th class="l">Empresa</th><th>Nº Nota</th><th class="l">Fornecedor</th><th>Valor</th>
+  <th>Emissão</th><th>Chegada</th><th>Status</th>
+ </tr></thead><tbody id="tb"><tr><td colspan="8" class="l muted">carregando…</td></tr></tbody></table></div>
+ <div class="sub" id="foot" style="margin-top:12px"></div>
+</div>
+<div class="ov" id="exp_modal">
+ <div class="modal">
+  <h3>Exportar — nº nota - fornecedor</h3>
+  <textarea id="exp_ta" readonly></textarea>
+  <div class="row">
+   <button class="btn btn-exp" onclick="copiarExport()">Copiar</button>
+   <button class="btn" onclick="document.getElementById('exp_modal').style.display='none'">Fechar</button>
+   <span class="sub" id="exp_msg"></span>
+  </div>
+ </div>
+</div>
+<div class="ov" id="itens_modal">
+ <div class="modal" style="width:min(860px,95vw)">
+  <h3 id="it_titulo">Itens da nota</h3>
+  <div class="sub" id="it_sub" style="margin-bottom:10px"></div>
+  <div style="max-height:54vh;overflow:auto;border:1px solid var(--ln);border-radius:8px">
+   <table style="font-size:14px"><thead><tr>
+     <th class="l">#</th><th class="l">Descrição</th><th>Qtd</th><th>Un</th><th>Vlr Unit</th><th>Total</th>
+   </tr></thead><tbody id="it_tb"></tbody></table>
+  </div>
+  <div class="row">
+   <button class="btn" onclick="document.getElementById('itens_modal').style.display='none'">Fechar</button>
+   <span class="sub" id="it_foot"></span>
+  </div>
+ </div>
+</div>
+<script>
+const BRL=n=>(Number(n)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const fdt=s=>{if(!s)return'';const d=new Date(s);return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});};
+const fd=s=>{if(!s)return'';return new Date(s).toLocaleDateString('pt-BR');};
+let DADOS=[], PRAZO=10, VISIVEIS=[];
+const SEL=new Set();
+async function carregar(){
+ document.getElementById('ts').textContent='atualizando…';
+ const dias=document.getElementById('dias').value;
+ try{
+  const r=await fetch('/acompanhamento-notas-lite/api/dados?dias='+dias);
+  const d=await r.json();
+  if(!d.ok){document.getElementById('foot').textContent='Erro: '+d.erro;return;}
+  DADOS=d.notas; PRAZO=d.prazo||10;
+  const c=d.cards;
+  b_p.textContent=PRAZO;
+  k_urg.textContent=c.urgentes;k_valorurg.textContent=BRL(c.valorUrgente);
+  k_total.textContent=c.total;k_valor.textContent=BRL(c.valor);
+  k_cheg.textContent=c.chegada;k_semcheg.textContent=c.semChegada;
+  const bn=document.getElementById('banner');
+  if(c.urgentes>0){b_n.textContent=c.urgentes;bn.style.display='flex';}else{bn.style.display='none';}
+  const emps=[...new Set(DADOS.map(n=>n.empresa))].sort();
+  const fe=document.getElementById('femp');const cur=fe.value;
+  fe.innerHTML='<option value="">todas</option>'+emps.map(e=>`<option>${e}</option>`).join('');fe.value=cur;
+  document.getElementById('ts').textContent='atualizado '+new Date().toLocaleTimeString('pt-BR');
+  render();
+ }catch(e){document.getElementById('foot').textContent='sem conexão';}
+}
+function verUrgentes(){document.getElementById('fst').value='urgente';render();}
+function render(){
+ const emp=document.getElementById('femp').value, st=document.getElementById('fst').value,
+       q=document.getElementById('fbusca').value.toLowerCase().trim();
+ let rows=DADOS.filter(n=>{
+   if(emp&&n.empresa!==emp)return false;
+   if(st==='urgente'&&!n.urgente)return false;
+   if(st==='chegada'&&!n.chegou)return false;
+   if(st==='semchegada'&&n.chegou)return false;
+   if(q&&!((n.fornecedor||'').toLowerCase().includes(q)||String(n.numnota).includes(q)))return false;
+   return true;
+ });
+ VISIVEIS=rows;
+ document.getElementById('tb').innerHTML = rows.length? rows.map(n=>{
+  const stPill=n.urgente?'<span class="pill p-urg">🚨 urgente</span>':'<span class="pill p-fila">na fila</span>';
+  let cheg;
+  if(n.chegouManual && n.chegada){
+    cheg=`<span class="pill p-cheg">${fdt(n.chegada)}</span>`;
+  }else if(n.chegouFin){
+    cheg=`<span class="pill p-fin" title="título no financeiro (TGFFIN) com mesmo nº e valor">${n.chegada ? fdt(n.chegada) : 'financeiro ✓'}</span>`;
+  }else if(n.chegada){
+    cheg=`<span class="pill p-cheg">${fdt(n.chegada)}</span>`;
+  }else{
+    cheg='';
+  }
+  const dias=n.diasEmissao==null?'':`<div class="${n.urgente?'hot':'muted'}" style="font-size:11px">há ${n.diasEmissao}d</div>`;
+  const key=n.numnota+'|'+n.cnpj+'|'+n.codemp;
+  return `<tr class="${n.urgente?'urg':''}">
+   <td class="l"><input type="checkbox" class="rowchk" data-k="${key}" ${SEL.has(key)?'checked':''} onchange="toggleSel('${key}')"></td>
+   <td class="l">${n.empresa}</td><td><a href="#" onclick="verItens(${n.nuarq});return false" title="ver itens da nota">${n.numnota}${n.serie?'/'+n.serie:''} 🔍</a></td>
+   <td class="l">${n.fornecedor}<div class="muted" style="font-size:11px">${n.cnpj||''}</div></td>
+   <td>${BRL(n.valor)}</td><td>${fd(n.emissao)}${dias}</td>
+   <td>${cheg}</td><td>${stPill}</td></tr>`;
+ }).join('') : '<tr><td colspan="8" class="l muted">nenhuma nota no filtro</td></tr>';
+ const ca=document.getElementById('chkall');
+ if(ca)ca.checked=rows.length>0 && rows.every(n=>SEL.has(n.numnota+'|'+n.cnpj+'|'+n.codemp));
+ atualizaBtnExport();
+ document.getElementById('foot').textContent=`${rows.length} de ${DADOS.length} notas pendentes`;
+}
+function keyOf(n){return n.numnota+'|'+n.cnpj+'|'+n.codemp;}
+function toggleSel(k){if(SEL.has(k))SEL.delete(k);else SEL.add(k);atualizaBtnExport();}
+function toggleAll(cb){document.querySelectorAll('.rowchk').forEach(c=>{c.checked=cb.checked;
+  const k=c.getAttribute('data-k');if(cb.checked)SEL.add(k);else SEL.delete(k);});atualizaBtnExport();}
+function atualizaBtnExport(){const b=document.getElementById('btnexp');if(b)
+  b.textContent=SEL.size?`⧉ Exportar (${SEL.size} selecionadas)`:'⧉ Exportar (nº - fornecedor)';}
+function exportar(){
+ const lista = SEL.size ? DADOS.filter(n=>SEL.has(keyOf(n))) : VISIVEIS;
+ const txt=lista.map(n=>`${n.numnota} - ${n.fornecedor||''}`).join('\n');
+ const ta=document.getElementById('exp_ta');ta.value=txt;
+ document.getElementById('exp_modal').style.display='flex';
+ document.getElementById('exp_msg').textContent=lista.length+' nota(s)'+(SEL.size?' selecionadas':' visíveis');
+ ta.focus();ta.select();
+ if(navigator.clipboard){navigator.clipboard.writeText(txt)
+   .then(()=>{document.getElementById('exp_msg').textContent='✓ copiado! ('+lista.length+' notas)';})
+   .catch(()=>{});}
+}
+function copiarExport(){
+ const ta=document.getElementById('exp_ta');ta.select();
+ try{document.execCommand('copy');}catch(e){}
+ if(navigator.clipboard)navigator.clipboard.writeText(ta.value);
+ document.getElementById('exp_msg').textContent='✓ copiado!';
+}
+async function verItens(nuarq){
+ const m=document.getElementById('itens_modal');
+ document.getElementById('it_titulo').textContent='Itens da nota';
+ document.getElementById('it_sub').textContent='';document.getElementById('it_foot').textContent='';
+ document.getElementById('it_tb').innerHTML='<tr><td colspan="6" class="l muted">carregando…</td></tr>';
+ m.style.display='flex';
+ try{
+  const r=await fetch('/acompanhamento-notas-lite/api/itens?nuarq='+nuarq);
+  const d=await r.json();
+  if(!d.ok){document.getElementById('it_tb').innerHTML='<tr><td colspan="6" class="l">Erro: '+(d.erro||'falha')+'</td></tr>';return;}
+  const c=d.cab;
+  document.getElementById('it_titulo').textContent=`Nota ${c.numnota||''}${c.serie?'/'+c.serie:''} — ${c.fornecedor||''}`;
+  document.getElementById('it_sub').innerHTML=`CNPJ ${c.cnpj||''} · Emissão ${c.emissao?new Date(c.emissao).toLocaleDateString('pt-BR'):'—'} · Valor da nota ${BRL(c.valor)}`
+    +`<br>🚚 Transportadora: <b>${c.transportadora||'— (sem transportadora / frete próprio)'}</b>${c.cnpjTransp?' · CNPJ '+c.cnpjTransp:''}`;
+  document.getElementById('it_tb').innerHTML=d.itens.length? d.itens.map(i=>`<tr>
+    <td class="l">${i.item}</td><td class="l">${i.descricao||''}</td>
+    <td>${i.qtd.toLocaleString('pt-BR',{maximumFractionDigits:4})}</td><td>${i.un||''}</td>
+    <td>${BRL(i.vunit)}</td><td>${BRL(i.vtotal)}</td></tr>`).join('')
+    : `<tr><td colspan="6" class="l muted">${c.tipo==='C'?'Documento CTe (transporte) — sem itens de produto':'sem itens no XML'}</td></tr>`;
+  document.getElementById('it_foot').textContent=`${d.qtdItens} item(ns) · soma dos itens ${BRL(d.somaItens)}`;
+ }catch(e){document.getElementById('it_tb').innerHTML='<tr><td colspan="6" class="l">sem conexão</td></tr>';}
+}
+['femp','fst'].forEach(id=>document.getElementById(id).addEventListener('change',render));
+document.getElementById('fbusca').addEventListener('input',render);
+document.getElementById('dias').addEventListener('change',carregar);
+carregar();setInterval(carregar,60000);
+</script></body></html>

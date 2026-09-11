@@ -1,0 +1,16 @@
+# =============================================================
+# Dependências Python para o módulo OCR
+# =============================================================
+# Instalar com: pip install -r requirements.txt
+#
+# NOTA: paddlepaddle é pesado (~1.5GB). Para GPU, use:
+# pip install paddlepaddle-gpu
+# =============================================================
+
+paddlepaddle
+paddleocr
+Pillow
+pymupdf        # PDF -> imagem (módulo Baixa de Boletos)
+zxing-cpp      # decodificar código de barras (módulo Baixa de Boletos)
+pytesseract    # OCR de PDF escaneado / imagem (requer Tesseract + idioma 'por')
+pdfplumber     # extração de texto nativo p/ detectar modelo Itaú Sispag

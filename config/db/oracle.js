@@ -1,6 +1,13 @@
 // db/oracle.js
 const oracledb = require('oracledb');
+const util = require('util');
 require('dotenv').config();
+
+// Polyfill para util.isDate removido em versões recentes do Node.js
+// Necessário para compatibilidade com oracledb 5.3.0
+if (!util.isDate) {
+  util.isDate = (d) => d instanceof Date;
+}
 
 oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
 

@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Baixa de Boletos</title>
+<style>
+  :root{--bg:#f8fafc;--card:#fff;--ink:#1e293b;--muted:#64748b;--line:#e2e8f0;
+        --brand:#ea580c;--brand2:#c2410c;--ok:#16a34a;--warn:#b45309;--bad:#c0392b;
+        --shadow:0 1px 3px rgba(16,24,40,.06);}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;font-size:16px}
+  header{background:var(--card);border-bottom:1px solid var(--line);padding:18px 32px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  header .logo{height:42px;width:auto}
+  header h1{font-size:22px;margin:0;font-weight:650}
+  header .sub{color:var(--muted);font-size:14px}
+  header .spacer{flex:1}
+  header a.badge{text-decoration:none;color:var(--brand);border:1px solid var(--brand);border-radius:8px;padding:8px 14px;font-size:14px}
+  .wrap{max-width:1500px;margin:0 auto;padding:26px 32px 70px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:20px 24px;margin-bottom:22px}
+  .panel h2{font-size:17px;margin:0 0 14px;font-weight:650}
+  .hidden{display:none}
+  .dropzone{border:2px dashed #c4ccd6;border-radius:10px;padding:26px;text-align:center;cursor:pointer;transition:all .15s;background:#fafbfd}
+  .dropzone:hover,.dropzone.drag{border-color:var(--brand);background:#fff4ec}
+  .dropzone p{margin:0 0 4px;font-weight:600}
+  .dropzone small{color:var(--muted)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .chip{background:#eef2f6;border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;display:flex;align-items:center;gap:8px}
+  .chip button{background:none;border:none;color:var(--bad);cursor:pointer;font-size:14px;padding:0;line-height:1}
+  .btn-go{background:var(--brand);color:#fff;border:none;border-radius:8px;padding:11px 20px;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px}
+  .btn-go:disabled{background:#cbd5e1;cursor:not-allowed}
+  .btn-go:hover:not(:disabled){background:var(--brand2)}
+  .btn-ghost{background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:11px 18px;font-size:15px;cursor:pointer;margin-top:14px;margin-left:8px}
+  .status{margin-top:14px;color:var(--muted);font-size:14px}
+  .status.ok{color:var(--ok);font-weight:600}
+  .status.err{color:var(--bad);font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);background:#fafbfd;position:sticky;top:0}
+  tr:hover td{background:#f8fafc}
+  .fname{font-weight:650;margin-top:14px;font-size:14.5px;color:var(--ink)}
+  .badge{display:inline-block;border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:600;white-space:nowrap}
+  .b-exato{background:#e3f3ee;color:var(--ok)}
+  .b-aprox{background:#fdf0e2;color:var(--warn)}
+  .b-nada{background:#fde9e7;color:var(--bad)}
+  .b-erro{background:#fde9e7;color:var(--bad)}
+  .b-pix{background:#fff4ec;color:#ea580c}
+  .b-boleto{background:#f0f4f8;color:#334155}
+  .aviso{color:var(--warn);font-size:12.5px;margin-top:3px}
+  .erro{color:var(--bad);font-size:13px}
+  .mono{font-family:Consolas,monospace;font-size:12px;color:var(--muted)}
+  .chk{width:18px;height:18px;accent-color:var(--brand);cursor:pointer}
+  .dim{color:var(--muted)}
+  .actions{display:flex;align-items:center;margin-top:8px}
+  .okrow{background:#f0faf6}
+  .nofin{color:var(--muted);text-align:center;padding:14px}
+  .hist-table td{font-size:13px}
+  .inp-codparc{padding:3px 6px;border:1px solid var(--line);border-radius:6px;font-size:12px;width:78px;font-family:Consolas,monospace;color:var(--ink)}
+  .inp-codparc:focus{outline:none;border-color:var(--brand)}
+  .btn-buscar{background:#f1f5f9;border:1px solid var(--line);border-radius:6px;padding:3px 7px;cursor:pointer;font-size:12px;line-height:1.4}
+  .btn-buscar:hover{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .nufin-auto{font-family:Consolas,monospace;font-size:12px;color:var(--ink);font-weight:600}
+  .nufin-manual{font-family:Consolas,monospace;font-size:12px;color:var(--brand);font-weight:700}
+  .codparc-wrap{display:flex;gap:4px;align-items:center}
+  .sel-conta{padding:3px 6px;border:1px solid var(--line);border-radius:6px;font-size:12px;width:100%;color:var(--ink);background:#fff}
+  .sel-conta:focus{outline:none;border-color:var(--brand)}
+  .sel-conta.ok{border-color:var(--ok);background:#f0faf6}
+  .sel-conta.vazio{border-color:var(--bad)}
+</style>
+  <link rel="stylesheet" href="/css/responsive-global.css">
+</head>
+<body>
+<header>
+  <img class="logo" src="/images/logo.png" alt="Exclusiva">
+  <h1>Baixa de Boletos</h1>
+  <span class="sub">Baixa de contas a pagar por PDF de boleto</span>
+  <span class="spacer"></span>
+  <a class="badge" href="/">Central de Acessos</a>
+</header>
+
+<main class="wrap">
+
+  <!-- ===== Passo 1: Upload ===== -->
+  <section class="panel" id="uploadPanel">
+    <h2>1 · Enviar PDFs de boleto</h2>
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="fileInput" accept="application/pdf,.pdf,image/jpeg,.jpg,.jpeg,image/png,.png,image/bmp,.bmp,image/webp,.webp,image/tiff,.tif,.tiff" multiple hidden>
+      <p>Arraste os comprovantes aqui ou clique para selecionar</p>
+      <small>PDFs de boleto e comprovantes de Pix (imagem) · vários arquivos de uma vez</small>
+    </div>
+    <div class="chips" id="fileChips"></div>
+    <button class="btn-go" id="btnProcessar" disabled>Processar PDFs</button>
+    <div class="status" id="status"></div>
+  </section>
+
+  <!-- ===== Passo 2: Pré-visualização ===== -->
+  <section class="panel hidden" id="previewPanel">
+    <h2>2 · Revisão do que será baixado</h2>
+    <div id="previewBody"></div>
+    <div class="actions">
+      <button class="btn-go" id="btnBaixar" disabled>Confirmar baixa (0 itens)</button>
+      <button class="btn-ghost" id="btnLimpar">Limpar tudo</button>
+    </div>
+    <div class="status" id="result"></div>
+  </section>
+
+  <!-- ===== Histórico ===== -->
+  <section class="panel" id="historyPanel">
+    <h2>Histórico recente</h2>
+    <div id="historyBody">carregando…</div>
+  </section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const fmtVal = v => (v == null || isNaN(v)) ? '—' : Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const fmtData = d => d ? String(d).slice(0,10) : '—';
+  const badgeTipo = t => t === 'PIX' ? '<span class="badge b-pix">Pix</span>'
+    : t === 'BOLETO' ? '<span class="badge b-boleto">Boleto</span>'
+    : '<span class="badge b-nada">' + esc(t || '?') + '</span>';
+  const montarPagamento = b => {
+    const temOrigem = (b.banco_origem || b.agencia_origem || b.conta_origem);
+    const temDestino = (b.banco_destino || b.agencia_destino || b.conta_destino);
+    let h = '';
+    if (temOrigem) {
+      h += `<span>🏦 ${esc(b.banco_origem || '—')}`;
+      if (b.agencia_origem) h += ` · Ag ${esc(b.agencia_origem)}`;
+      if (b.conta_origem)   h += ` · Cta ${esc(b.conta_origem)}`;
+      h += '</span>';
+    } else {
+      h += '<span class="dim">origem não identificada</span>';
+    }
+    // Conta bancária identificada no Sankhya (TGFCTA)
+    if (b.desconta) {
+      h += `<div style="font-size:11px;color:var(--ok);margin-top:2px">✔ ${esc(b.desconta)}`;
+      if (b.nuconta) h += ` <span class="mono">NUCONTA ${esc(b.nuconta)}</span>`;
+      h += '</div>';
+    }
+    if (temDestino) {
+      h += `<div class="dim" style="font-size:12px">→ ${esc(b.banco_destino || '—')}${b.agencia_destino ? ' · Ag ' + esc(b.agencia_destino) : ''}${b.conta_destino ? ' · Cta ' + esc(b.conta_destino) : ''}</div>`;
+    }
+    if (b.chave_pix) h += `<div class="mono" style="font-size:11px">🔑 ${esc(b.chave_pix)}</div>`;
+    return h;
+  };
+
+  let ultimosArquivos = [];
+  const manualMatches = new Map(); // idx → titulo (montarTitulo output) selecionado manualmente
+  let contasBancarias = [];
+  let erroContas = '';
+
+  async function carregarContas() {
+    erroContas = '';
+    try {
+      const r = await fetch('/baixa-boletos/api/contas');
+      const d = await r.json();
+      if (d.ok) {
+        contasBancarias = d.contas || [];
+        if (!contasBancarias.length) erroContas = 'Nenhuma conta cadastrada em TGFCTA.';
+      } else {
+        erroContas = d.erro || 'Falha ao carregar contas';
+        console.error('[Contas]', erroContas);
+      }
+    } catch (e) {
+      erroContas = e.message || String(e);
+      console.error('[Contas]', erroContas);
+    }
+  }
+  carregarContas();
+
+  // ---------- Upload ----------
+  const files = [];
+  const dropzone = $('#dropzone');
+  const fileInput = $('#fileInput');
+
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault(); dropzone.classList.remove('drag');
+    addFiles(e.dataTransfer.files);
+  });
+  fileInput.addEventListener('change', () => { addFiles(fileInput.files); fileInput.value = ''; });
+
+  const EXT_OK = /\.(pdf|jpg|jpeg|png|bmp|webp|tif|tiff)$/i;
+
+  function addFiles(lista) {
+    for (const f of lista) {
+      if (!EXT_OK.test(f.name)) {
+        Swal.fire('Formato inválido', `"${f.name}" — use PDF ou imagem (JPG/PNG/BMP/TIFF/WEBP).`, 'warning');
+        continue;
+      }
+      if (files.length >= 20) { Swal.fire('Limite', 'Máximo de 20 arquivos por vez.', 'warning'); break; }
+      if (!files.some(x => x.name === f.name)) files.push(f);
+    }
+    renderChips();
+  }
+
+  function renderChips() {
+    $('#fileChips').innerHTML = files.map((f, i) =>
+      `<span class="chip">${esc(f.name)} <button type="button" data-i="${i}" aria-label="remover">×</button></span>`).join('');
+    $('#fileChips').querySelectorAll('button').forEach(b =>
+      b.addEventListener('click', () => { files.splice(Number(b.dataset.i), 1); renderChips(); }));
+    $('#btnProcessar').disabled = files.length === 0;
+  }
+
+  // ---------- Processar ----------
+  $('#btnProcessar').addEventListener('click', async () => {
+    const btn = $('#btnProcessar');
+    const st = $('#status');
+    btn.disabled = true;
+    st.className = 'status';
+    st.textContent = `Processando ${files.length} PDF(s)… O OCR pode levar alguns minutos por arquivo.`;
+
+    const fd = new FormData();
+    for (const f of files) fd.append('arquivos', f);
+
+    try {
+      const r = await fetch('/baixa-boletos/api/upload', { method: 'POST', body: fd });
+      const data = await r.json();
+      if (!data.ok) throw new Error(data.erro || 'Falha no upload');
+      ultimosArquivos = data.arquivos || [];
+      renderPreview();
+      st.className = 'status ok';
+      st.textContent = 'PDFs processados. Revise abaixo antes de confirmar.';
+      $('#previewPanel').classList.remove('hidden');
+      $('#previewPanel').scrollIntoView({ behavior: 'smooth' });
+    } catch (e) {
+      st.className = 'status err';
+      st.textContent = 'Erro: ' + (e.message || e);
+    } finally {
+      btn.disabled = files.length === 0;
+    }
+  });
+
+  // ---------- Pré-visualização ----------
+  let selecionados = new Set();
+
+  async function renderPreview() {
+    if (!contasBancarias.length) await carregarContas();
+    const body = $('#previewBody');
+    if (!ultimosArquivos.length) { body.innerHTML = '<div class="nofin">Nada para mostrar.</div>'; return; }
+    selecionados = new Set();
+    manualMatches.clear();
+
+    let html = '';
+    let idx = 0;
+    for (const arq of ultimosArquivos) {
+      html += `<div class="fname">📄 ${esc(arq.nome)}${arq.escaneado ? ' <span class="dim">(escaneado)</span>' : ''}</div>`;
+      if (arq.erro) { html += `<div class="erro">Falha ao ler o arquivo: ${esc(arq.erro)}</div>`; continue; }
+      if (!arq.boletos || !arq.boletos.length) { html += '<div class="nofin">Nenhum boleto identificado.</div>'; continue; }
+
+      html += `<table><thead><tr>
+        <th></th><th>Tipo</th><th>Fornecedor</th><th>Valor comprovante</th><th>Valor título</th>
+        <th>Data</th><th>Parcela</th><th>Emp</th><th>Nota</th><th>NUFIN</th>
+        <th>Cód. Parceiro</th><th>Pagamento (origem)</th><th>Conta Sankhya</th><th>Confiança</th>
+      </tr></thead><tbody>`;
+
+      for (const b of arq.boletos) {
+        const i = idx++;
+        if (b.erro) {
+          html += `<tr><td colspan="10" class="erro">Página ${b.page}: ${esc(b.erro)}</td></tr>`;
+          continue;
+        }
+        const m = b.match || {};
+        const t = m.titulo || null;
+        const conf = m.confianca; // exato | aproximado | null
+        const podeMarcar = conf === 'exato' || conf === 'aproximado';
+        const checado = conf === 'exato';
+        if (checado) selecionados.add(i);
+
+        const badge = conf === 'exato' ? '<span class="badge b-exato">✔ Casado</span>'
+          : conf === 'aproximado' ? '<span class="badge b-aprox">⚠ Aproximado</span>'
+          : '<span class="badge b-nada">✖ Não encontrado</span>';
+
+        const avisos = (m.avisos || []).map(a => `<div class="aviso">⚠ ${esc(a)}</div>`).join('');
+
+        html += `<tr>
+          <td><input type="checkbox" class="chk" data-i="${i}" ${podeMarcar ? '' : 'disabled'} ${checado ? 'checked' : ''}></td>
+          <td>${badgeTipo(b.tipo)}<div class="mono" style="font-size:11px">p${b.page}</div></td>
+          <td id="forn-${i}">${esc((t ? t.fornecedor : '') || b.fornecedor || '—')}${t && t.cnpj ? `<div class="mono">${esc(t.cnpj)}</div>` : (b.cnpj ? `<div class="mono">${esc(b.cnpj)}</div>` : '')}</td>
+          <td>${fmtVal(b.valor)}</td>
+          <td id="vtit-${i}">${t ? fmtVal(t.valor) : '<span class="dim">—</span>'}</td>
+          <td id="data-${i}">${fmtData(t ? t.vencimento : b.vencimento)}</td>
+          <td id="parc-${i}">${t ? esc(t.parcLabel) : '—'}</td>
+          <td id="emp-${i}">${t ? esc(t.codemp) : '—'}</td>
+          <td id="nota-${i}">${t && t.numnota ? esc(t.numnota) : '—'}</td>
+          <td id="nufin-${i}">${t ? `<span class="nufin-auto">${esc(t.nufin)}</span>` : '<span class="dim">—</span>'}</td>
+          <td>
+            <div class="codparc-wrap">
+              <input type="number" class="inp-codparc" id="cp-${i}" data-i="${i}"
+                     placeholder="codparc" value="${t ? esc(t.codparc || '') : ''}"
+                     title="Informe o CODPARC para buscar títulos em aberto desse parceiro">
+              <button class="btn-buscar" data-i="${i}" title="Buscar títulos por CODPARC">🔍</button>
+            </div>
+          </td>
+          <td>${montarPagamento(b)}</td>
+          <td style="min-width:160px">
+            ${contasBancarias.length ? `
+            <select id="cta-${i}" class="sel-conta ${b.codcta_sugerido ? 'ok' : 'vazio'}" data-i="${i}">
+              <option value="">— selecione —</option>
+              ${contasBancarias.map(c => `<option value="${esc(c.CODCTA)}" ${Number(c.CODCTA) === Number(b.codcta_sugerido) ? 'selected' : ''}>${esc(c.DESCRICAO)}${c.NUCONTA ? ' · ' + esc(c.NUCONTA) : ''}</option>`).join('')}
+            </select>
+            ${b.desconta ? `<div style="font-size:11px;color:var(--ok);margin-top:2px">✔ auto</div>` : ''}
+            ` : '<span class="dim" style="font-size:12px">sem contas</span>'}
+          </td>
+          <td>${badge}${avisos}</td>
+        </tr>`;
+      }
+      html += '</tbody></table>';
+    }
+    body.innerHTML = html;
+
+    body.querySelectorAll('.chk').forEach(chk =>
+      chk.addEventListener('change', () => {
+        const i = Number(chk.dataset.i);
+        if (chk.checked) selecionados.add(i); else selecionados.delete(i);
+        atualizarBtnBaixar();
+      }));
+
+    // Handler busca por CODPARC — abre modal com títulos em aberto do parceiro
+    body.querySelectorAll('.btn-buscar').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const i = Number(btn.dataset.i);
+        const cpInput = document.getElementById(`cp-${i}`);
+        const codparc = Number(cpInput.value) || null;
+        if (!codparc) {
+          Swal.fire('CODPARC obrigatório', 'Informe o código do parceiro antes de buscar.', 'warning');
+          return;
+        }
+
+        // Pega valor e vencimento do boleto para ordenar por proximidade
+        let boletoValor = 0;
+        let idx2 = 0;
+        outer: for (const arq of ultimosArquivos) {
+          for (const b of (arq.boletos || [])) {
+            if (idx2++ === i) { boletoValor = b.valor || 0; break outer; }
+          }
+        }
+
+        btn.textContent = '⏳';
+        btn.disabled = true;
+        try {
+          const r = await fetch('/baixa-boletos/api/buscar-por-codparc', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ codparc, valor: boletoValor })
+          });
+          const data = await r.json();
+          if (!data.ok) throw new Error(data.erro || 'Falha na busca');
+
+          const titulos = data.titulos || [];
+          if (!titulos.length) {
+            Swal.fire('Sem títulos', `Nenhum título em aberto encontrado para o parceiro ${codparc}.`, 'info');
+            return;
+          }
+
+          // Monta HTML da lista de títulos para o usuário selecionar
+          const linhas = titulos.map((t, j) => `
+            <tr style="cursor:pointer" data-j="${j}" class="swal-row" title="Selecionar este título">
+              <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;font-family:Consolas,monospace;font-size:13px;font-weight:700">${esc(t.nufin)}</td>
+              <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;font-size:13px">${esc(t.fornecedor)}</td>
+              <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;font-size:13px;text-align:right">${fmtVal(t.valor)}</td>
+              <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;font-size:13px">${fmtData(t.vencimento)}</td>
+              <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;font-size:13px">${esc(t.parcLabel)}</td>
+              <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;font-size:13px">${esc(t.numnota || '—')}</td>
+            </tr>`).join('');
+
+          const { value: escolhido } = await Swal.fire({
+            title: `Títulos em aberto — Parceiro ${codparc}`,
+            width: 820,
+            html: `
+              <p style="font-size:13px;color:#64748b;margin:0 0 10px">Clique no título correto para vinculá-lo ao boleto.</p>
+              <div style="overflow-x:auto">
+              <table style="width:100%;border-collapse:collapse;font-size:13px">
+                <thead><tr style="background:#fafbfd">
+                  <th style="padding:6px 10px;text-align:left;font-size:11px;color:#64748b;border-bottom:2px solid #e2e8f0">NUFIN</th>
+                  <th style="padding:6px 10px;text-align:left;font-size:11px;color:#64748b;border-bottom:2px solid #e2e8f0">Fornecedor</th>
+                  <th style="padding:6px 10px;text-align:right;font-size:11px;color:#64748b;border-bottom:2px solid #e2e8f0">Valor</th>
+                  <th style="padding:6px 10px;text-align:left;font-size:11px;color:#64748b;border-bottom:2px solid #e2e8f0">Vencimento</th>
+                  <th style="padding:6px 10px;text-align:left;font-size:11px;color:#64748b;border-bottom:2px solid #e2e8f0">Parcela</th>
+                  <th style="padding:6px 10px;text-align:left;font-size:11px;color:#64748b;border-bottom:2px solid #e2e8f0">Nota</th>
+                </tr></thead>
+                <tbody id="swal-titulos">${linhas}</tbody>
+              </table></div>`,
+            showConfirmButton: false,
+            showCancelButton: true,
+            cancelButtonText: 'Cancelar',
+            didOpen: () => {
+              document.querySelectorAll('.swal-row').forEach(tr => {
+                tr.addEventListener('mouseenter', () => tr.style.background = '#fff4ec');
+                tr.addEventListener('mouseleave', () => tr.style.background = '');
+                tr.addEventListener('click', () => {
+                  Swal.clickConfirm();
+                  // guarda o índice escolhido num atributo do form para recuperar abaixo
+                  document.getElementById('swal-titulos').dataset.escolhido = tr.dataset.j;
+                });
+              });
+            },
+            preConfirm: () => {
+              const j = document.getElementById('swal-titulos').dataset.escolhido;
+              return j != null ? titulos[Number(j)] : null;
+            }
+          });
+
+          if (!escolhido) return; // cancelou
+          preencherLinhaComTitulo(i, escolhido);
+
+        } catch (e) {
+          Swal.fire('Erro', e.message || String(e), 'error');
+        } finally {
+          btn.textContent = '🔍';
+          btn.disabled = false;
+        }
+      });
+    });
+
+    // Preenche todos os campos de uma linha com os dados de um título encontrado
+    function preencherLinhaComTitulo(i, titulo) {
+      manualMatches.set(i, titulo);
+
+      const set = (id, html, text) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (html !== undefined) el.innerHTML = html;
+        else el.textContent = text ?? '—';
+      };
+
+      set(`nufin-${i}`, `<span class="nufin-manual">${esc(titulo.nufin)}</span><div class="dim" style="font-size:11px">${esc(titulo.parcLabel || '')}</div>`);
+      set(`forn-${i}`,  titulo.fornecedor ? `${esc(titulo.fornecedor)}${titulo.cnpj ? `<div class="mono">${esc(titulo.cnpj)}</div>` : ''}` : undefined);
+      set(`vtit-${i}`,  undefined, fmtVal(titulo.valor));
+      set(`data-${i}`,  undefined, fmtData(titulo.vencimento));
+      set(`parc-${i}`,  undefined, titulo.parcLabel || '—');
+      set(`emp-${i}`,   undefined, titulo.codemp   || '—');
+      set(`nota-${i}`,  undefined, titulo.numnota  || '—');
+
+      // Atualiza o codparc input com o valor do título
+      const cpEl = document.getElementById(`cp-${i}`);
+      if (cpEl && titulo.codparc) cpEl.value = titulo.codparc;
+
+      // Habilita e marca o checkbox
+      const chk = body.querySelector(`.chk[data-i="${i}"]`);
+      if (chk) { chk.disabled = false; chk.checked = true; selecionados.add(i); }
+
+      atualizarBtnBaixar();
+    }
+
+    // Quando conta muda: atualiza estilo e revalida botão de baixa
+    body.querySelectorAll('.sel-conta').forEach(sel => {
+      sel.addEventListener('change', () => {
+        sel.classList.toggle('ok',    !!sel.value);
+        sel.classList.toggle('vazio', !sel.value);
+        atualizarBtnBaixar();
+      });
+    });
+
+    // Auto-fill completo ao digitar CODPARC: parceiro + títulos em aberto
+    body.querySelectorAll('.inp-codparc').forEach(inp => {
+      let timer;
+      inp.addEventListener('input', () => {
+        clearTimeout(timer);
+        const i  = Number(inp.dataset.i);
+        const cp = inp.value.trim();
+        if (!cp || isNaN(cp) || Number(cp) < 1) return;
+
+        timer = setTimeout(async () => {
+          try {
+            // Pega o valor do boleto desta linha para ordenar por proximidade
+            let boletoValor = 0;
+            let idx2 = 0;
+            outer: for (const arq of ultimosArquivos) {
+              for (const b of (arq.boletos || [])) {
+                if (idx2++ === i) { boletoValor = b.valor || 0; break outer; }
+              }
+            }
+
+            // 1) Dados do parceiro → preenche fornecedor
+            const rp = await fetch(`/baixa-boletos/api/parceiro/${encodeURIComponent(cp)}`);
+            const dp = await rp.json();
+            if (dp.ok && dp.parceiro) {
+              const el = document.getElementById(`forn-${i}`);
+              if (el) el.innerHTML = `${esc(dp.parceiro.nome)}<div class="mono">${esc(dp.parceiro.cnpj || '')}</div>`;
+            }
+
+            // 2) Títulos em aberto → preenche NUFIN e demais campos
+            const rt = await fetch('/baixa-boletos/api/buscar-por-codparc', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ codparc: Number(cp), valor: boletoValor })
+            });
+            const dt = await rt.json();
+            if (!dt.ok || !dt.titulos || !dt.titulos.length) return;
+
+            const titulos = dt.titulos;
+            // Se só um resultado ou o melhor é muito próximo do valor → preenche direto
+            const melhor = titulos[0];
+            if (titulos.length === 1 || Math.abs((melhor.valor || 0) - boletoValor) <= 0.50) {
+              preencherLinhaComTitulo(i, melhor);
+            } else {
+              // Vários candidatos → aciona o modal de seleção (mesmo fluxo do botão 🔍)
+              body.querySelector(`.btn-buscar[data-i="${i}"]`)?.click();
+            }
+          } catch (_) {}
+        }, 700);
+      });
+    });
+
+    atualizarBtnBaixar();
+  }
+
+  function itensSelecionados() {
+    const out = [];
+    let idx = 0;
+    for (const arq of ultimosArquivos) {
+      for (const b of (arq.boletos || [])) {
+        const i = idx++;
+        if (b.erro || !selecionados.has(i)) continue;
+        // Match manual tem prioridade sobre o automático
+        const titulo = manualMatches.has(i)
+          ? manualMatches.get(i)
+          : (b.match && b.match.titulo ? b.match.titulo : null);
+        if (!titulo) continue;
+        const ctaSel = document.getElementById(`cta-${i}`);
+        out.push({
+          nufin: titulo.nufin,
+          arquivo: arq.nome,
+          confianca: manualMatches.has(i) ? 'manual' : b.match.confianca,
+          codcta: ctaSel ? Number(ctaSel.value) || null : (b.codcta_sugerido || null),
+          codcta_sugerido: b.codcta_sugerido || null,
+          boleto: {
+            page: b.page, tipo: b.tipo, barcode: b.barcode, linha_digitavel: b.linha_digitavel,
+            valor: b.valor, vencimento: b.vencimento, cnpj: b.cnpj, fornecedor: b.fornecedor,
+            banco_origem: b.banco_origem, agencia_origem: b.agencia_origem, conta_origem: b.conta_origem,
+            banco_destino: b.banco_destino, agencia_destino: b.agencia_destino, conta_destino: b.conta_destino,
+            chave_pix: b.chave_pix, id_transacao: b.id_transacao
+          }
+        });
+      }
+    }
+    return out;
+  }
+
+  function atualizarBtnBaixar() {
+    const n = itensSelecionados().length;
+    const btn = $('#btnBaixar');
+    btn.disabled = n === 0;
+    btn.textContent = `Confirmar baixa (${n} ${n === 1 ? 'item' : 'itens'})`;
+  }
+
+  // ---------- Confirmar baixa ----------
+  $('#btnBaixar').addEventListener('click', async () => {
+    const itens = itensSelecionados();
+    if (!itens.length) return;
+    const valorTotal = itens.reduce((s, it) => s + (Number(it.boleto.valor) || 0), 0);
+
+    // Valida que todos os itens têm conta selecionada
+    const semConta = itens.filter(it => !it.codcta);
+    if (semConta.length) {
+      await Swal.fire('Conta não selecionada',
+        `${semConta.length} título(s) sem conta bancária — selecione a conta na grade antes de baixar.`,
+        'warning');
+      return;
+    }
+
+    // Mapa rápido para exibir nome da conta no resumo
+    const contasMap = new Map(contasBancarias.map(c => [Number(c.CODCTA), c]));
+
+    // Resumo: contas únicas que serão usadas
+    const contasUsadas = [...new Map(itens.map(it => [it.codcta, contasMap.get(it.codcta)])).entries()]
+      .filter(([, c]) => c)
+      .map(([cod, c]) => `<li style="font-size:13px"><b>${esc(c.DESCRICAO)}</b>${c.NUCONTA ? ` · <span style="font-family:Consolas,monospace">${esc(c.NUCONTA)}</span>` : ''}${c.AGENCIA ? ` · Ag ${esc(c.AGENCIA)}` : ''}</li>`)
+      .join('');
+
+    const confirmado = await Swal.fire({
+      title: 'Confirmar baixa?',
+      width: 560,
+      html: `<p style="margin:0 0 12px">Serão baixados <b>${itens.length} título(s)</b> no total de <b>${fmtVal(valorTotal)}</b>.</p>
+             <div style="background:#f0faf6;border:1px solid #bbf0d6;border-radius:8px;padding:10px 14px;text-align:left">
+               <div style="font-size:11px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Contas que serão usadas</div>
+               <ul style="margin:0;padding-left:18px">${contasUsadas}</ul>
+             </div>
+             <p style="margin:12px 0 0;font-size:12px;color:#64748b">A baixa registra o movimento na TGFMBC e seta DHBAIXA — não é desfeita automaticamente.</p>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, baixar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#ea580c'
+    });
+    if (!confirmado.isConfirmed) return;
+
+    const st = $('#result');
+    st.className = 'status';
+    st.textContent = 'Baixando…';
+
+    try {
+      const r = await fetch('/baixa-boletos/api/baixar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itens })
+      });
+      const data = await r.json();
+      if (!data.ok) throw new Error(data.erro || 'Falha na baixa');
+
+      const res = data.resultados || [];
+      const ok = res.filter(x => x.status === 'BAIXADO').length;
+      const ja = res.filter(x => x.status === 'JA_PAGO').length;
+      const er = res.length - ok - ja;
+      const partes = [`Baixados: <b>${ok}</b>`];
+      if (ja) partes.push(`já pagos: ${ja}`);
+      if (er) partes.push(`erros: ${er}`);
+      st.className = 'status ' + (er ? 'err' : 'ok');
+      st.innerHTML = 'Resultado — ' + partes.join(' · ') + '.';
+      if (er) {
+        const det = res.filter(x => x.status !== 'BAIXADO').map(x => `${x.nufin || '?'}: ${x.mensagem}`).join('<br>');
+        st.innerHTML += `<br><span class="dim">${det}</span>`;
+      }
+
+      carregarHistorico();
+      // mantém a prévia (desmarca os que já foram baixados)
+      const itensOk = new Set(res.filter(x => x.status === 'BAIXADO').map(x => String(x.nufin)));
+      // desmarca os que já foram
+      let idx = 0;
+      for (const arq of ultimosArquivos) for (const b of (arq.boletos || [])) {
+        const i = idx++;
+        if (b.match && b.match.titulo && itensOk.has(String(b.match.titulo.nufin))) selecionados.delete(i);
+      }
+      atualizarBtnBaixar();
+    } catch (e) {
+      st.className = 'status err';
+      st.textContent = 'Erro: ' + (e.message || e);
+    }
+  });
+
+  // ---------- Limpar ----------
+  $('#btnLimpar').addEventListener('click', async () => {
+    const r = await Swal.fire({ title: 'Limpar tudo?', icon: 'question', showCancelButton: true,
+      confirmButtonText: 'Sim, limpar', cancelButtonText: 'Cancelar' });
+    if (!r.isConfirmed) return;
+    ultimosArquivos = [];
+    selecionados = new Set();
+    $('#previewBody').innerHTML = '';
+    $('#result').textContent = '';
+    $('#result').className = 'status';
+    $('#previewPanel').classList.add('hidden');
+    files.length = 0;
+    renderChips();
+    $('#status').textContent = '';
+  });
+
+  // ---------- Histórico ----------
+  async function carregarHistorico() {
+    const body = $('#historyBody');
+    try {
+      const r = await fetch('/baixa-boletos/api/historico');
+      const data = await r.json();
+      if (!data.ok) throw new Error(data.erro || 'Falha');
+      if (data.aviso) { body.innerHTML = `<div class="nofin">${esc(data.aviso)}</div>`; return; }
+      const h = data.historico || [];
+      if (!h.length) { body.innerHTML = '<div class="nofin">Nenhum registro ainda.</div>'; return; }
+      const badge = s => s === 'BAIXADO' ? '<span class="badge b-exato">BAIXADO</span>'
+        : s === 'JA_PAGO' ? '<span class="badge b-aprox">JÁ PAGO</span>'
+        : '<span class="badge b-erro">' + esc(s) + '</span>';
+      const pagOrigem = x => {
+        if (x.BANCO_ORIGEM || x.AGENCIA_ORIGEM || x.CONTA_ORIGEM)
+          return `${esc(x.BANCO_ORIGEM || '')}${x.AGENCIA_ORIGEM ? ' · Ag ' + esc(x.AGENCIA_ORIGEM) : ''}${x.CONTA_ORIGEM ? ' · Cta ' + esc(x.CONTA_ORIGEM) : ''}`;
+        return '—';
+      };
+      body.innerHTML = `<table class="hist-table"><thead><tr>
+        <th>Quando</th><th>Por</th><th>Arquivo</th><th>Tipo</th><th>Fornecedor</th><th>Valor</th>
+        <th>Parcela</th><th>Origem</th><th>Confiança</th><th>Status</th>
+      </tr></thead><tbody>` +
+      h.map(x => `<tr>
+        <td>${esc(x.BAIXADO_EM || '')}</td>
+        <td>${esc(x.BAIXADO_POR || '')}</td>
+        <td>${esc(x.NOME_ARQUIVO || '')}${x.PAGINA ? ` <span class="mono">p${x.PAGINA}</span>` : ''}</td>
+        <td>${x.TIPO_PAGAMENTO ? badgeTipo(x.TIPO_PAGAMENTO) : '—'}</td>
+        <td>${esc(x.FORNECEDOR || '')}</td>
+        <td>${fmtVal(x.VALOR_BOLETO ?? x.VALOR_TITULO)}</td>
+        <td>${esc(x.PARCELA || '—')}</td>
+        <td>${pagOrigem(x)}</td>
+        <td>${esc(x.CONFIANCA || '—')}</td>
+        <td>${badge(x.STATUS)}</td>
+      </tr>`).join('') + '</tbody></table>';
+    } catch (e) {
+      body.innerHTML = `<div class="erro">Erro ao carregar histórico: ${esc(e.message || e)}</div>`;
+    }
+  }
+
+  carregarHistorico();
+</script>
+</body>
+</html>
