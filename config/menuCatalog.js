@@ -33,6 +33,7 @@ const APPS = [
   { key: 'entrada-saida', category: 'relatorios', title: 'Entrada x Saída', description: 'Movimento fiscal por empresa', href: '/entrada-saida', icon: 'fa-right-left', roles: ['ADMIN'], order: 20 },
   { key: 'markup', category: 'relatorios', title: 'Markup', description: 'Rentabilidade, custo e desconto por vendedor', href: '/markup', icon: 'fa-chart-line', roles: ['ADMIN'], order: 30 },
   { key: 'dre', category: 'relatorios', title: 'DRE', description: 'Demonstração mensal do resultado', href: '/dre', icon: 'fa-chart-column', roles: ['ADMIN'], order: 40 },
+  { key: 'fluxo-caixa', category: 'relatorios', title: 'Fluxo de Caixa', description: 'Relatório mensal por empresa e grupo', href: '/fluxo-caixa', icon: 'fa-money-bill-transfer', roles: ['ADMIN'], order: 45 },
   { key: 'faturamento-marcas', category: 'relatorios', title: 'Faturamento por Marca', description: 'Vendas por marca, linha e vendedor', href: '/faturamento/marcas', icon: 'fa-layer-group', roles: ['ADMIN'], order: 50 },
   { key: 'compras-marcas', category: 'relatorios', title: 'Compras por Marca', description: 'Compras por marca, linha e fornecedor', href: '/compras-marcas', icon: 'fa-cart-flatbed', roles: ['ADMIN'], order: 60 },
   { key: 'financeiro', category: 'financeiro', title: 'Acompanhamento Financeiro', description: 'Boletos e contas a pagar', href: '/acompanhamento-financeiro', icon: 'fa-file-invoice-dollar', roles: ['ADMIN'], order: 10 },

@@ -16,6 +16,7 @@ const SCREENS = [
   { key: 'entrada-saida', label: 'Entrada x Saída', prefix: '/entrada-saida', roles: ['ADMIN'] },
   { key: 'markup', label: 'Markup', prefix: '/markup', roles: ['ADMIN'] },
   { key: 'dre', label: 'DRE', prefix: '/dre', roles: ['ADMIN'] },
+  { key: 'fluxo-caixa', label: 'Fluxo de Caixa', prefix: '/fluxo-caixa', roles: ['ADMIN'] },
   { key: 'baixa-boletos', label: 'Baixa de Boletos', prefix: '/baixa-boletos', roles: ['ADMIN', 'ASS_COMPRA'] },
   { key: 'controle-cartao', label: 'Controle de Cartões', prefix: '/controle-cartao', roles: null },
   { key: 'calculadora-custo', label: 'Calculadora de Custo', prefix: '/calculadora-custo', roles: ['ADMIN'] },

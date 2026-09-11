@@ -1,0 +1,242 @@
+.receita-manual-card {
+  margin: 16px 0;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid var(--line, #dbe5ee);
+  border-radius: 18px;
+  box-shadow: 0 4px 18px rgba(16, 44, 70, 0.05);
+}
+
+.receita-manual-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line, #dbe5ee);
+}
+
+.receita-manual-header h3 {
+  margin: 0;
+  font: 800 16px "Manrope", sans-serif;
+  color: var(--ink, #142d40);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.receita-manual-header .badge-status {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.badge-status.salvo {
+  background: #e8f7ef;
+  color: #12613f;
+  border: 1px solid #b9e3ca;
+}
+
+.badge-status.pendente {
+  background: #fff8e6;
+  color: #8a6d3b;
+  border: 1px solid #fce8b2;
+}
+
+.receita-manual-empresa-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  background: #f4f8fb;
+  padding: 10px 14px;
+  border-radius: 12px;
+}
+
+.receita-manual-empresa-select label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted, #607789);
+}
+
+.receita-manual-empresa-select select {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line, #dbe5ee);
+  font-weight: 700;
+  color: var(--ink, #142d40);
+}
+
+.receita-manual-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.receita-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.receita-input-group label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted, #607789);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.receita-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.receita-input-wrapper span {
+  position: absolute;
+  left: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted, #607789);
+}
+
+.receita-input-wrapper input {
+  width: 100%;
+  height: 40px;
+  padding: 0 10px 0 34px;
+  border: 1px solid var(--line, #dbe5ee);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink, #142d40);
+  background: #ffffff;
+  text-align: right;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.receita-input-wrapper input:focus {
+  outline: none;
+  border-color: var(--accent, #087e8b);
+  box-shadow: 0 0 0 3px rgba(8, 126, 139, 0.15);
+}
+
+.receita-manual-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid var(--line, #dbe5ee);
+}
+
+.receita-manual-total {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink, #142d40);
+}
+
+.receita-manual-total strong {
+  font-size: 18px;
+  color: var(--accent, #087e8b);
+  margin-left: 6px;
+}
+
+.btn-salvar-receita {
+  height: 40px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--accent, #087e8b);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.btn-salvar-receita:hover {
+  background: #06646f;
+}
+
+.btn-salvar-receita:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.receita-confirm-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2500;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(16, 44, 70, .58);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .18s, visibility .18s;
+}
+
+.receita-confirm-modal.show { opacity: 1; visibility: visible; }
+
+.receita-confirm-box {
+  width: min(510px, 100%);
+  overflow: hidden;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 25px 70px rgba(16, 44, 70, .28);
+}
+
+.receita-confirm-box header { display: flex; justify-content: space-between; gap: 16px; padding: 22px 24px 16px; border-bottom: 1px solid var(--line, #dbe5ee); }
+.receita-confirm-box header span { display: block; color: var(--accent, #087e8b); font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.receita-confirm-box h3 { margin: 5px 0 0; color: var(--ink, #142d40); font: 800 20px "Manrope", sans-serif; }
+.receita-confirm-close { width: 36px; height: 36px; border: 0; border-radius: 50%; background: #eef5f8; color: var(--ink, #142d40); font-size: 22px; cursor: pointer; }
+.receita-confirm-context { margin: 14px 24px; color: var(--muted, #607789); font-size: 13px; }
+.receita-confirm-values { margin: 0 24px 20px; border: 1px solid var(--line, #dbe5ee); border-radius: 12px; overflow: hidden; }
+.receita-confirm-values div { display: flex; justify-content: space-between; gap: 16px; padding: 10px 13px; border-bottom: 1px solid var(--line, #dbe5ee); color: var(--muted, #607789); font-size: 13px; }
+.receita-confirm-values div:last-child { border-bottom: 0; }
+.receita-confirm-values b { color: var(--ink, #142d40); font-variant-numeric: tabular-nums; }
+.receita-confirm-values .receita-confirm-total { padding: 14px 13px; background: #e9f6fa; color: var(--ink, #142d40); font-weight: 800; }
+.receita-confirm-values .receita-confirm-total b { color: var(--accent, #087e8b); font-size: 16px; }
+.receita-confirm-box footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px 22px; }
+.receita-confirm-box footer button { min-height: 40px; padding: 0 15px; border-radius: 9px; font: 700 13px inherit; cursor: pointer; }
+.receita-confirm-cancel { border: 1px solid var(--line, #dbe5ee); background: #fff; color: var(--ink, #142d40); }
+.receita-confirm-save { border: 0; background: var(--accent, #087e8b); color: #fff; }
+.receita-confirm-save:disabled { opacity: .6; cursor: wait; }
+
+.sub-row-receita {
+  background: #f8fafc;
+}
+
+.sub-row-receita td, .sub-row-receita .money {
+  font-size: 13px;
+}
+
+@media (max-width: 600px) {
+  .receita-manual-grid {
+    grid-template-columns: 1fr;
+  }
+  .receita-manual-footer {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  .btn-salvar-receita {
+    justify-content: center;
+  }
+  .receita-confirm-box footer { flex-direction: column-reverse; }
+  .receita-confirm-box footer button { width: 100%; }
+}
